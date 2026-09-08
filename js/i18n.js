@@ -5,13 +5,10 @@
 (function (root) {
   'use strict';
 
-  var LANGS = ['ko', 'en', 'ja', 'zh-cn', 'zh-tw'];
+  var LANGS = ['ko', 'en'];
   var NAMES = {
     ko: '한국어',
-    en: 'English',
-    ja: '日本語',
-    'zh-cn': '简体中文',
-    'zh-tw': '繁體中文'
+    en: 'English'
   };
   var PACK = {};
 
