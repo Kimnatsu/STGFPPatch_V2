@@ -305,14 +305,14 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 @keyframes kenburns{from{transform:scale(1) translateY(0)}to{transform:scale(1.09) translateY(-8px)}}
 .banner--home::after{
   content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
-  background:linear-gradient(180deg,transparent 40%,color-mix(in srgb,var(--bg) 88%,transparent) 96%),
+  background:linear-gradient(180deg,transparent 40%,rgba(255,255,255,.88) 96%),
              linear-gradient(90deg,rgba(4,12,22,.42),transparent 45%);
 }
 /* 배너 텍스트 — 박스 없이 하단 안전 영역만 만들어 이미지와 타이포를 함께 살림 */
 .banner-tag{
   position:absolute;left:0;right:0;bottom:0;z-index:4;pointer-events:none;
   padding:58px 18px 17px;
-  background:linear-gradient(0deg,rgba(4,13,23,.94) 0%,rgba(4,13,23,.72) 48%,rgba(4,13,23,0) 100%);
+  background:linear-gradient(0deg,rgba(255,255,255,.94) 0%,rgba(255,255,255,.72) 48%,rgba(255,255,255,0) 100%);
 }
 .banner-tag::before{
   content:"";position:absolute;left:18px;top:40px;width:38px;height:2px;
@@ -325,11 +325,11 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 .banner-tag.swap{animation:tagSwap .55s var(--ease)}
 @keyframes tagSwap{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .banner-tag-txt{
-  font-family:var(--font-d);font-size:clamp(24px,4.4vw,44px);font-weight:700;color:#fff;letter-spacing:2px;line-height:1.28;
-  text-shadow:0 2px 3px rgba(0,0,0,.9),0 6px 22px rgba(0,0,0,.6);
+  font-family:var(--font-d);font-size:clamp(24px,4.4vw,44px);font-weight:700;color:var(--text);letter-spacing:2px;line-height:1.28;
+  text-shadow:0 1px 3px rgba(255,255,255,.9),0 4px 16px rgba(255,255,255,.65);
   display:inline-block;position:relative;
 }
-.banner-tag-sub{display:block;color:var(--gold-2);font-size:13px;font-weight:900;letter-spacing:1.5px;margin-top:10px;text-shadow:0 2px 6px rgba(0,0,0,.85)}
+.banner-tag-sub{display:block;color:var(--gold);font-size:13px;font-weight:900;letter-spacing:1.5px;margin-top:10px;text-shadow:0 1px 3px rgba(255,255,255,.9)}
 .banner-dots{position:absolute;right:16px;bottom:14px;z-index:4;display:flex;gap:6px}
 .bdot{width:9px;height:9px;border-radius:99px;background:rgba(255,255,255,.4);transition:.25s;padding:0}
 .bdot.on{background:var(--gold);width:22px}
