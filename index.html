@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FPP v2</title>
+  <script>
+    (function () {
+      var langs = ['ko', 'en', 'ja', 'zh-cn', 'zh-tw'];
+      var lang = 'ko';
+      try {
+        var saved = localStorage.getItem('fpp_language');
+        if (langs.indexOf(saved) > -1) lang = saved;
+      } catch (e) {}
+      var suffix = location.search + location.hash;
+      location.replace(lang + '/Main.html' + suffix);
+    })();
+  </script>
+</head>
+<body>
+  <p>FPP v2로 이동 중입니다…</p>
+</body>
+</html>
