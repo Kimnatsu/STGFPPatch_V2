@@ -1076,10 +1076,10 @@ window.UI = (function () {
   var PAGE_BANNERS = {
     characters: { image: 'https://image.qwenlm.ai/generated-images/987f7614-9aa7-4d15-8615-e46b88e3b65b/_result.png', title: '캐릭터', tag: 'CHARACTER ARCHIVE' },
     pvp: { image: 'https://image.qwenlm.ai/generated-images/f6395166-19bd-4970-8d7b-b86ac14dc624/_result.png', title: 'PvP 패치', tag: 'BALANCE UPDATE' },
-    community: { image: 'https://image.qwenlm.ai/generated-images/6675fceb-63e6-4e40-830f-3de5669b163a/_result.png', title: '커뮤니티', tag: 'CREW BOARD' },
-    patch: { image: 'https://image.qwenlm.ai/generated-images/dde0cd4a-dbb2-4686-bd7e-6e4493d52f77/_result.png', title: '패치노트', tag: 'PATCH LOG' },
-    board: { image: 'https://image.qwenlm.ai/generated-images/f81f7d7e-65e0-41f7-902f-7a0309e951fd/_result.png', title: '게시판', tag: 'MESSAGE BOARD' },
-    event: { image: 'https://image.qwenlm.ai/generated-images/5e736e5b-ebea-4077-9479-ff5ee9aeae09/_result.png', title: '이벤트', tag: 'FESTIVAL' },
+    community: { image: 'https://image.qwenlm.ai/generated-images/6675fceb-63e6-4e40-830f-3de5669b163a/_result.png', title: '커뮤니티', tag: 'COMMUNITY' },
+    patch: { image: 'https://image.qwenlm.ai/generated-images/dde0cd4a-dbb2-4686-bd7e-6e4493d52f77/_result.png', title: '패치노트', tag: 'PATCH NOTE' },
+    board: { image: 'https://image.qwenlm.ai/generated-images/f81f7d7e-65e0-41f7-902f-7a0309e951fd/_result.png', title: '게시판', tag: 'BOARD' },
+    event: { image: 'https://image.qwenlm.ai/generated-images/5e736e5b-ebea-4077-9479-ff5ee9aeae09/_result.png', title: '이벤트', tag: 'EVENTS' },
     cs: { image: 'https://image.qwenlm.ai/generated-images/1f2f41ad-4373-4c23-a185-5a2b8a6bd506/_result.png', title: '고객센터', tag: 'HELP CENTER' }
   };
   function fillBanner(mediaEl, fallbackTitle, items) {
