@@ -100,7 +100,7 @@
       '<span>' + UI.esc(value) + '</span></span>';
   }
   function rowHTML(o) {
-    return '<li class="lst-row" data-go="' + UI.esc(o.page) + '" tabindex="0" role="button" aria-label="' + UI.esc(o.title) + '">' +
+    return '<li class="lst-row" data-go="' + UI.esc(UI.pageUrl(o.page)) + '" tabindex="0" role="button" aria-label="' + UI.esc(o.title) + '">' +
       '<div class="lst-main"><div class="lst-l1">' + o.badge +
       '<span class="lst-title">' + UI.esc(o.title) + '</span></div>' +
       '<div class="lst-l2"><span>' + UI.esc(o.author) + '</span><span>·</span><span>' + UI.esc(UI.fmtDate(o.date)) + '</span>' +
@@ -230,7 +230,7 @@
       }
       startEvTimer();
       cards.forEach(function (cc) {
-        cc.addEventListener('click', function () { location.href = 'Community.html#event/view/' + cc.getAttribute('data-ev'); });
+        cc.addEventListener('click', function () { location.href = UI.pageUrl('Community.html#event/view/' + cc.getAttribute('data-ev')); });
       });
     }
 
@@ -495,7 +495,7 @@
   function tipWriteHTML(u) {
     if (!u) {
       return '<div class="tip-write tip-login"><span>꿀팁은 로그인 후 남길 수 있습니다.</span>' +
-        '<a class="btn btn--gold btn--sm" href="Login.html">로그인</a></div>';
+        '<a class="btn btn--gold btn--sm" href="' + UI.pageUrl('Login.html') + '">로그인</a></div>';
     }
     return '<div class="tip-write">' +
       '<div class="tip-write-head"><b>꿀팁 남기기</b></div>' +

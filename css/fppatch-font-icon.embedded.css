@@ -45,12 +45,6 @@
 .ic-v2-navigation-alarm-disabled-fill:before {
   content: "\e906";
 }
-.ic-v2-navigation-language-fill:before {
-  content: "\e907";
-}
-.ic-v2-navigation-language-line:before {
-  content: "\e908";
-}
 .ic-v2-navigation-apps-fill:before {
   content: "\e909";
 }

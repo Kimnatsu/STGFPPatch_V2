@@ -30,7 +30,7 @@
 
   function afterLogin(user) {
     UI.toast((user.displayName || user.email || '선원') + '님, 환영합니다!', 'ok');
-    setTimeout(function () { location.href = 'Main.html#home'; }, 650);
+    setTimeout(function () { location.href = UI.pageUrl('Main.html#home'); }, 650);
   }
 
   function googleLogin(btn) {
@@ -144,7 +144,7 @@
       var finish = function () {
         return FB.ensureUserDoc(user, { nickname: nick }).then(function () {
           UI.toast('가입이 완료되었습니다! 환영합니다, ' + nick + '님', 'ok');
-          setTimeout(function () { location.href = 'Main.html#home'; }, 800);
+          setTimeout(function () { location.href = UI.pageUrl('Main.html#home'); }, 800);
         });
       };
       if (user.emailVerified) return finish();

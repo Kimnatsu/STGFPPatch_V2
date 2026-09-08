@@ -3,10 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<script>
-/* 루트 페이지와 /ko/, /en/ 같은 언어별 페이지에서 같은 에셋을 사용한다. */
-(function(){var m=location.pathname.match(/\/(ko|en|ja|zh-cn|zh-tw)\/[^/]+\.html$/i);document.write('<base href="' + (m ? '../' : './') + '">');})();
-</script>
+<base href="../" />
 <title>FPP v2 — 원피스 파이팅패스 커뮤니티</title>
 <meta name="description" content="FPP v2 — 캐릭터, PvP 패치, 커뮤니티, 고객센터" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a1626'/%3E%3Cpath d='M32 12c-8 0-14 6-14 13 0 5 3 9 7 11v6l4-2 3 3 3-3 4 2v-6c4-2 7-6 7-11 0-7-6-13-14-13z' fill='%23f5b942'/%3E%3C/svg%3E" />
@@ -27,12 +24,11 @@ html[data-theme="light"] .page-veil{background:#eef3f8}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="js/i18n.js"></script>
 <script src="js/sdk.js"></script>
 <script>
 /* 에셋 로더 — 루트/서브폴더 배포 모두 대응 (상대경로 우선 → 절대경로 재시도) */
 (function () {
-  /* <base>가 이미 루트 에셋 경로를 가리키므로 언어 폴더를 다시 올라가지 않는다. */
+  /* <base>가 루트 에셋 경로를 가리키므로 모든 에셋을 동일한 기준으로 불러온다. */
   var B = './';
   var CSS = ['css/common.css', 'css/Main.css'];
   var JS = ['js/Firebase.js', 'js/common.js', 'js/Main.js'];
@@ -94,15 +90,15 @@ html[data-theme="light"] .page-veil{background:#eef3f8}
     <div class="wrap">
       <div class="home-grid">
         <div class="box box--patch rv" id="homePatchBox">
-          <div class="box-head"><h2 class="box-title">패치노트</h2><a class="box-go" href="Community.html#patch">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
+          <div class="box-head"><h2 class="box-title">패치노트</h2><a class="box-go" href="ko/Community.html#patch">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
           <div class="box-body" id="homePatchList"></div>
         </div>
         <div class="box box--pvp rv">
-          <div class="box-head"><h2 class="box-title">PvP 패치</h2><a class="box-go" href="Main.html#pvp">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
+          <div class="box-head"><h2 class="box-title">PvP 패치</h2><a class="box-go" href="ko/Main.html#pvp">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
           <div class="box-body pvp-orbs" id="homePvpGrid"></div>
         </div>
         <div class="box box--event rv" id="homeEventBox">
-          <div class="box-head"><h2 class="box-title">이벤트</h2><a class="box-go" href="Community.html#event">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
+          <div class="box-head"><h2 class="box-title">이벤트</h2><a class="box-go" href="ko/Community.html#event">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
           <div class="box-body home-event-body">
             <button class="ev-nav ev-nav--prev" id="homeEventPrev" type="button" aria-label="이전 이벤트"><i class="ic-v2-control-arrow-left-circle-fill" aria-hidden="true"></i></button>
             <div class="ev-roll" id="homeEventRoll"></div>
@@ -110,7 +106,7 @@ html[data-theme="light"] .page-veil{background:#eef3f8}
           </div>
         </div>
         <div class="box box--board rv">
-          <div class="box-head"><h2 class="box-title">게시글</h2><a class="box-go" href="Community.html#board">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
+          <div class="box-head"><h2 class="box-title">게시글</h2><a class="box-go" href="ko/Community.html#board">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
           <div class="box-body" id="homeBoardList"></div>
         </div>
       </div>

@@ -205,7 +205,7 @@
     var p = S.patches.find(function (x) { return x.docId === id; });
     var el = $('patchContent');
     $('monthFilter').style.display = 'none';
-    if (!p) { UI.empty(el, { title: '패치노트를 찾을 수 없습니다.', btnText: '목록으로', btnHref: 'Community.html#patch' }); return; }
+    if (!p) { UI.empty(el, { title: '패치노트를 찾을 수 없습니다.', btnText: '목록으로', btnHref: UI.pageUrl('Community.html#patch') }); return; }
     el.innerHTML =
       '<button class="detail-back" type="button" data-back="patch">' + UI.IC.back + ' 패치노트 목록</button>' +
       '<article class="detail"><div class="detail-head"><div class="detail-head-main">' +
@@ -263,7 +263,7 @@
     likeState(type, item.docId, item.likeCount).then(paint);
     likeBtn.addEventListener('click', function () {
       var u = UI.currentUser();
-      if (!u) { UI.toast('로그인 후 이용할 수 있습니다.'); setTimeout(function () { location.href = 'Login.html'; }, 700); return; }
+      if (!u) { UI.toast('로그인 후 이용할 수 있습니다.'); setTimeout(function () { location.href = UI.pageUrl('Login.html'); }, 700); return; }
       var nowLiked = !!likedCache[key];
       var pr = type === 'board'
         ? FB.toggleBoardLike(item.docId, u.uid, nowLiked)
@@ -294,7 +294,7 @@
     var listEl = $('cmtList');
     var u = UI.currentUser();
     if (!u) {
-      write.innerHTML = '<div class="cmt-login"><span>댓글은 로그인 후 작성할 수 있습니다.</span><a class="btn btn--gold btn--sm" href="Login.html">로그인</a></div>';
+      write.innerHTML = '<div class="cmt-login"><span>댓글은 로그인 후 작성할 수 있습니다.</span><a class="btn btn--gold btn--sm" href="' + UI.pageUrl('Login.html') + '">로그인</a></div>';
     } else {
       var ud = UI.userDoc() || {};
       write.innerHTML = '<div class="comment-write"><span class="c-avatar"><img src="' + UI.esc(UI.avatarOf(ud.profileIcon)) + '" alt="내 프로필"></span>' +
@@ -388,7 +388,7 @@
     $('boardToolbar').style.display = 'none';
     var wt = document.querySelector('#view-board .write-toolbar');
     if (wt) wt.style.display = 'none';
-    if (!b) { UI.empty(el, { title: '게시글을 찾을 수 없습니다.', btnText: '게시판으로', btnHref: 'Community.html#board' }); return; }
+    if (!b) { UI.empty(el, { title: '게시글을 찾을 수 없습니다.', btnText: '게시판으로', btnHref: UI.pageUrl('Community.html#board') }); return; }
     
     /* 작성자 확인 — 편집/삭제 버튼 표시 여부 결정 */
     var u = UI.currentUser();
@@ -558,7 +558,7 @@
     var e = S.events.find(function (x) { return x.docId === id; });
     var el = $('eventContent');
     $('eventToolbar').style.display = 'none';
-    if (!e) { UI.empty(el, { title: '이벤트를 찾을 수 없습니다.', btnText: '이벤트 목록으로', btnHref: 'Community.html#event' }); return; }
+    if (!e) { UI.empty(el, { title: '이벤트를 찾을 수 없습니다.', btnText: '이벤트 목록으로', btnHref: UI.pageUrl('Community.html#event') }); return; }
     el.innerHTML =
       '<button class="detail-back" type="button" data-back="event">' + UI.IC.back + ' 이벤트 목록</button>' +
       '<article class="detail"><div class="detail-head"><div class="detail-head-main">' +
@@ -624,7 +624,7 @@
     var u = UI.currentUser();
     if (!u) {
       UI.toast('로그인 후 글을 작성할 수 있습니다.', 'err');
-      setTimeout(function () { location.href = 'Login.html'; }, 700);
+      setTimeout(function () { location.href = UI.pageUrl('Login.html'); }, 700);
       return;
     }
     var ud = UI.userDoc() || {};

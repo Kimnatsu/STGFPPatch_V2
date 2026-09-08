@@ -78,7 +78,7 @@
     var u = UI.currentUser();
     if (!u) {
       UI.toast('로그인 후 확인할 수 있습니다.');
-      setTimeout(function () { location.href = 'Login.html'; }, 700);
+      setTimeout(function () { location.href = UI.pageUrl('Login.html'); }, 700);
       return;
     }
     var m = UI.openModal({ title: '나의 문의', body: '<div id="myInqBox"></div>' });
