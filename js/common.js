@@ -59,14 +59,8 @@ window.UI = (function () {
     return PROFILE_ICONS[isNaN(i) ? 0 : Math.abs(i) % PROFILE_ICONS.length];
   }
 
-  /* ---------- 한국어 UI 라벨 ---------- */
-  var LABELS = {
-    home: '홈', characters: '캐릭터', pvp: 'PvP 패치', community: '커뮤니티',
-    cs: '고객센터', login: '로그인', signup: '회원가입'
-  };
   function t(k) {
-    var fallback = LABELS[k] || k;
-    return window.I18N ? window.I18N.t(fallback, fallback) : fallback;
+    return window.I18N ? window.I18N.t(k, k) : k;
   }
 
   /* ---------- 아이콘 (인라인 SVG, 폰트 폴백) ---------- */
