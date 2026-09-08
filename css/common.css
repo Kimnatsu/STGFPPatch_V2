@@ -289,9 +289,9 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 }
 @keyframes drift{to{transform:translateX(92px)}}
 .banner-media{position:absolute;inset:0;z-index:1}
-.bimg{position:absolute;inset:0;opacity:0;cursor:pointer}
+.bimg{position:absolute;inset:0;opacity:0;pointer-events:none;cursor:pointer}
 .bimg img{width:100%;height:100%;object-fit:cover}
-.bimg.on{opacity:1}
+.bimg.on{opacity:1;pointer-events:auto}
 /* 배너 이미지 로드 실패(CDN 차단 등) 시 폴백 배경 */
 .bimg.noimg{background:
   radial-gradient(900px 400px at 80% 18%, rgba(86,169,230,.28), transparent 62%),
