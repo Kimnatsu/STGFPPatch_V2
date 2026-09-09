@@ -155,16 +155,15 @@ html[data-theme="dark"] .logo-img-dark{display:block}
 .hd-right > .icon-btn.is-selected > .top-menu-icon--line{display:none}
 .hd-right > .icon-btn.is-selected > .top-menu-icon--fill{display:inline-flex}
 .hd-settings > .top-menu-icon{
-  width:24px;height:24px;border-radius:50%;
-  background:transparent;color:var(--text-2);
+  width:24px;height:24px;
+  color:var(--text-2);
   font-size:20px;transition:color .2s ease;
 }
 .hd-settings:hover{
-  background:var(--surface-2);border-color:var(--line);border-radius:50%;
-  color:var(--gold);
+  color:var(--text-2);
 }
 .hd-settings:hover > .top-menu-icon{
-  color:var(--gold);background:transparent;transform:none;box-shadow:none;
+  color:var(--text-2);
 }
 .hd-right > .icon-btn > .ficon{width:23.75px;height:24px}
 .hd-right > .icon-btn > .ficon::before{font-size:23.75px}

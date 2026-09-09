@@ -622,7 +622,7 @@ window.UI = (function () {
       ['appIcon', '앱 아이콘 변경', '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 13.5l2.2 2.2L15.5 11" stroke-linecap="round" stroke-linejoin="round"/></svg>']
     ];
     var pop = openPopup(anchor,
-      '<div class="pop-head"><span class="top-menu-icon ic-v2-navigation-setting-fill" aria-hidden="true"></span><b>설정</b></div>' +
+      '<div class="pop-head"><b>설정</b></div>' +
       '<div class="pop-body">' + items.map(function (it) {
         return '<button class="pop-item" data-act="' + it[0] + '" type="button">' + it[2] + '<span>' + it[1] + '</span></button>';
       }).join('') + '</div>', '260px');
