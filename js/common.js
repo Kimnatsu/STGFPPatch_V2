@@ -37,7 +37,7 @@ window.UI = (function () {
     if (!d) return false;
     var t = new Date(String(d).replace(/-/g, '/')).getTime();
     if (isNaN(t)) return false;
-    return Date.now() - t < 7 * 24 * 3600 * 1000;
+    return Date.now() - t < 3 * 24 * 3600 * 1000;
   }
   var store = {
     get: function (k, d) { try { var v = localStorage.getItem('fpp_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
