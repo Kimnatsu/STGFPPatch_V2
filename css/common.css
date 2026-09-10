@@ -97,6 +97,9 @@ ul,ol{list-style:none}
 }
 .hd-in{max-width:1280px;margin:0 auto;height:100%;padding:0 20px;display:flex;align-items:center;gap:10px}
 @media (max-width:420px){.hd-in{padding:0 14px}}
+@media (min-width:768px){
+  .hd-in{width:calc(100% - clamp(48px,8.8vw,90px));padding-left:15px;padding-right:15px}
+}
 .hd-burger{display:flex}
 @media (min-width:768px){.hd-burger.icon-btn{display:none}}
 .logo{display:flex;align-items:center;gap:9px;color:var(--gold);margin-right:auto}
@@ -586,7 +589,7 @@ select{appearance:none;-webkit-appearance:none;cursor:pointer;
   position:absolute;right:-8px;bottom:-8px;width:24px;height:24px;z-index:2;
   display:inline-flex;align-items:center;justify-content:center;
   border:2px solid var(--surface);border-radius:50%;
-  background:var(--surface-2);color:var(--gold);font-size:14px;line-height:1;
+  background:var(--surface-2);color:var(--text-2);font-size:14px;line-height:1;
 }
 .profile-menu .prof-ava-home::before{display:block}
 .profile-menu-name{min-width:0}
