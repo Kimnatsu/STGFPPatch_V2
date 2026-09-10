@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <base href="../" />
+  <title>설정 — FPP v2</title>
+  <meta name="description" content="FPP v2 사이트 설정" />
+  <link rel="icon" href="img/logo-dark.png" />
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('fpp_theme');
+        var theme = saved ? JSON.parse(saved) : 'dark';
+        document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/Settings.css" />
+</head>
+<body class="settings-page">
+  <main class="settings-shell">
+    <header class="settings-header">
+      <button class="settings-back" id="settingsBack" type="button" aria-label="이전 페이지로 이동">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="settings-heading">
+        <span class="settings-eyebrow">FPP v2</span>
+        <h1 id="settingsTitle">설정</h1>
+      </div>
+      <a class="settings-home" href="ko/Main.html#home" aria-label="메인 홈으로 이동">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>
+      </a>
+    </header>
+
+    <div class="settings-progress" aria-hidden="true"><span id="settingsProgress"></span></div>
+
+    <section class="settings-view is-active" id="settings-main" data-view="main">
+      <div class="settings-content">
+        <div class="settings-intro">
+          <p class="settings-kicker">SITE SETTINGS</p>
+          <h2>사이트를 내 방식대로<br /><strong>편하게 사용하세요.</strong></h2>
+          <p>현재 FPP 사이트에서 제공하는 설정만 모았습니다.</p>
+        </div>
+
+        <div class="settings-list" aria-label="설정 메뉴">
+          <button class="settings-row" type="button" data-open="notice">
+            <span class="settings-row-icon settings-row-icon--notice">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5V14h2l1.4 4h2l1-4h4.1l3 2.4V7.6L14.5 10H10L9 6H7.5l-1 4.5H4Z"/><path d="M19 8.5c1.2 1 1.2 3 0 4"/></svg>
+            </span>
+            <span class="settings-row-copy"><strong>공지사항</strong><small>FPP의 새 소식과 업데이트를 확인합니다.</small></span>
+            <svg class="settings-row-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="settings-row" type="button" data-open="notify">
+            <span class="settings-row-icon settings-row-icon--notify">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 6.5-2.5 8-2.5 8h15S18 15.5 18 9Z"/><path d="M10 21h4"/></svg>
+            </span>
+            <span class="settings-row-copy"><strong>알림 설정</strong><small>받고 싶은 패치·댓글·이벤트 알림을 고릅니다.</small></span>
+            <svg class="settings-row-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="settings-row" type="button" data-open="theme">
+            <span class="settings-row-icon settings-row-icon--theme">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
+            </span>
+            <span class="settings-row-copy"><strong>테마 변경</strong><small>FPP 화면을 밝게 또는 어둡게 표시합니다.</small></span>
+            <span class="settings-row-value" id="themeSummary">다크 모드</span>
+            <svg class="settings-row-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="settings-row" type="button" data-open="appIcon">
+            <span class="settings-row-icon settings-row-icon--icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.2"/><rect x="14" y="4" width="6" height="6" rx="1.2"/><rect x="4" y="14" width="6" height="6" rx="1.2"/><rect x="14" y="14" width="6" height="6" rx="1.2"/></svg>
+            </span>
+            <span class="settings-row-copy"><strong>앱 아이콘 변경</strong><small>홈 화면 바로가기에 사용할 로고를 선택합니다.</small></span>
+            <span class="settings-row-value" id="iconSummary">다크 로고</span>
+            <svg class="settings-row-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <p class="settings-note">설정은 이 브라우저에 즉시 반영됩니다. 알림과 앱 아이콘 선택은 로그인한 계정에도 저장됩니다.</p>
+      </div>
+    </section>
+
+    <section class="settings-view" id="settings-notice" data-view="notice" aria-hidden="true">
+      <div class="settings-content settings-content--sub">
+        <div class="settings-subhead"><p>FPP NEWS</p><h2>공지사항</h2><span>새로운 소식과 업데이트입니다.</span></div>
+        <div class="notice-list" id="noticeList"><div class="settings-loading">공지사항을 불러오는 중입니다.</div></div>
+        <article class="notice-detail" id="noticeDetail" hidden>
+          <button class="inline-back" id="noticeDetailBack" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> 목록으로
+          </button>
+          <div class="notice-detail-meta" id="noticeDetailMeta"></div>
+          <h3 id="noticeDetailTitle"></h3>
+          <div class="notice-detail-content" id="noticeDetailContent"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="settings-view" id="settings-notify" data-view="notify" aria-hidden="true">
+      <div class="settings-content settings-content--sub">
+        <div class="settings-subhead"><p>NOTIFICATIONS</p><h2>알림 설정</h2><span>원하는 소식만 선택해서 받아보세요.</span></div>
+        <div class="login-required" id="notifyLogin" hidden>
+          <span class="login-required-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5M15 12H3"/></svg></span>
+          <strong>로그인이 필요합니다.</strong>
+          <p>알림 설정을 계정에 저장하려면 로그인해 주세요.</p>
+          <a class="settings-action-button" href="ko/Login.html">로그인하기</a>
+        </div>
+        <div class="settings-choice-card" id="notifyCard" hidden></div>
+      </div>
+    </section>
+
+    <section class="settings-view" id="settings-theme" data-view="theme" aria-hidden="true">
+      <div class="settings-content settings-content--sub">
+        <div class="settings-subhead"><p>APPEARANCE</p><h2>테마 변경</h2><span>화면 분위기를 선택하세요.</span></div>
+        <div class="theme-options" role="radiogroup" aria-label="테마 선택">
+          <button class="theme-option" type="button" data-theme-choice="light" role="radio" aria-checked="false">
+            <span class="theme-preview theme-preview--light"><i></i><b></b><em></em></span>
+            <span><strong>라이트 모드</strong><small>밝고 선명한 화면</small></span><i class="choice-check"></i>
+          </button>
+          <button class="theme-option" type="button" data-theme-choice="dark" role="radio" aria-checked="false">
+            <span class="theme-preview theme-preview--dark"><i></i><b></b><em></em></span>
+            <span><strong>다크 모드</strong><small>눈이 편안한 어두운 화면</small></span><i class="choice-check"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="settings-view" id="settings-appIcon" data-view="appIcon" aria-hidden="true">
+      <div class="settings-content settings-content--sub">
+        <div class="settings-subhead"><p>HOME SCREEN</p><h2>앱 아이콘 변경</h2><span>홈 화면 바로가기에 사용할 로고입니다.</span></div>
+        <div class="icon-options" role="radiogroup" aria-label="앱 아이콘 선택">
+          <button class="icon-option" type="button" data-icon-choice="logo-dark" role="radio" aria-checked="false">
+            <span class="icon-preview icon-preview--dark"><img src="img/logo-dark.png" alt="" /></span><span><strong>다크 로고</strong><small>어두운 배경에 잘 어울립니다.</small></span><i class="choice-check"></i>
+          </button>
+          <button class="icon-option" type="button" data-icon-choice="logo-light" role="radio" aria-checked="false">
+            <span class="icon-preview icon-preview--light"><img src="img/logo-light.png" alt="" /></span><span><strong>라이트 로고</strong><small>밝은 배경에 잘 어울립니다.</small></span><i class="choice-check"></i>
+          </button>
+        </div>
+        <div class="install-card">
+          <span class="install-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></span>
+          <div><strong>홈 화면에 추가</strong><p>아이콘 선택 후 브라우저 메뉴에서 홈 화면에 추가를 선택하세요.</p></div>
+          <button id="installShortcut" type="button" aria-label="홈 화면에 추가">추가</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="settings-toast" id="settingsToast" role="status" aria-live="polite"></div>
+  </main>
+  <script src="js/Firebase.js"></script>
+  <script src="js/Settings.js"></script>
+</body>
+</html>

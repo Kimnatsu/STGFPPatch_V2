@@ -373,7 +373,7 @@ window.UI = (function () {
       '<img class="logo-img-dark" src="img/logo-dark.png" alt="FPP 로고" />' +
       '</a>' +
       '<div class="hd-right">' +
-      '<button class="icon-btn hd-settings" id="btnSet" aria-label="설정" title="설정" aria-haspopup="dialog" aria-expanded="false">' +
+      '<button class="icon-btn hd-settings" id="btnSet" aria-label="설정 페이지 열기" title="설정">' +
       '<span class="top-menu-icon top-menu-icon--fill ic-v2-navigation-setting-fill" aria-hidden="true"></span></button>' +
       '<button class="icon-btn" id="btnFav" aria-label="즐겨찾기" title="즐겨찾기" aria-haspopup="dialog" aria-expanded="false">' +
       '<span class="top-menu-icon top-menu-icon--fill ic-v2-community-favorite-fill" aria-hidden="true"></span></button>' +
@@ -382,7 +382,9 @@ window.UI = (function () {
       '<div class="hd-auth" id="hdAuth"></div>' +
       '</div></div>';
     $('btnBurger').addEventListener('click', toggleDrawer);
-    $('btnSet').addEventListener('click', function (e) { e.stopPropagation(); toggleHeaderPopup($('btnSet'), onSettingsClick); });
+    $('btnSet').addEventListener('click', function () {
+      location.href = pageUrl('Settings.html');
+    });
     $('btnFav').addEventListener('click', function (e) { e.stopPropagation(); toggleHeaderPopup($('btnFav'), openFavPopup); });
     $('btnNotify').addEventListener('click', function (e) { e.stopPropagation(); toggleHeaderPopup($('btnNotify'), openNotifyPopup); });
     updateNotificationBadge();
