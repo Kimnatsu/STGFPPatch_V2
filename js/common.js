@@ -112,10 +112,10 @@ window.UI = (function () {
   /* ---------- 알림 ---------- */
   var notificationState = { uid: null, items: [], loaded: false, loading: null };
   var NOTIFY_DESCRIPTIONS = {
-    event: '새 이벤트 등록 시 알림이 울립니다.',
-    patch: '새 패치노트 등록 시 알림이 울립니다.',
-    fav: '즐겨찾기한 캐릭터/서폿 캐릭터 PvP 패치 등록 시 알림이 울립니다.',
-    comment: '내 게시글과 댓글에 댓글과 답글이 달릴 때 알림이 울립니다.'
+    patch: '새로운 패치노트 등록 시 알림 받기',
+    fav: '즐겨찾기 캐릭터 밸런스 패치 알림 받기',
+    comment: '댓글 및 대댓글 알림 받기',
+    event: '신규 이벤트 및 종료 임박 알림 받기'
   };
   function notificationEnabled(type) {
     var settings = (userDoc() && userDoc().settings) || {};
@@ -768,10 +768,10 @@ window.UI = (function () {
     notify: function () {
       var s = (userDoc() && userDoc().settings) || {};
       var rows = [
-        ['event', '이벤트', NOTIFY_DESCRIPTIONS.event],
         ['patch', '패치노트', NOTIFY_DESCRIPTIONS.patch],
         ['fav', '즐겨찾기', NOTIFY_DESCRIPTIONS.fav],
-        ['comment', '댓글', NOTIFY_DESCRIPTIONS.comment]
+        ['comment', '댓글', NOTIFY_DESCRIPTIONS.comment],
+        ['event', '이벤트', NOTIFY_DESCRIPTIONS.event]
       ];
       var m = openModal({
         title: '알림 설정',

@@ -281,7 +281,7 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 .drawer-item.active{background:color-mix(in srgb,var(--gold) 14%,transparent);color:var(--gold)}
 
 /* ---------- 배너 ---------- */
-.banner{position:relative;width:100%;max-width:1920px;margin:0 auto;overflow:hidden;height:200px}
+.banner{position:relative;overflow:hidden;height:200px}
 @media (min-width:768px){.banner{height:420px}}
 .banner-fallback{position:absolute;inset:0;background:var(--bg-2)}
 .banner--home .banner-fallback::before{
@@ -767,7 +767,7 @@ body.body-lock{
 }
 .modal--notification-settings .tgl-copy{padding:0 8px 0 0}
 .modal--notification-settings .tgl-copy b{font-size:13px;color:var(--text-2)}
-.modal--notification-settings .tgl-copy small{display:none}
+.modal--notification-settings .tgl-copy small{display:block;font-size:11px;line-height:1.45;color:var(--text-3);font-weight:500}
 .modal--notification-settings .tgl.on{
   background:color-mix(in srgb,var(--gold) 24%,var(--surface-3));
 }
