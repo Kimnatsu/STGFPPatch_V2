@@ -95,7 +95,7 @@ ul,ol{list-style:none}
   background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);
   border-bottom:1px solid var(--line);
 }
-.hd-in{max-width:1280px;margin:0 auto;height:100%;padding:0 20px;display:flex;align-items:center;gap:10px}
+.hd-in{max-width:1600px;margin:0 auto;height:100%;padding:0 20px;display:flex;align-items:center;gap:10px}
 @media (max-width:420px){.hd-in{padding:0 14px}}
 @media (min-width:768px){
   .hd-in{width:calc(100% - clamp(48px,8.8vw,90px));padding-left:15px;padding-right:15px}
