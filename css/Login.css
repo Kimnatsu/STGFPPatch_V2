@@ -117,13 +117,14 @@ html[data-theme="light"] .login-logo-image--light{display:block}
     position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);
   }
   .login-page .or-line{display:none}
-  .login-page #btnGoogle1{
-    width:auto;min-height:40px;margin-top:25px;padding:0;
-    justify-content:flex-start;border:0;background:transparent;
-    color:var(--text);font-size:14px;font-weight:500;box-shadow:none;
+  .login-page #btnGoogle1,.login-page #btnGoogle2{
+    width:100%;min-height:46px;margin-top:16px;padding:11px 20px;
+    justify-content:center;border:1px solid #dadce0;background:#fff;
+    color:#3c4043;font-size:14px;font-weight:900;box-shadow:none;
   }
-  .login-page #btnGoogle1:hover{background:transparent;transform:none}
-  .login-page #formSignupIntro #btnGoogle2{width:auto;background:transparent;border:0;color:var(--text);box-shadow:none}
+  .login-page #btnGoogle1:hover,.login-page #btnGoogle2:hover{
+    background:#f6f8fc;transform:none;
+  }
   .login-page .login-footer{
     margin-top:28px;gap:12px;color:var(--text-3);font-size:11px;
   }
