@@ -1125,13 +1125,13 @@ main,.app-footer{animation:pageRise .3s var(--ease) both}
 @media (max-width:767px){
   .hd-in{gap:4px;min-width:0;padding-left:10px;padding-right:10px}
   .logo{min-width:0;margin-right:auto}
-  .logo-img,.logo-img-dark{width:40px;height:40px;object-fit:contain}
+  .logo-img,.logo-img-dark{width:30px;height:30px;object-fit:contain}
   .hd-right{gap:2px}
 
   /* 햄버거·설정·북마크·auth 버튼 크기 통일 */
   .icon-btn{width:40px!important;height:40px!important;flex:0 0 40px}
-  /* 햄버거: U+E90A(ic-v2-navigation-menu-line), 40×40px */
-  .hd-burger .top-menu-icon{width:40px;height:40px;font-size:40px}
+  /* 햄버거: U+E90A(ic-v2-navigation-menu-line), 30×30px */
+  .hd-burger .top-menu-icon{width:30px;height:30px;font-size:30px}
 
   /* 모바일에서도 PC 와 동일하게 데스크톱용 버튼 표시 */
   .hd-auth-desktop{display:flex!important}
