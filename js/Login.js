@@ -14,6 +14,42 @@
     if (on) { btn.dataset.tx = btn.innerHTML; btn.innerHTML = '<span class="spin"></span> 처리 중…'; btn.disabled = true; }
     else { if (btn.dataset.tx) btn.innerHTML = btn.dataset.tx; btn.disabled = false; }
   }
+  function updateInputActions(input) {
+    var wrap = input.closest('.login-input-wrap');
+    if (!wrap) return;
+    var clear = wrap.querySelector('.login-input-clear');
+    if (clear) clear.classList.toggle('is-visible', !!input.value);
+  }
+  function togglePassword(button) {
+    var input = el(button.getAttribute('data-password-target'));
+    var icon = button.querySelector('.password-toggle-icon');
+    if (!input || !icon) return;
+    var visible = input.type === 'password';
+    input.type = visible ? 'text' : 'password';
+    button.setAttribute('aria-pressed', String(visible));
+    button.setAttribute('aria-label', visible ? '비밀번호 숨기기' : '비밀번호 표시');
+    icon.className = 'password-toggle-icon ' + (visible
+      ? 'ic-v2-community-number-of-view-off-fill'
+      : 'ic-v2-community-number-of-view-fill');
+  }
+  function bindInputActions() {
+    document.querySelectorAll('.login-input-wrap input').forEach(function (input) {
+      input.addEventListener('input', function () { updateInputActions(input); });
+      updateInputActions(input);
+    });
+    document.querySelectorAll('.login-input-clear').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var input = button.parentElement.querySelector('input');
+        if (!input) return;
+        input.value = '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.focus();
+      });
+    });
+    document.querySelectorAll('.password-toggle').forEach(function (button) {
+      button.addEventListener('click', function () { togglePassword(button); });
+    });
+  }
 
   function setMode(m) {
     MODE = m;
@@ -193,6 +229,7 @@
     el('btnGoogle2').addEventListener('click', function () { googleLogin(el('btnGoogle2')); });
     el('btnSendCode').addEventListener('click', sendCode);
     el('btnSignup').addEventListener('click', doSignup);
+    bindInputActions();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

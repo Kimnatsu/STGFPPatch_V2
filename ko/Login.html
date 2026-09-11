@@ -52,12 +52,26 @@ html[data-theme="light"] .page-veil{background:#eef3f8}
   <!-- ===== 로그인 폼 ===== -->
   <section class="login-card rv" id="formLogin">
     <label class="fld">
-      <span class="fld-lb">아이디 (이메일)</span>
-      <input id="liEmail" type="email" autocomplete="username" placeholder="아이디 또는 이메일" />
+       <span class="fld-lb fld-lb--desktop">아이디 (이메일)</span>
+       <span class="fld-lb fld-lb--mobile">아이디 또는 전화번호</span>
+       <div class="login-input-wrap">
+         <input id="liEmail" type="email" autocomplete="username" placeholder="" />
+         <button class="login-input-action login-input-clear" type="button" aria-label="아이디 또는 전화번호 지우기">
+           <i class="ic-v2-control-close-circle-fill" aria-hidden="true"></i>
+         </button>
+       </div>
     </label>
     <label class="fld">
       <span class="fld-lb">비밀번호</span>
-      <input id="liPw" type="password" autocomplete="current-password" placeholder="비밀번호" />
+       <div class="login-input-wrap has-password-toggle">
+         <input id="liPw" type="password" autocomplete="current-password" placeholder="" />
+         <button class="login-input-action password-toggle" type="button" data-password-target="liPw" aria-label="비밀번호 표시" aria-pressed="false">
+           <i class="password-toggle-icon ic-v2-community-number-of-view-fill" aria-hidden="true"></i>
+         </button>
+         <button class="login-input-action login-input-clear" type="button" aria-label="비밀번호 지우기">
+           <i class="ic-v2-control-close-circle-fill" aria-hidden="true"></i>
+         </button>
+       </div>
     </label>
     <button class="btn btn--gold btn--block" id="btnLogin" type="button">로그인</button>
     <div class="login-links">
@@ -90,17 +104,48 @@ html[data-theme="light"] .page-veil{background:#eef3f8}
   <!-- ===== 이메일 회원가입 폼 ===== -->
   <section class="login-card rv" id="formSignup" hidden>
     <label class="fld"><span class="fld-lb">아이디 (이메일)</span>
-      <input id="suEmail" type="email" autocomplete="email" placeholder="email@example.com" /></label>
+      <div class="login-input-wrap">
+        <input id="suEmail" type="email" autocomplete="email" placeholder="" />
+        <button class="login-input-action login-input-clear" type="button" aria-label="이메일 지우기">
+          <i class="ic-v2-control-close-circle-fill" aria-hidden="true"></i>
+        </button>
+      </div></label>
     <label class="fld"><span class="fld-lb">비밀번호</span>
-      <input id="suPw" type="password" autocomplete="new-password" placeholder="6자 이상" /></label>
+      <div class="login-input-wrap has-password-toggle">
+        <input id="suPw" type="password" autocomplete="new-password" placeholder="" />
+        <button class="login-input-action password-toggle" type="button" data-password-target="suPw" aria-label="비밀번호 표시" aria-pressed="false">
+          <i class="password-toggle-icon ic-v2-community-number-of-view-fill" aria-hidden="true"></i>
+        </button>
+        <button class="login-input-action login-input-clear" type="button" aria-label="비밀번호 지우기">
+          <i class="ic-v2-control-close-circle-fill" aria-hidden="true"></i>
+        </button>
+      </div></label>
     <label class="fld"><span class="fld-lb">비밀번호 확인</span>
-      <input id="suPw2" type="password" autocomplete="new-password" placeholder="비밀번호 다시 입력" /></label>
+      <div class="login-input-wrap has-password-toggle">
+        <input id="suPw2" type="password" autocomplete="new-password" placeholder="" />
+        <button class="login-input-action password-toggle" type="button" data-password-target="suPw2" aria-label="비밀번호 표시" aria-pressed="false">
+          <i class="password-toggle-icon ic-v2-community-number-of-view-fill" aria-hidden="true"></i>
+        </button>
+        <button class="login-input-action login-input-clear" type="button" aria-label="비밀번호 확인 지우기">
+          <i class="ic-v2-control-close-circle-fill" aria-hidden="true"></i>
+        </button>
+      </div></label>
     <label class="fld"><span class="fld-lb">닉네임</span>
-      <input id="suNick" type="text" maxlength="16" placeholder="사용할 닉네임" /></label>
+      <div class="login-input-wrap">
+        <input id="suNick" type="text" maxlength="16" placeholder="" />
+        <button class="login-input-action login-input-clear" type="button" aria-label="닉네임 지우기">
+          <i class="ic-v2-control-close-circle-fill" aria-hidden="true"></i>
+        </button>
+      </div></label>
     <div class="fld">
       <span class="fld-lb">이메일 인증번호</span>
       <div class="fld-row">
-        <input id="suCode" type="text" inputmode="numeric" maxlength="6" placeholder="인증번호 6자리" />
+        <div class="login-input-wrap">
+          <input id="suCode" type="text" inputmode="numeric" maxlength="6" placeholder="" />
+          <button class="login-input-action login-input-clear" type="button" aria-label="인증번호 지우기">
+            <i class="ic-v2-control-close-circle-fill" aria-hidden="true"></i>
+          </button>
+        </div>
         <button class="btn btn--ghost btn--sm" id="btnSendCode" type="button">인증 전송</button>
       </div>
       <p class="fld-hint" id="codeHint">가입 전 이메일 인증이 필요합니다. 인증 전송을 눌러주세요.</p>
