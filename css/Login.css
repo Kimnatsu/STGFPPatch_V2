@@ -97,8 +97,8 @@ html[data-theme="light"] .login-logo-image--light{display:block}
   .login-page .fld{gap:0;margin:0}
   .login-page .fld-lb{
     position:static;width:auto;height:auto;overflow:visible;clip:auto;
-    display:block;margin:0 0 1px;color:var(--text-3);font-size:12px;
-    font-weight:400;letter-spacing:0;line-height:16px;
+    display:block;margin:0 0 1px;color:var(--text-3);font-size:14px;
+    font-weight:400;letter-spacing:0;line-height:19px;
   }
   .login-page .fld-lb--desktop{display:none}
   .login-page .fld-lb--mobile{display:block}
@@ -139,10 +139,10 @@ html[data-theme="light"] .login-logo-image--light{display:block}
   .login-page .login-links{
     justify-content:center;gap:9px;margin-top:22px;
   }
-  .login-page .login-links::before{content:"아이디 찾기  |";color:var(--text-3);font-size:12px}
-  .login-page .login-links::after{content:"비밀번호 찾기  |";color:var(--text-3);font-size:12px}
+  .login-page .login-links::before{content:"아이디 찾기  |";color:var(--text-3);font-size:14px}
+  .login-page .login-links::after{content:"비밀번호 찾기  |";color:var(--text-3);font-size:14px}
   .login-page .login-links .lk{
-    order:3;padding:0;min-height:0;color:var(--gold);font-size:12px;font-weight:500;
+    order:3;padding:0;min-height:0;color:var(--gold);font-size:14px;font-weight:500;
   }
   .login-page .login-links .lk:first-child{
     position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);
@@ -157,8 +157,8 @@ html[data-theme="light"] .login-logo-image--light{display:block}
     background:#f6f8fc;transform:none;
   }
   .login-page .login-footer{
-    margin-top:28px;gap:12px;color:var(--text-3);font-size:11px;
+    margin-top:28px;gap:12px;color:var(--text-3);font-size:14px;
   }
-  .login-page .login-footer-links{gap:8px}
-  .login-page .login-footer p{font-size:10px}
+  .login-page .login-footer-links{gap:8px;font-size:14px}
+  .login-page .login-footer p{font-size:14px}
 }
