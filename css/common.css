@@ -1133,9 +1133,9 @@ main,.app-footer{animation:pageRise .3s var(--ease) both}
   /* 햄버거: U+E90A(ic-v2-navigation-menu-line), 30×30px */
   .hd-burger .top-menu-icon{width:30px;height:30px;font-size:30px}
 
-  /* 모바일에서도 PC 와 동일하게 데스크톱용 버튼 표시 */
-  .hd-auth-desktop{display:flex!important}
-  .hd-auth-mobile{display:none!important}
+  /* 모바일 로그인: 회원가입·로그인 텍스트 버튼 대신 U+E920 아이콘 */
+  .hd-auth-desktop{display:none!important}
+  .hd-auth-mobile{display:flex!important}
   .hd-auth{width:auto;flex:0 0 auto}
 
   /* 북마크: 헤더 바로 아래, 화면 중앙 */

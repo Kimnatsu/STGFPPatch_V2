@@ -426,7 +426,9 @@ window.UI = (function () {
         '<div class="hd-auth-desktop">' +
         '<button class="btn btn--ghost btn--sm" data-auth="signup">회원가입</button>' +
         '<button class="btn btn--gold btn--sm" data-auth="login">로그인</button>' +
-        '</div>';
+        '</div>' +
+        '<a class="hd-auth-mobile icon-btn" href="' + pageUrl('Login.html') + '" aria-label="로그인" title="로그인">' +
+        '<span class="top-menu-icon ic-v2-navigation-profile-fill" aria-hidden="true"></span></a>';
       box.querySelectorAll('[data-auth]').forEach(function (button) {
         button.addEventListener('click', function () {
           location.href = pageUrl(button.getAttribute('data-auth') === 'signup' ? 'Login.html#signup' : 'Login.html');
