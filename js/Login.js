@@ -24,8 +24,8 @@
     el('loginSub').textContent = m === 'login'
       ? '그랜드 라인 항해 기록에 오신 것을 환영합니다'
       : 'FPP v2와 함께 항해를 시작하세요';
-    if (m === 'login') history.replaceState(null, '', 'Login.html');
-    else if (location.hash.indexOf('signup') < 0) history.replaceState(null, '', 'Login.html#signup');
+    if (m === 'login') history.replaceState(null, '', UI.pageUrl('Login.html'));
+    else if (location.hash.indexOf('signup') < 0) history.replaceState(null, '', UI.pageUrl('Login.html') + '#signup');
   }
 
   function afterLogin(user) {
