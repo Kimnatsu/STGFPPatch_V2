@@ -61,6 +61,26 @@
     state.toastTimer = setTimeout(function () { el.classList.remove('is-visible'); }, 2600);
   }
 
+  function renderMobileHeader() {
+    var userBox = $('settingsMobileUser');
+    if (!userBox) return;
+    if (!state.user) {
+      userBox.innerHTML =
+        '<span class="settings-mobile-profile settings-mobile-profile-icon ic-v2-navigation-profile-fill" aria-hidden="true"></span>' +
+        '<a class="settings-mobile-login" href="Login.html">' +
+        '<span>로그인 해주세요</span><span class="settings-mobile-login-icon ic-v2-control-arrow-right-line" aria-hidden="true"></span></a>';
+      return;
+    }
+    var nickname = (state.userDoc && state.userDoc.nickname) || state.user.displayName || '선원';
+    userBox.innerHTML =
+      '<span class="settings-mobile-profile settings-mobile-profile-icon ic-v2-navigation-profile-fill" aria-hidden="true"></span>' +
+      '<span class="settings-mobile-login">' + esc(nickname) + '</span>';
+  }
+
+  function closeSettings() {
+    location.href = 'Main.html#home';
+  }
+
   function setTitle(view) {
     $('settingsTitle').textContent = TITLES[view] || TITLES.main;
     $('settingsProgress').style.width = (view === 'main' ? 25 : 100) + '%';
@@ -239,12 +259,14 @@
       auth.onAuthStateChanged(function (user) {
         state.user = user;
         state.userDoc = null;
+        renderMobileHeader();
         if (!user) {
           renderNotifications();
           return;
         }
         FB.getUserDoc(user.uid).then(function (profile) {
           state.userDoc = profile || {};
+          renderMobileHeader();
           if (state.view === 'notify') renderNotifications();
           if (state.view === 'appIcon') renderAppIcons();
         }).catch(function () {
@@ -258,6 +280,8 @@
   document.addEventListener('DOMContentLoaded', function () {
     applyTheme(readTheme());
     $('settingsBack').addEventListener('click', goBack);
+    $('settingsMobileNotify').addEventListener('click', function () { showView('notify', true); });
+    $('settingsMobileClose').addEventListener('click', closeSettings);
     $('noticeDetailBack').addEventListener('click', goBack);
     document.querySelectorAll('[data-open]').forEach(function (button) {
       button.addEventListener('click', function () { showView(button.dataset.open, true); });
@@ -281,6 +305,7 @@
       else showView('main', false);
     });
     initAuth();
+    renderMobileHeader();
     var initial = location.hash.replace(/^#settings-/, '');
     if (TITLES[initial]) showView(initial, false);
   });

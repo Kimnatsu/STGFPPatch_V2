@@ -151,7 +151,7 @@ html[data-theme="dark"] .logo-img-dark{display:block}
 .hd-right > .icon-btn > .top-menu-icon,
 .hd-right > .icon-btn > .ic-v2{
   display:inline-flex;align-items:center;justify-content:center;
-  width:23.75px;height:24px;font-size:23.75px;
+  width:30px;height:30px;font-size:30px;
 }
 .hd-right > .icon-btn > .top-menu-icon--line{display:inline-flex}
 .hd-right > .icon-btn > .top-menu-icon--fill{display:inline-flex}
@@ -168,8 +168,8 @@ html[data-theme="dark"] .logo-img-dark{display:block}
 .hd-settings:hover > .top-menu-icon{
   color:var(--text-2);
 }
-.hd-right > .icon-btn > .ficon{width:23.75px;height:24px}
-.hd-right > .icon-btn > .ficon::before{font-size:23.75px}
+.hd-right > .icon-btn > .ficon{width:30px;height:30px}
+.hd-right > .icon-btn > .ficon::before{font-size:30px}
 .hd-right > .icon-btn > svg{width:23.75px;height:24px}
 .hd-avatar{width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid var(--line-2);padding:0;transition:.2s}
 .hd-avatar:hover{border-color:var(--gold);transform:scale(1.06)}
@@ -207,6 +207,10 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 .notify-dot{
   position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;
   background:var(--red);border:2px solid var(--bg);box-sizing:content-box;
+}
+
+@media (max-width:767px){
+  :root{--header-h:56px}
 }
 
 /* ---------- 데스크톱 내비 ---------- */

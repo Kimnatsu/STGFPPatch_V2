@@ -423,12 +423,12 @@ window.UI = (function () {
     var favoriteButton = $('btnFav');
     var notify = $('btnNotify');
     if (settingsButton) {
-      settingsButton.hidden = mobile && !u;
-      settingsButton.setAttribute('aria-hidden', String(mobile && !u));
+      settingsButton.hidden = mobile;
+      settingsButton.setAttribute('aria-hidden', String(mobile));
     }
     if (favoriteButton) {
-      favoriteButton.hidden = mobile && !u;
-      favoriteButton.setAttribute('aria-hidden', String(mobile && !u));
+      favoriteButton.hidden = mobile;
+      favoriteButton.setAttribute('aria-hidden', String(mobile));
     }
     if (notify) {
       notify.hidden = !u && !mobile;
@@ -458,7 +458,14 @@ window.UI = (function () {
     var ud = userDoc() || {};
     box.innerHTML =
       '<button class="hd-avatar" id="btnProfile" aria-label="프로필 메뉴"><img src="' + esc(avatarOf(ud.profileIcon)) + '" alt="내 프로필"></button>';
-    box.querySelector('#btnProfile').addEventListener('click', function (e) { e.stopPropagation(); openProfilePopup(box.querySelector('#btnProfile')); });
+     box.querySelector('#btnProfile').addEventListener('click', function (e) {
+       e.stopPropagation();
+       if (isMobileLayout()) {
+         location.href = pageUrl('Settings.html');
+         return;
+       }
+       openProfilePopup(box.querySelector('#btnProfile'));
+     });
     updateNotificationBadge();
   }
 
