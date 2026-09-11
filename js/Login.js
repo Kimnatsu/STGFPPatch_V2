@@ -18,7 +18,19 @@
     var wrap = input.closest('.login-input-wrap');
     if (!wrap) return;
     var clear = wrap.querySelector('.login-input-clear');
-    if (clear) clear.classList.toggle('is-visible', !!input.value);
+    var toggle = wrap.querySelector('.password-toggle');
+    var hasValue = !!input.value;
+    if (clear) clear.classList.toggle('is-visible', hasValue);
+    if (toggle) {
+      toggle.classList.toggle('is-visible', hasValue);
+      if (!hasValue && input.type !== 'password') {
+        input.type = 'password';
+        toggle.setAttribute('aria-pressed', 'false');
+        toggle.setAttribute('aria-label', '비밀번호 표시');
+        toggle.querySelector('.password-toggle-icon').className =
+          'password-toggle-icon ic-v2-community-number-of-view-fill';
+      }
+    }
   }
   function togglePassword(button) {
     var input = el(button.getAttribute('data-password-target'));

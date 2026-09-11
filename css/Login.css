@@ -123,7 +123,11 @@ html[data-theme="light"] .login-logo-image--light{display:block}
     display:inline-flex;align-items:center;justify-content:center;
     width:20px;height:20px;font-size:20px;line-height:20px;
   }
-  .login-page .password-toggle{right:41px;display:flex}
+  .login-page .password-toggle,
+  .login-page .password-toggle:hover,
+  .login-page .password-toggle:active,
+  .login-page .password-toggle:focus{color:var(--text-3)}
+  .login-page .password-toggle{right:41px}
   .login-page .login-input-clear{right:5px}
   .login-page .fld + .fld{margin-top:19px}
   .login-page #btnLogin{
