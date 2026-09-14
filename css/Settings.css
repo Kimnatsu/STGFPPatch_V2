@@ -109,7 +109,7 @@
 }
 .settings-mobile-action{
   display:inline-flex;align-items:center;justify-content:center;
-  width:30px;height:30px;padding:0;color:var(--text-2);
+  width:40px;height:40px;padding:0;color:var(--text-2);
 }
 .settings-mobile-action:hover{color:var(--text)}
 .settings-mobile-action .top-menu-icon{

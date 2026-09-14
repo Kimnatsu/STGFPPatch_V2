@@ -223,6 +223,9 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 
 @media (max-width:767px){
   :root{--header-h:56px}
+  .hd-auth-mobile .top-menu-icon{
+    width:30px;height:30px;font-size:30px;line-height:30px;
+  }
   .hd-right > .icon-btn > .top-menu-icon,
   .hd-right > .icon-btn > .ic-v2,
   .hd-right > .icon-btn > .ficon{
