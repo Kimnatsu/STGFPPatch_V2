@@ -111,10 +111,24 @@
     var user = $('settingsMobileUser');
     if (!settings || !notify || !back || !title || !user) return;
     var inSettings = view !== 'blank';
+    var headerTitles = {
+      main: '설정',
+      myInfo: '내 정보',
+      notice: '공지사항',
+      notify: '알림',
+      theme: '테마',
+      appIcon: '앱 아이콘 변경'
+    };
     back.hidden = !inSettings;
     title.hidden = !inSettings;
+    title.textContent = headerTitles[view] || '설정';
     user.hidden = inSettings;
     var settingsSelected = view !== 'blank' && view !== 'notify';
+    var hideTopActions = view === 'main';
+    settings.hidden = hideTopActions;
+    notify.hidden = hideTopActions;
+    settings.setAttribute('aria-hidden', String(hideTopActions));
+    notify.setAttribute('aria-hidden', String(hideTopActions));
     settings.toggleAttribute('aria-current', settingsSelected);
     if (settingsSelected) settings.setAttribute('aria-current', 'page');
     notify.toggleAttribute('aria-current', view === 'notify');
@@ -132,9 +146,10 @@
     state.view = view;
     setProgress(view);
     setHeaderSelection(view);
-    if (addHistory) history.pushState({ settingsView: view }, '', '#settings-' + view);
+    if (addHistory) history.pushState({ settingsView: view }, '', view === 'main' ? '#setting' : '#settings-' + view);
     if (view === 'notice') loadNotices();
     if (view === 'notify') renderNotifications();
+    if (view === 'myInfo') renderMyInfo();
     if (view === 'theme') applyTheme(readTheme());
     if (view === 'appIcon') renderAppIcons();
     window.scrollTo(0, 0);
@@ -148,7 +163,7 @@
       location.href = 'ko/Settings.html';
       return;
     }
-    history.replaceState({ settingsView: 'main' }, '', '#settings-main');
+    history.replaceState({ settingsView: 'main' }, '', '#setting');
     showView('main', false);
   }
 
@@ -233,6 +248,27 @@
     card.querySelectorAll('[data-notify-key]').forEach(function (button) {
       button.addEventListener('click', function () { toggleNotification(button); });
     });
+  }
+
+  function renderMyInfo() {
+    var login = $('infoLogin');
+    var card = $('infoCard');
+    if (!login || !card) return;
+    if (!state.user) {
+      login.hidden = false;
+      card.hidden = true;
+      return;
+    }
+    login.hidden = true;
+    card.hidden = false;
+    var profile = state.userDoc || {};
+    var nickname = profile.nickname || state.user.displayName || '선원';
+    var email = state.user.email || '이메일 없음';
+    var memberId = profile.memberNumber || profile.memberId || state.user.uid || '확인 불가';
+    card.innerHTML =
+      '<div class="settings-info-row"><span>닉네임</span><strong>' + esc(nickname) + '</strong></div>' +
+      '<div class="settings-info-row"><span>이메일</span><strong>' + esc(email) + '</strong></div>' +
+      '<div class="settings-info-row"><span>회원번호</span><strong>' + esc(memberId) + '</strong></div>';
   }
 
   function toggleNotification(button) {
@@ -321,11 +357,13 @@
         FB.getUserDoc(user.uid).then(function (profile) {
           state.userDoc = profile || {};
           renderMobileHeader();
-          if (state.view === 'notify') renderNotifications();
+           if (state.view === 'notify') renderNotifications();
+           if (state.view === 'myInfo') renderMyInfo();
           if (state.view === 'appIcon') renderAppIcons();
         }).catch(function () {
           state.userDoc = {};
-          if (state.view === 'notify') renderNotifications();
+           if (state.view === 'notify') renderNotifications();
+           if (state.view === 'myInfo') renderMyInfo();
         });
       });
     });
@@ -374,8 +412,11 @@
     });
     initAuth();
     renderMobileHeader();
-    var initial = location.hash.replace(/^#settings-/, '');
-    if (['blank', 'main', 'notice', 'notify', 'theme', 'appIcon'].indexOf(initial) > -1) {
+    var initial = location.hash === '#setting' ? 'main' : location.hash.replace(/^#settings-/, '');
+    if (['blank', 'main', 'myInfo', 'notice', 'notify', 'theme', 'appIcon'].indexOf(initial) > -1) {
+      if (initial === 'main' && location.hash === '#settings-main') {
+        history.replaceState({ settingsView: 'main' }, '', '#setting');
+      }
       if (initial !== state.view) showView(initial, false);
       else setHeaderSelection(initial);
     } else {
