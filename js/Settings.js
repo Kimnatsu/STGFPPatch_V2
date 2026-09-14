@@ -10,11 +10,28 @@
     ['comment', '댓글 알림', '댓글과 대댓글이 달리면 알려드립니다.'],
     ['event', '이벤트 알림', '새로운 이벤트와 종료 임박 소식을 알려드립니다.']
   ];
+  var PROFILE_ICON_FILES = [
+    'ace.png', 'akainu.png', 'bigmom.png', 'bonney.png', 'brook.png',
+    'buggy.png', 'carrot.png', 'chopper.png', 'crocodile.png', 'doflamingo.png',
+    'dragon.png', 'franky.png', 'garp.png', 'hancock.png', 'jinbe.png',
+    'kaido.png', 'katakuri.png', 'kid.png', 'kizaru.png', 'koby.png',
+    'kuma.png', 'law.png', 'luffy.png', 'mihawk.png', 'nami.png',
+    'nika.png', 'robin.png', 'roger.png', 'sabo.png', 'sanji.png',
+    'shanks.png', 'smoker.png', 'teach.png', 'usopp.png', 'vivi.png',
+    'whitebeard.png', 'yamato.png', 'zoro.png'
+  ];
 
   function esc(value) {
     return String(value == null ? '' : value)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function avatarOf(icon) {
+    var index = parseInt(icon, 10);
+    if (isNaN(index)) index = 0;
+    index = Math.abs(index) % PROFILE_ICON_FILES.length;
+    return 'img/avatars/' + PROFILE_ICON_FILES[index];
   }
 
   function dateText(value) {
@@ -72,7 +89,8 @@
     }
     var nickname = (state.userDoc && state.userDoc.nickname) || state.user.displayName || '선원';
     userBox.innerHTML =
-      '<span class="settings-mobile-profile settings-mobile-profile-icon ic-v2-navigation-profile-fill" aria-hidden="true"></span>' +
+      '<span class="settings-mobile-profile settings-mobile-profile--image" aria-hidden="true">' +
+      '<img src="' + esc(avatarOf(state.userDoc && state.userDoc.profileIcon)) + '" alt="내 프로필"></span>' +
       '<span class="settings-mobile-login">' + esc(nickname) + '</span>';
   }
 
