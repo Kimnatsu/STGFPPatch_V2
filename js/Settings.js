@@ -10,7 +10,6 @@
     ['comment', '댓글 알림', '댓글과 대댓글이 달리면 알려드립니다.'],
     ['event', '이벤트 알림', '새로운 이벤트와 종료 임박 소식을 알려드립니다.']
   ];
-  var TITLES = { main: '설정', notice: '공지사항', notify: '알림 설정', theme: '테마 변경', appIcon: '앱 아이콘 변경' };
 
   function esc(value) {
     return String(value == null ? '' : value)
@@ -81,8 +80,7 @@
     location.href = 'Main.html#home';
   }
 
-  function setTitle(view) {
-    $('settingsTitle').textContent = TITLES[view] || TITLES.main;
+  function setProgress(view) {
     $('settingsProgress').style.width = (view === 'main' ? 25 : 100) + '%';
   }
 
@@ -95,7 +93,7 @@
       section.setAttribute('aria-hidden', String(!active));
     });
     state.view = view;
-    setTitle(view);
+    setProgress(view);
     if (addHistory) history.pushState({ settingsView: view }, '', '#settings-' + view);
     if (view === 'notice') loadNotices();
     if (view === 'notify') renderNotifications();
@@ -251,6 +249,12 @@
     }
   }
 
+  function isMobileLayout() {
+    return window.matchMedia
+      ? window.matchMedia('(max-width: 767px)').matches
+      : window.innerWidth <= 767;
+  }
+
   function initAuth() {
     if (typeof FB === 'undefined') return;
     FB.onReady().then(function () {
@@ -278,8 +282,12 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    /* HTML의 조기 리다이렉트가 막히는 환경을 위한 2차 방어 */
+    if (!isMobileLayout()) {
+      location.replace('Main.html#home');
+      return;
+    }
     applyTheme(readTheme());
-    $('settingsBack').addEventListener('click', goBack);
     $('settingsMobileNotify').addEventListener('click', function () { showView('notify', true); });
     $('settingsMobileClose').addEventListener('click', closeSettings);
     $('noticeDetailBack').addEventListener('click', goBack);
@@ -307,6 +315,6 @@
     initAuth();
     renderMobileHeader();
     var initial = location.hash.replace(/^#settings-/, '');
-    if (TITLES[initial]) showView(initial, false);
+    if (['main', 'notice', 'notify', 'theme', 'appIcon'].indexOf(initial) > -1) showView(initial, false);
   });
 })();

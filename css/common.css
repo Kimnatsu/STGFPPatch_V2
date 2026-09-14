@@ -151,16 +151,16 @@ html[data-theme="dark"] .logo-img-dark{display:block}
 .hd-right > .icon-btn > .top-menu-icon,
 .hd-right > .icon-btn > .ic-v2{
   display:inline-flex;align-items:center;justify-content:center;
-  width:30px;height:30px;font-size:30px;
+  width:23.75px;height:24px;font-size:24px;line-height:24px;
 }
 .hd-right > .icon-btn > .top-menu-icon--line{display:inline-flex}
 .hd-right > .icon-btn > .top-menu-icon--fill{display:inline-flex}
 .hd-right > .icon-btn.is-selected > .top-menu-icon--line{display:none}
 .hd-right > .icon-btn.is-selected > .top-menu-icon--fill{display:inline-flex}
 .hd-settings > .top-menu-icon{
-  width:24px;height:24px;
+  width:23.75px;height:24px;
   color:var(--text-2);
-  font-size:20px;transition:color .2s ease;
+  font-size:24px;line-height:24px;transition:color .2s ease;
 }
 .hd-settings:hover{
   color:var(--text-2);
@@ -168,13 +168,25 @@ html[data-theme="dark"] .logo-img-dark{display:block}
 .hd-settings:hover > .top-menu-icon{
   color:var(--text-2);
 }
-.hd-right > .icon-btn > .ficon{width:30px;height:30px}
-.hd-right > .icon-btn > .ficon::before{font-size:30px}
+.hd-right > .icon-btn > .ficon{width:23.75px;height:24px}
+.hd-right > .icon-btn > .ficon::before{font-size:24px}
 .hd-right > .icon-btn > svg{width:23.75px;height:24px}
 .hd-avatar{width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid var(--line-2);padding:0;transition:.2s}
 .hd-avatar:hover{border-color:var(--gold);transform:scale(1.06)}
 .hd-avatar.is-selected{border-color:var(--gold);transform:scale(1.06)}
 .hd-avatar img{width:100%;height:100%;object-fit:cover}
+
+/* PC(LG/MD)에서는 모바일 전용 프로필 메뉴를 렌더링하지 않는다. */
+@media (min-width:768px){
+  .hd-auth-mobile{display:none!important}
+  .hd-auth-desktop{display:flex!important}
+  .hd-right > .icon-btn > .top-menu-icon,
+  .hd-right > .icon-btn > .ic-v2,
+  .hd-right > .icon-btn > .ficon{
+    width:23.75px;height:24px;font-size:24px;line-height:24px;
+  }
+  .hd-right > .icon-btn > svg{width:23.75px;height:24px}
+}
 
 /* 아이콘 폰트 글리프 (즐겨찾기 \e98f · 설정 \e994) — SVG 폴백 포함 */
 .gnb-font-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;font-size:24px;line-height:1}
@@ -1134,10 +1146,14 @@ main,.app-footer{animation:pageRise .3s var(--ease) both}
 
   /* 햄버거·설정·북마크·auth 버튼 크기 통일 */
   .icon-btn{width:40px!important;height:40px!important;flex:0 0 40px}
-  /* 햄버거: U+E90A(ic-v2-navigation-menu-line), 30×30px */
-  .hd-burger .top-menu-icon{width:30px;height:30px;font-size:30px}
-  /* 알림 및 비로그인 프로필 아이콘: 30×30px */
-  .hd-notify .top-menu-icon,.hd-auth-mobile .top-menu-icon{width:30px;height:30px;font-size:30px}
+  /* 모바일(SM/XS) 상단 메뉴 아이콘은 30×30px */
+  .hd-burger .top-menu-icon,
+  .hd-right > .icon-btn > .top-menu-icon,
+  .hd-right > .icon-btn > .ic-v2,
+  .hd-right > .icon-btn > .ficon{
+    width:30px;height:30px;font-size:30px;line-height:30px;
+  }
+  .hd-right > .icon-btn > svg{width:30px;height:30px}
 
   /* 모바일 로그인: 회원가입·로그인 텍스트 버튼 대신 U+E920 아이콘 */
   .hd-auth-desktop{display:none!important}
