@@ -223,6 +223,14 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 
 @media (max-width:767px){
   :root{--header-h:56px}
+  .hd-right > .icon-btn > .top-menu-icon,
+  .hd-right > .icon-btn > .ic-v2,
+  .hd-right > .icon-btn > .ficon{
+    width:30px;height:30px;font-size:30px;line-height:30px;
+  }
+  .hd-right > .icon-btn > svg{width:30px;height:30px}
+  .hd-auth-mobile.icon-btn{width:30px;height:30px}
+  .hd-avatar{width:30px;height:30px}
 }
 
 /* ---------- 데스크톱 내비 ---------- */

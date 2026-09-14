@@ -66,7 +66,7 @@
     if (!state.user) {
       userBox.innerHTML =
         '<span class="settings-mobile-profile settings-mobile-profile-icon ic-v2-navigation-profile-fill" aria-hidden="true"></span>' +
-        '<a class="settings-mobile-login" href="Login.html">' +
+        '<a class="settings-mobile-login" href="ko/Login.html">' +
         '<span>로그인 해주세요</span><span class="settings-mobile-login-icon ic-v2-control-arrow-right-line" aria-hidden="true"></span></a>';
       return;
     }
@@ -77,7 +77,7 @@
   }
 
   function closeSettings() {
-    location.href = 'Main.html#home';
+    location.href = 'ko/Main.html#home';
   }
 
   function setProgress(view) {
@@ -115,7 +115,7 @@
       return;
     }
     if (document.referrer && document.referrer.indexOf(location.origin) === 0 && history.length > 1) history.back();
-    else location.href = 'Main.html#home';
+    else location.href = 'ko/Main.html#home';
   }
 
   function loadNotices() {
@@ -284,7 +284,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     /* HTML의 조기 리다이렉트가 막히는 환경을 위한 2차 방어 */
     if (!isMobileLayout()) {
-      location.replace('Main.html#home');
+      location.replace('ko/Main.html#home');
       return;
     }
     applyTheme(readTheme());

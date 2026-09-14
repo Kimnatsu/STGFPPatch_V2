@@ -42,6 +42,7 @@ html[data-theme="light"] .login-logo-image--light{display:block}
 .login-links--center{justify-content:center}
 .lk{font-size:13px;font-weight:700;color:var(--text-2);padding:9px 6px;min-height:38px;transition:.2s;border-radius:4px}
 .lk:hover{color:var(--gold)}
+.login-find-label--mobile{display:none}
 
 .or-line{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text-3);font-size:11.5px;font-weight:800}
 .or-line::before,.or-line::after{content:"";flex:1;height:1px;background:var(--line)}
@@ -56,7 +57,25 @@ html[data-theme="light"] .login-logo-image--light{display:block}
 
 .login-input-wrap{position:relative;width:100%}
 .fld-row .login-input-wrap{flex:1;min-width:0}
-.login-input-action{display:none}
+.login-input-wrap input{padding-right:32px}
+.login-input-wrap.has-password-toggle input{padding-right:68px}
+.login-input-action{
+  display:none;position:absolute;top:50%;align-items:center;justify-content:center;
+  width:20px;height:20px;padding:0;color:var(--text-3);transform:translateY(-50%);
+  border-radius:50%;line-height:20px;
+}
+.login-input-action.is-visible{display:flex}
+.login-input-action:hover{color:var(--text)}
+.login-input-action i{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;font-size:20px;line-height:20px;
+}
+.password-toggle,
+.password-toggle:hover,
+.password-toggle:active,
+.password-toggle:focus{color:var(--text-3)}
+.password-toggle{right:41px}
+.login-input-clear{right:5px}
 .fld-lb--mobile{display:none}
 
 @media (max-width:420px){
@@ -141,15 +160,16 @@ html[data-theme="light"] .login-logo-image--light{display:block}
   .login-page .login-links{
     justify-content:center;gap:9px;margin-top:22px;
   }
-  .login-page .login-links::before{content:"아이디 찾기  |";color:var(--text-3);font-size:14px}
-  .login-page .login-links::after{content:"비밀번호 찾기  |";color:var(--text-3);font-size:14px}
-  .login-page .login-links .lk{
-    order:3;padding:0;min-height:0;color:var(--gold);font-size:14px;font-weight:500;
-  }
-  .login-page .login-links .lk:first-child{
-    position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);
-  }
+   .login-page .login-links .lk{
+     padding:0;min-height:0;color:var(--gold);font-size:14px;font-weight:500;
+   }
+   .login-page .login-find-label--desktop{display:none}
+   .login-page .login-find-label--mobile{display:inline}
   .login-page .or-line{display:none}
+  .login-page #formSignupIntro .or-line{
+    display:flex;margin:22px 0 10px;
+  }
+  .login-page #formSignupIntro #btnGoogle2{margin-top:0}
   .login-page #btnGoogle1,.login-page #btnGoogle2{
     width:100%;min-height:46px;margin-top:16px;padding:11px 20px;
     justify-content:center;border:1px solid #dadce0;background:#fff;
