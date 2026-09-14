@@ -106,7 +106,14 @@
   function setHeaderSelection(view) {
     var settings = $('settingsMobileSettings');
     var notify = $('settingsMobileNotify');
-    if (!settings || !notify) return;
+    var back = $('settingsMobileBack');
+    var title = $('settingsMobileTitle');
+    var user = $('settingsMobileUser');
+    if (!settings || !notify || !back || !title || !user) return;
+    var inSettings = view !== 'blank';
+    back.hidden = !inSettings;
+    title.hidden = !inSettings;
+    user.hidden = inSettings;
     var settingsSelected = view !== 'blank' && view !== 'notify';
     settings.toggleAttribute('aria-current', settingsSelected);
     if (settingsSelected) settings.setAttribute('aria-current', 'page');
@@ -131,6 +138,18 @@
     if (view === 'theme') applyTheme(readTheme());
     if (view === 'appIcon') renderAppIcons();
     window.scrollTo(0, 0);
+  }
+
+  function goToSettingsMain() {
+    state.noticeDetail = null;
+    if ($('noticeDetail')) $('noticeDetail').hidden = true;
+    if ($('noticeList')) $('noticeList').hidden = false;
+    if (state.view === 'main') {
+      closeSettings();
+      return;
+    }
+    history.replaceState({ settingsView: 'main' }, '', '#settings-main');
+    showView('main', false);
   }
 
   function goBack() {
@@ -319,6 +338,7 @@
       return;
     }
     applyTheme(readTheme());
+    $('settingsMobileBack').addEventListener('click', goToSettingsMain);
     $('settingsMobileSettings').addEventListener('click', function () {
       showView('main', true);
     });

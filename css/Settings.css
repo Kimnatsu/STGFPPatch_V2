@@ -13,6 +13,20 @@
   background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(18px);
   border-bottom:1px solid var(--line);
 }
+.settings-mobile-leading{display:flex;align-items:center;min-width:40px}
+.settings-mobile-back{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:40px;height:40px;padding:0;color:var(--text-2);border-radius:8px;
+}
+.settings-mobile-back:hover{background:var(--surface-2);color:var(--text)}
+.settings-mobile-back .top-menu-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;font-size:30px;line-height:30px;
+}
+.settings-mobile-title{
+  position:absolute;left:50%;margin:0;transform:translateX(-50%);
+  color:var(--text);font-size:16px;font-weight:700;white-space:nowrap;
+}
 .settings-mobile-user{display:flex;align-items:center;gap:8px;min-width:0}
 .settings-mobile-actions{display:flex;align-items:center;gap:4px;margin-left:auto}
 .settings-progress{position:fixed;top:55px;left:0;z-index:21;width:100%;height:2px;background:transparent;pointer-events:none}
@@ -24,11 +38,7 @@
 @keyframes settings-out{to{opacity:0;transform:translateX(-18px)}}
 .settings-content{width:min(100%,620px);margin:0 auto;padding:30px 18px calc(34px + env(safe-area-inset-bottom))}
 .settings-content--sub{padding-top:26px}
-.settings-intro{padding:12px 4px 26px}
-.settings-kicker,.settings-subhead p{color:var(--gold);font-size:10px;font-weight:700;letter-spacing:2.2px}
-.settings-intro h2{margin-top:12px;font-family:var(--font-d);font-size:27px;line-height:1.3;letter-spacing:-.8px}
-.settings-intro h2 strong{color:var(--gold)}
-.settings-intro>p:last-child{margin-top:11px;color:var(--text-3);font-size:13px;line-height:1.55}
+.settings-subhead p{color:var(--gold);font-size:10px;font-weight:700;letter-spacing:2.2px}
 .settings-list,.settings-choice-card,.theme-options,.icon-options{display:flex;flex-direction:column;gap:9px}
 .settings-row{
   position:relative;width:100%;display:flex;align-items:center;gap:12px;min-height:79px;
@@ -50,7 +60,6 @@
 .settings-row-copy small{overflow:hidden;color:var(--text-3);font-size:11px;line-height:1.4;text-overflow:ellipsis;white-space:nowrap}
 .settings-row-value{max-width:82px;overflow:hidden;color:var(--gold);font-size:11px;white-space:nowrap;text-overflow:ellipsis}
 .settings-row-arrow{width:18px;height:18px;flex:none;fill:none;stroke:var(--text-3);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.settings-note{padding:17px 6px 0;color:var(--text-3);font-size:11px;line-height:1.6}
 .settings-subhead{padding:7px 4px 23px}
 .settings-subhead h2{margin-top:10px;font-family:var(--font-d);font-size:28px;letter-spacing:-.8px}
 .settings-subhead>span{display:block;margin-top:9px;color:var(--text-3);font-size:13px}

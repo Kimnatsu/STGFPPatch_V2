@@ -36,7 +36,13 @@
 <body class="settings-page">
   <main class="settings-shell">
     <header class="settings-header">
-      <div class="settings-mobile-user" id="settingsMobileUser"></div>
+      <div class="settings-mobile-leading">
+        <button class="settings-mobile-back" id="settingsMobileBack" type="button" aria-label="설정 메인으로 돌아가기" hidden>
+          <span class="top-menu-icon ic-v2-control-arrow-left-line" aria-hidden="true"></span>
+        </button>
+        <div class="settings-mobile-user" id="settingsMobileUser"></div>
+      </div>
+      <h1 class="settings-mobile-title" id="settingsMobileTitle" hidden>설정</h1>
       <div class="settings-mobile-actions">
         <button class="settings-mobile-action" id="settingsMobileSettings" type="button" aria-label="설정">
           <span class="top-menu-icon ic-v2-navigation-setting-fill" aria-hidden="true"></span>
@@ -56,12 +62,6 @@
 
     <section class="settings-view" id="settings-main" data-view="main" aria-hidden="true">
       <div class="settings-content">
-        <div class="settings-intro">
-          <p class="settings-kicker">SITE SETTINGS</p>
-          <h2>사이트를 내 방식대로<br /><strong>편하게 사용하세요.</strong></h2>
-          <p>현재 FPP 사이트에서 제공하는 설정만 모았습니다.</p>
-        </div>
-
         <div class="settings-list" aria-label="설정 메뉴">
           <button class="settings-row" type="button" data-open="notice">
             <span class="settings-row-icon settings-row-icon--notice">
@@ -94,8 +94,6 @@
             <svg class="settings-row-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </div>
-
-        <p class="settings-note">설정은 이 브라우저에 즉시 반영됩니다. 알림과 앱 아이콘 선택은 로그인한 계정에도 저장됩니다.</p>
       </div>
     </section>
 
