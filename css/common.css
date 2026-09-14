@@ -1154,6 +1154,8 @@ main,.app-footer{animation:pageRise .3s var(--ease) both}
 
   /* 햄버거·설정·북마크·auth 버튼 크기 통일 */
   .icon-btn{width:40px!important;height:40px!important;flex:0 0 40px}
+  .hd-auth-mobile.icon-btn{width:30px!important;height:30px!important;flex:0 0 30px}
+  .hd-avatar{width:30px!important;height:30px!important}
   /* 모바일(SM/XS) 상단 메뉴 아이콘은 30×30px */
   .hd-burger .top-menu-icon,
   .hd-right > .icon-btn > .top-menu-icon,
