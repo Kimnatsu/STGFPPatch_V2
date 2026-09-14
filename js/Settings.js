@@ -145,7 +145,7 @@
     if ($('noticeDetail')) $('noticeDetail').hidden = true;
     if ($('noticeList')) $('noticeList').hidden = false;
     if (state.view === 'main') {
-      closeSettings();
+      location.href = 'ko/Settings.html';
       return;
     }
     history.replaceState({ settingsView: 'main' }, '', '#settings-main');
