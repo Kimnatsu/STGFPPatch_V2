@@ -58,7 +58,29 @@
 
     <div class="settings-progress" aria-hidden="true"><span id="settingsProgress"></span></div>
 
-    <section class="settings-view is-active" id="settings-blank" data-view="blank" aria-hidden="false"></section>
+    <section class="settings-view is-active" id="settings-blank" data-view="blank" aria-hidden="false">
+      <div class="settings-dashboard">
+        <div class="settings-stats" aria-label="활동 통계">
+          <div class="settings-stat"><strong id="dashboardPosts">0</strong><span>게시글</span></div>
+          <div class="settings-stat"><strong id="dashboardComments">0</strong><span>댓글</span></div>
+          <div class="settings-stat"><strong id="dashboardLikes">0</strong><span>좋아요</span></div>
+        </div>
+
+        <a class="settings-write-button" href="ko/Community.html#board">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 3.8-.9L19 7.9a2.1 2.1 0 0 0-3-3L4.8 16.1 4 20Z"/><path d="m14.5 6.5 3 3"/></svg>
+          <span>글쓰기</span>
+        </a>
+
+        <section class="settings-favorites" aria-label="즐겨찾기">
+          <h2>즐겨찾기</h2>
+          <div class="settings-favorite-tabs" role="tablist" aria-label="즐겨찾기 종류">
+            <button class="settings-favorite-tab is-on" type="button" role="tab" aria-selected="true" data-favorite-tab="char">캐릭터</button>
+            <button class="settings-favorite-tab" type="button" role="tab" aria-selected="false" data-favorite-tab="support">현질 서폿 캐릭터</button>
+          </div>
+          <div class="settings-favorite-body" id="dashboardFavoriteBody"></div>
+        </section>
+      </div>
+    </section>
 
     <section class="settings-view" id="settings-main" data-view="main" aria-hidden="true">
       <div class="settings-content">

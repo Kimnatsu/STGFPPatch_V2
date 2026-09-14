@@ -3,7 +3,7 @@
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = { view: 'blank', notices: [], noticeDetail: null, user: null, userDoc: null, toastTimer: null, deferredInstall: null };
+  var state = { view: 'blank', notices: [], noticeDetail: null, user: null, userDoc: null, favoriteTab: 'char', toastTimer: null, deferredInstall: null };
   var NOTIFY_ROWS = [
     ['patch', '패치노트 알림', '새로운 패치노트가 등록되면 알려드립니다.'],
     ['fav', '즐겨찾기 알림', '즐겨찾기한 캐릭터의 밸런스 패치를 알려드립니다.'],
@@ -95,6 +95,41 @@
       '<span class="settings-mobile-login">' + esc(nickname) + '</span>';
   }
 
+  function dashboardCounts() {
+    return (state.userDoc && state.userDoc.counts) || {};
+  }
+
+  function renderDashboardFavorites() {
+    var body = $('dashboardFavoriteBody');
+    if (!body) return;
+    var settings = state.userDoc || {};
+    var key = state.favoriteTab === 'support' ? 'favSupports' : 'favChars';
+    var ids = Array.isArray(settings[key]) ? settings[key] : [];
+    var page = state.favoriteTab === 'support' ? 'Main.html#characters?tab=support' : 'Main.html#characters';
+    if (!ids.length) {
+      body.innerHTML =
+        '<div class="settings-favorite-empty">' +
+        '<strong>즐겨찾기한 ' + (state.favoriteTab === 'support' ? '서폿 캐릭터' : '캐릭터') + ' 없음</strong>' +
+        '<span>추가해보세요</span>' +
+        '<a class="settings-favorite-button" href="ko/' + page + '">캐릭터 페이지로</a>' +
+        '</div>';
+      return;
+    }
+    var itemPage = state.favoriteTab === 'support' ? 'Main.html#characters?tab=support&' : 'Main.html#characters?';
+    body.innerHTML = '<div class="settings-favorite-grid">' + ids.slice(0, 16).map(function (id) {
+      return '<a class="settings-favorite-item" href="ko/' + itemPage + 'fav=1&char=' + encodeURIComponent(id) + '">' +
+        '<span class="settings-favorite-item-icon ic-v2-community-star-fill" aria-hidden="true"></span><strong>캐릭터 ' + esc(id) + '</strong></a>';
+    }).join('') + '</div>';
+  }
+
+  function renderDashboard() {
+    var counts = dashboardCounts();
+    if ($('dashboardPosts')) $('dashboardPosts').textContent = counts.posts || 0;
+    if ($('dashboardComments')) $('dashboardComments').textContent = counts.comments || 0;
+    if ($('dashboardLikes')) $('dashboardLikes').textContent = counts.likes || 0;
+    renderDashboardFavorites();
+  }
+
   function closeSettings() {
     location.href = 'ko/Main.html#home';
   }
@@ -152,6 +187,7 @@
     if (view === 'myInfo') renderMyInfo();
     if (view === 'theme') applyTheme(readTheme());
     if (view === 'appIcon') renderAppIcons();
+    if (view === 'blank') renderDashboard();
     window.scrollTo(0, 0);
   }
 
@@ -165,6 +201,16 @@
     }
     history.replaceState({ settingsView: 'main' }, '', '#setting');
     showView('main', false);
+  }
+
+  function setFavoriteTab(button) {
+    state.favoriteTab = button.getAttribute('data-favorite-tab') === 'support' ? 'support' : 'char';
+    document.querySelectorAll('[data-favorite-tab]').forEach(function (tab) {
+      var selected = tab === button;
+      tab.classList.toggle('is-on', selected);
+      tab.setAttribute('aria-selected', String(selected));
+    });
+    renderDashboardFavorites();
   }
 
   function goBack() {
@@ -357,11 +403,13 @@
         FB.getUserDoc(user.uid).then(function (profile) {
           state.userDoc = profile || {};
           renderMobileHeader();
+          renderDashboard();
            if (state.view === 'notify') renderNotifications();
            if (state.view === 'myInfo') renderMyInfo();
           if (state.view === 'appIcon') renderAppIcons();
         }).catch(function () {
           state.userDoc = {};
+          renderDashboard();
            if (state.view === 'notify') renderNotifications();
            if (state.view === 'myInfo') renderMyInfo();
         });
@@ -392,6 +440,9 @@
     document.querySelectorAll('[data-open]').forEach(function (button) {
       button.addEventListener('click', function () { showView(button.dataset.open, true); });
     });
+    document.querySelectorAll('[data-favorite-tab]').forEach(function (button) {
+      button.addEventListener('click', function () { setFavoriteTab(button); });
+    });
     document.querySelectorAll('[data-theme-choice]').forEach(function (button) {
       button.addEventListener('click', function () {
         applyTheme(button.dataset.themeChoice);
@@ -412,6 +463,7 @@
     });
     initAuth();
     renderMobileHeader();
+    renderDashboard();
     var initial = location.hash === '#setting' ? 'main' : location.hash.replace(/^#settings-/, '');
     if (['blank', 'main', 'myInfo', 'notice', 'notify', 'theme', 'appIcon'].indexOf(initial) > -1) {
       if (initial === 'main' && location.hash === '#settings-main') {
