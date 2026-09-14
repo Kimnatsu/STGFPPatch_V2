@@ -12,7 +12,8 @@
   ];
   var PROFILE_ICON_FILES = [
     'ace.png', 'akainu.png', 'bigmom.png', 'bonney.png', 'brook.png',
-    'buggy.png', 'carrot.png', 'chopper.png', 'crocodile.png', 'doflamingo.png',
+    'buggy.png', 'carrot.png', 'chopper.png', 'crocodile.png', 'dendenmushi.png',
+    'doflamingo.png',
     'dragon.png', 'franky.png', 'garp.png', 'hancock.png', 'jinbe.png',
     'kaido.png', 'katakuri.png', 'kid.png', 'kizaru.png', 'koby.png',
     'kuma.png', 'law.png', 'luffy.png', 'mihawk.png', 'nami.png',
