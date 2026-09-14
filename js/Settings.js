@@ -290,7 +290,7 @@
     applyTheme(readTheme());
     $('settingsMobileNotify').addEventListener('click', function () {
       if (!state.user) {
-        location.href = 'Login.html';
+        location.href = 'ko/Login.html';
         return;
       }
       showView('notify', true);
