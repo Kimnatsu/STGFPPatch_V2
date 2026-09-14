@@ -288,7 +288,13 @@
       return;
     }
     applyTheme(readTheme());
-    $('settingsMobileNotify').addEventListener('click', function () { showView('notify', true); });
+    $('settingsMobileNotify').addEventListener('click', function () {
+      if (!state.user) {
+        location.href = 'Login.html';
+        return;
+      }
+      showView('notify', true);
+    });
     $('settingsMobileClose').addEventListener('click', closeSettings);
     $('noticeDetailBack').addEventListener('click', goBack);
     document.querySelectorAll('[data-open]').forEach(function (button) {
