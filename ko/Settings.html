@@ -38,7 +38,7 @@
     <header class="settings-header">
       <div class="settings-mobile-user" id="settingsMobileUser"></div>
       <div class="settings-mobile-actions">
-        <button class="settings-mobile-action" id="settingsMobileSettings" type="button" aria-label="설정" aria-current="page">
+        <button class="settings-mobile-action" id="settingsMobileSettings" type="button" aria-label="설정">
           <span class="top-menu-icon ic-v2-navigation-setting-fill" aria-hidden="true"></span>
         </button>
         <button class="settings-mobile-action" id="settingsMobileNotify" type="button" aria-label="알림">
@@ -52,7 +52,9 @@
 
     <div class="settings-progress" aria-hidden="true"><span id="settingsProgress"></span></div>
 
-    <section class="settings-view is-active" id="settings-main" data-view="main">
+    <section class="settings-view is-active" id="settings-blank" data-view="blank" aria-hidden="false"></section>
+
+    <section class="settings-view" id="settings-main" data-view="main" aria-hidden="true">
       <div class="settings-content">
         <div class="settings-intro">
           <p class="settings-kicker">SITE SETTINGS</p>

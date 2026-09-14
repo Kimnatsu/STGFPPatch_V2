@@ -3,7 +3,7 @@
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = { view: 'main', notices: [], noticeDetail: null, user: null, userDoc: null, toastTimer: null, deferredInstall: null };
+  var state = { view: 'blank', notices: [], noticeDetail: null, user: null, userDoc: null, toastTimer: null, deferredInstall: null };
   var NOTIFY_ROWS = [
     ['patch', '패치노트 알림', '새로운 패치노트가 등록되면 알려드립니다.'],
     ['fav', '즐겨찾기 알림', '즐겨찾기한 캐릭터의 밸런스 패치를 알려드립니다.'],
@@ -100,12 +100,23 @@
   }
 
   function setProgress(view) {
-    $('settingsProgress').style.width = (view === 'main' ? 25 : 100) + '%';
+    $('settingsProgress').style.width = (view === 'blank' ? 0 : view === 'main' ? 25 : 100) + '%';
+  }
+
+  function setHeaderSelection(view) {
+    var settings = $('settingsMobileSettings');
+    var notify = $('settingsMobileNotify');
+    if (!settings || !notify) return;
+    var settingsSelected = view !== 'blank' && view !== 'notify';
+    settings.toggleAttribute('aria-current', settingsSelected);
+    if (settingsSelected) settings.setAttribute('aria-current', 'page');
+    notify.toggleAttribute('aria-current', view === 'notify');
+    if (view === 'notify') notify.setAttribute('aria-current', 'page');
   }
 
   function showView(view, addHistory) {
     if (!document.getElementById('settings-' + view)) view = 'main';
-    if (view === state.view && view !== 'main') return;
+    if (view === state.view) return;
     document.querySelectorAll('.settings-view').forEach(function (section) {
       var active = section.getAttribute('data-view') === view;
       section.classList.toggle('is-active', active);
@@ -113,6 +124,7 @@
     });
     state.view = view;
     setProgress(view);
+    setHeaderSelection(view);
     if (addHistory) history.pushState({ settingsView: view }, '', '#settings-' + view);
     if (view === 'notice') loadNotices();
     if (view === 'notify') renderNotifications();
@@ -307,6 +319,9 @@
       return;
     }
     applyTheme(readTheme());
+    $('settingsMobileSettings').addEventListener('click', function () {
+      showView('main', true);
+    });
     $('settingsMobileNotify').addEventListener('click', function () {
       if (!state.user) {
         location.href = 'ko/Login.html';
@@ -340,6 +355,11 @@
     initAuth();
     renderMobileHeader();
     var initial = location.hash.replace(/^#settings-/, '');
-    if (['main', 'notice', 'notify', 'theme', 'appIcon'].indexOf(initial) > -1) showView(initial, false);
+    if (['blank', 'main', 'notice', 'notify', 'theme', 'appIcon'].indexOf(initial) > -1) {
+      if (initial !== state.view) showView(initial, false);
+      else setHeaderSelection(initial);
+    } else {
+      setHeaderSelection('blank');
+    }
   });
 })();
