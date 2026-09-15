@@ -223,7 +223,7 @@
     title.textContent = headerTitles[view] || '설정';
     user.hidden = inSettings;
     var settingsSelected = view !== 'blank' && view !== 'notify';
-    var hideTopActions = view === 'main';
+    var hideTopActions = inSettings;
     settings.hidden = hideTopActions;
     notify.hidden = hideTopActions;
     settings.setAttribute('aria-hidden', String(hideTopActions));
@@ -245,7 +245,7 @@
     state.view = view;
     setProgress(view);
     setHeaderSelection(view);
-    if (addHistory) history.pushState({ settingsView: view }, '', view === 'main' ? '#setting' : '#settings-' + view);
+    if (addHistory) history.pushState({ settingsView: view }, '', view === 'main' ? '#Setting' : '#setting-' + view);
     if (view === 'notice') loadNotices();
     if (view === 'notify') renderNotifications();
     if (view === 'myInfo') renderMyInfo();
@@ -263,7 +263,7 @@
       location.href = 'ko/Settings.html';
       return;
     }
-    history.replaceState({ settingsView: 'main' }, '', '#setting');
+    history.replaceState({ settingsView: 'main' }, '', '#Setting');
     showView('main', false);
   }
 
@@ -529,10 +529,10 @@
     initAuth();
     renderMobileHeader();
     renderDashboard();
-    var initial = location.hash === '#setting' ? 'main' : location.hash.replace(/^#settings-/, '');
+    var initial = (location.hash === '#Setting' || location.hash === '#setting') ? 'main' : location.hash.replace(/^#setting-/, '');
     if (['blank', 'main', 'myInfo', 'notice', 'notify', 'theme', 'appIcon'].indexOf(initial) > -1) {
-      if (initial === 'main' && location.hash === '#settings-main') {
-        history.replaceState({ settingsView: 'main' }, '', '#setting');
+      if (initial === 'main' && location.hash === '#setting-main') {
+        history.replaceState({ settingsView: 'main' }, '', '#Setting');
       }
       if (initial !== state.view) showView(initial, false);
       else setHeaderSelection(initial);

@@ -57,7 +57,7 @@
 .settings-favorite-button{display:inline-flex;min-height:39px;align-items:center;justify-content:center;margin-top:7px;padding:0 16px;border-radius:999px;background:linear-gradient(135deg,var(--gold-2),var(--gold));box-shadow:0 8px 20px -10px color-mix(in srgb,var(--gold) 75%,transparent);color:var(--gold-ink);font-size:12px;font-weight:700}
 .settings-favorite-slider{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .settings-favorite-slider::-webkit-scrollbar{display:none}
-.settings-favorite-slide{width:100%;flex:0 0 100%;scroll-snap-align:start}
+.settings-favorite-slide{width:100%;flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always}
 .settings-favorite-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .settings-favorite-item{position:relative;display:flex;min-height:66px;align-items:center;gap:10px;padding:9px 30px 9px 10px;border:1px solid var(--line);border-radius:18px;background:var(--surface);box-shadow:var(--shadow);color:var(--text);transition:transform .2s var(--ease),border-color .2s,background .2s}
 .settings-favorite-item:hover,.settings-favorite-item:focus-visible{transform:translateY(-2px);border-color:var(--line-2);background:var(--surface-2)}

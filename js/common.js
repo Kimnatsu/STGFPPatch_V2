@@ -11,7 +11,7 @@ window.UI = (function () {
     if (/^(?:[a-z]+:|\/\/|#|\/)/i.test(path)) return path;
     return new URL('ko/' + path.replace(/^ko\//i, ''), document.baseURI).href;
   }
-  var SETTINGS_ROUTE = 'ko/Settings.html#setting';
+  var SETTINGS_ROUTE = 'ko/Settings.html#Setting';
   var PROFILE_ROUTE = 'ko/Settings.html';
   function settingsPageUrl() { return pageUrl(SETTINGS_ROUTE); }
   function profilePageUrl() { return pageUrl(PROFILE_ROUTE); }
