@@ -11,6 +11,8 @@ window.UI = (function () {
     if (/^(?:[a-z]+:|\/\/|#|\/)/i.test(path)) return path;
     return new URL('ko/' + path.replace(/^ko\//i, ''), document.baseURI).href;
   }
+  var SETTINGS_ROUTE = 'ko/Settings.html#setting';
+  function settingsPageUrl() { return pageUrl(SETTINGS_ROUTE); }
 
   /* ---------- 유틸 ---------- */
   function esc(s) {
@@ -388,7 +390,7 @@ window.UI = (function () {
     $('btnSet').addEventListener('click', function (e) {
       e.stopPropagation();
       if (isMobileLayout()) {
-        location.href = pageUrl('Settings.html#setting');
+        location.href = settingsPageUrl();
         return;
       }
       toggleHeaderPopup($('btnSet'), onSettingsClick);
@@ -445,7 +447,7 @@ window.UI = (function () {
         '<button class="btn btn--ghost btn--sm" data-auth="signup">회원가입</button>' +
         '<button class="btn btn--gold btn--sm" data-auth="login">로그인</button>' +
         '</div>' +
-        '<a class="hd-auth-mobile icon-btn" href="' + pageUrl('Settings.html#setting') + '" aria-label="설정" title="설정">' +
+        '<a class="hd-auth-mobile icon-btn" href="' + settingsPageUrl() + '" aria-label="설정" title="설정">' +
         '<span class="top-menu-icon ic-v2-navigation-profile-fill" aria-hidden="true"></span></a>';
       box.querySelectorAll('[data-auth]').forEach(function (button) {
         button.addEventListener('click', function () {
@@ -461,7 +463,7 @@ window.UI = (function () {
      box.querySelector('#btnProfile').addEventListener('click', function (e) {
        e.stopPropagation();
        if (isMobileLayout()) {
-          location.href = pageUrl('Settings.html#setting');
+          location.href = settingsPageUrl();
          return;
        }
        openProfilePopup(box.querySelector('#btnProfile'));
