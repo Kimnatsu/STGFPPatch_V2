@@ -65,8 +65,9 @@
 .settings-favorite-item-icon img{width:100%;height:100%;object-fit:cover}
 .settings-favorite-item strong{min-width:0;overflow:hidden;font-size:13px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
 .settings-favorite-item-star{position:absolute;right:11px;color:var(--gold);font-size:16px}
-.settings-favorite-hint{margin-top:10px;color:var(--text-3);font-size:10px;text-align:center}
-.settings-favorite-hint span{color:var(--gold);font-size:13px}
+.settings-favorite-pagination{display:flex;min-height:18px;align-items:center;justify-content:center;gap:5px;margin-top:10px}
+.settings-favorite-page{width:6px;height:6px;padding:0;border-radius:999px;background:var(--line-2);transition:width .22s var(--ease),background .22s var(--ease)}
+.settings-favorite-page.is-on{width:20px;background:var(--gold)}
 .settings-content{width:min(100%,620px);margin:0 auto;padding:30px 18px calc(34px + env(safe-area-inset-bottom))}
 .settings-content--sub{padding-top:26px}
 .settings-list,.settings-choice-card,.theme-options,.icon-options{display:flex;flex-direction:column;gap:9px}

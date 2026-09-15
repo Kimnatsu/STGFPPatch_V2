@@ -129,7 +129,7 @@
       return;
     }
     var itemPage = state.favoriteTab === 'support' ? 'Main.html#characters?tab=support&' : 'Main.html#characters?';
-    var visibleIds = ids.slice(0, 8);
+    var visibleIds = ids.slice(0, 16);
     var slides = [];
     for (var start = 0; start < visibleIds.length; start += 4) {
       var group = visibleIds.slice(start, start + 4);
@@ -144,7 +144,46 @@
         }).join('') + '</div></div>');
     }
     body.innerHTML = '<div class="settings-favorite-slider" aria-label="즐겨찾기 카드 목록">' + slides.join('') + '</div>' +
-      (slides.length > 1 ? '<p class="settings-favorite-hint">옆으로 밀어 더 보기 <span aria-hidden="true">→</span></p>' : '');
+      (slides.length > 1 ? '<div class="settings-favorite-pagination" role="tablist" aria-label="즐겨찾기 페이지">' +
+        slides.map(function (_, index) {
+          return '<button class="settings-favorite-page' + (index === 0 ? ' is-on' : '') + '" type="button" role="tab" aria-label="' + (index + 1) + '페이지" aria-selected="' + (index === 0 ? 'true' : 'false') + '" data-favorite-page="' + index + '"></button>';
+        }).join('') + '</div>' : '');
+    if (slides.length > 1) {
+      var slider = body.querySelector('.settings-favorite-slider');
+      var pages = body.querySelectorAll('[data-favorite-page]');
+      function paintFavoritePage(index) {
+        index = Math.max(0, Math.min(slides.length - 1, index));
+        pages.forEach(function (page, pageIndex) {
+          var selected = pageIndex === index;
+          page.classList.toggle('is-on', selected);
+          page.setAttribute('aria-selected', String(selected));
+        });
+      }
+      function setFavoritePage(index, smooth) {
+        index = Math.max(0, Math.min(slides.length - 1, index));
+        var target = slider.children[index];
+        if (target) slider.scrollTo({ left: target.offsetLeft, behavior: smooth ? 'smooth' : 'auto' });
+        paintFavoritePage(index);
+      }
+      function syncFavoritePage() {
+        var current = 0;
+        var distance = Infinity;
+        Array.prototype.forEach.call(slider.children, function (slide, index) {
+          var nextDistance = Math.abs(slider.scrollLeft - slide.offsetLeft);
+          if (nextDistance < distance) {
+            distance = nextDistance;
+            current = index;
+          }
+        });
+        paintFavoritePage(current);
+      }
+      pages.forEach(function (page) {
+        page.addEventListener('click', function () {
+          setFavoritePage(Number(page.getAttribute('data-favorite-page')) || 0, true);
+        });
+      });
+      slider.addEventListener('scroll', syncFavoritePage, { passive: true });
+    }
   }
 
   function renderDashboard() {
