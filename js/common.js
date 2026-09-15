@@ -12,7 +12,9 @@ window.UI = (function () {
     return new URL('ko/' + path.replace(/^ko\//i, ''), document.baseURI).href;
   }
   var SETTINGS_ROUTE = 'ko/Settings.html#setting';
+  var PROFILE_ROUTE = 'ko/Settings.html';
   function settingsPageUrl() { return pageUrl(SETTINGS_ROUTE); }
+  function profilePageUrl() { return pageUrl(PROFILE_ROUTE); }
 
   /* ---------- 유틸 ---------- */
   function esc(s) {
@@ -447,7 +449,7 @@ window.UI = (function () {
         '<button class="btn btn--ghost btn--sm" data-auth="signup">회원가입</button>' +
         '<button class="btn btn--gold btn--sm" data-auth="login">로그인</button>' +
         '</div>' +
-        '<a class="hd-auth-mobile icon-btn" href="' + settingsPageUrl() + '" aria-label="설정" title="설정">' +
+        '<a class="hd-auth-mobile icon-btn" href="' + profilePageUrl() + '" aria-label="내 프로필" title="내 프로필">' +
         '<span class="top-menu-icon ic-v2-navigation-profile-fill" aria-hidden="true"></span></a>';
       box.querySelectorAll('[data-auth]').forEach(function (button) {
         button.addEventListener('click', function () {
@@ -463,7 +465,7 @@ window.UI = (function () {
      box.querySelector('#btnProfile').addEventListener('click', function (e) {
        e.stopPropagation();
        if (isMobileLayout()) {
-          location.href = settingsPageUrl();
+          location.href = profilePageUrl();
          return;
        }
        openProfilePopup(box.querySelector('#btnProfile'));
