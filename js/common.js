@@ -315,6 +315,10 @@ window.UI = (function () {
     var idx = arr.indexOf(id);
     if (idx < 0) idx = arr.indexOf(String(id));
     var nowOn;
+    if (idx < 0 && arr.length >= 16) {
+      toast('즐겨찾기는 최대 16개만 등록 할 수 있어요.');
+      return Promise.resolve(false);
+    }
     if (idx > -1) { arr.splice(idx, 1); nowOn = false; }
     else { arr.push(id); nowOn = true; }
     var patch = {}; patch[key] = arr;
