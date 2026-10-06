@@ -92,6 +92,33 @@ window.FB = (function () {
     return out;
   }
   function col(name) { return db.collection(name); }
+  var COMMUNITY_VISIBILITY_DEFAULTS = { boards: true, events: true };
+  function normalizeCommunityVisibility(data) {
+    data = data || {};
+    return {
+      boards: data.boardsEnabled !== false,
+      events: data.eventsEnabled !== false
+    };
+  }
+  function getCommunityVisibility() {
+    if (!ready) return Promise.reject(new Error('Firebase 미준비'));
+    return col('publishMeta').doc('communityVisibility').get()
+      .then(function (snap) { return normalizeCommunityVisibility(snap.exists ? snap.data() : null); });
+  }
+  function watchCommunityVisibility(callback) {
+    if (!ready) {
+      callback(Object.assign({}, COMMUNITY_VISIBILITY_DEFAULTS));
+      return function () {};
+    }
+    return col('publishMeta').doc('communityVisibility').onSnapshot(
+      function (snap) {
+        callback(normalizeCommunityVisibility(snap.exists ? snap.data() : null));
+      },
+      function () {
+        callback(Object.assign({}, COMMUNITY_VISIBILITY_DEFAULTS));
+      }
+    );
+  }
   var VIEW_COLLECTIONS = { patch: 'patchViews', board: 'boardViews', event: 'eventViews' };
   function viewCol(type) {
     return VIEW_COLLECTIONS[type] ? col(VIEW_COLLECTIONS[type]) : null;
@@ -715,6 +742,7 @@ window.FB = (function () {
     getCharacters: getCharacters, getSupportCharacters: getSupportCharacters,
     getPvpPatches: getPvpPatches, getPatchNotes: getPatchNotes, getNotices: getNotices,
     getBanners: getBanners, getEvents: getEvents, getBoards: getBoards, addBoard: addBoard, deleteBoard: deleteBoard, updateBoard: updateBoard,
+    getCommunityVisibility: getCommunityVisibility, watchCommunityVisibility: watchCommunityVisibility,
     getTips: getTips, addTip: addTip, updateTip: updateTip, deleteTip: deleteTip, voteTip: voteTip,
     getLikeDoc: getLikeDoc, toggleGenericLike: toggleGenericLike, toggleBoardLike: toggleBoardLike,
     bumpViewCount: bumpViewCount,

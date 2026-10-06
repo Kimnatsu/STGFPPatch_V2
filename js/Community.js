@@ -7,7 +7,10 @@
 
   function $(id) { return document.getElementById(id); }
 
-  var S = { patches: [], events: [], boards: [], banners: [], loaded: false };
+  var S = {
+    patches: [], events: [], boards: [], banners: [], loaded: false,
+    visibility: UI.getCommunityVisibility ? UI.getCommunityVisibility() : { boards: true, events: true }
+  };
   var likedCache = {};
 
   function viewMeta(count) {
@@ -36,8 +39,14 @@
   function loadAll() {
     if (S.loaded) return Promise.resolve();
     if (!FB.ready) return Promise.reject(new Error('Firebase SDK 없음'));
-    return Promise.all([FB.getPatchNotes(), FB.getEvents(), FB.getBoards(), FB.getBanners()])
-      .then(function (r) { S.patches = r[0]; S.events = r[1]; S.boards = r[2]; S.banners = r[3]; S.loaded = true; });
+    return Promise.all([
+      FB.getPatchNotes(), FB.getEvents(), FB.getBoards(), FB.getBanners(),
+      FB.getCommunityVisibility().catch(function () { return S.visibility; })
+    ]).then(function (r) {
+      S.patches = r[0]; S.events = r[1]; S.boards = r[2]; S.banners = r[3];
+      S.visibility = r[4] || S.visibility;
+      S.loaded = true;
+    });
   }
 
   var CAT_CLS = { '자유': 'badge--free', '정보': 'badge--info', '질문': 'badge--q', '자랑': 'badge--brag' };
@@ -73,6 +82,8 @@
   /* ================= 커뮤니티 홈 ================= */
   function renderComHome() {
     UI.setActiveNav('comhome');
+    $('comBoardBox').hidden = !S.visibility.boards;
+    $('comEventBox').hidden = !S.visibility.events;
     var pl = $('comPatchList');
     if (!S.patches.length) UI.empty(pl, { title: '등록된 패치노트가 없습니다.' });
     else {
@@ -597,10 +608,17 @@
   function route() {
     var r = parseHash();
     if (!PAGE_VIEWS[r.page]) r.page = 'home';
+    if (!S.loaded) {
+      showPage('patch');
+      return;
+    }
+    if ((r.page === 'board' && !S.visibility.boards) || (r.page === 'event' && !S.visibility.events)) {
+      location.hash = '#patch';
+      return;
+    }
     showPage(r.page);
     UI.setActiveNav(r.page === 'home' ? 'comhome' : r.page);
     window.scrollTo({ top: 0 });
-    if (!S.loaded) return;
     if (r.page === 'home') { renderComHome(); return; }
     if (r.page === 'patch') {
       if (r.mode === 'view' && r.id) renderPatchDetail(r.id);
@@ -777,6 +795,10 @@
       });
     });
     window.addEventListener('hashchange', route);
+    document.addEventListener('fpp:community-visibility', function (event) {
+      S.visibility = event.detail || { boards: true, events: true };
+      if (S.loaded) route();
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

@@ -7,7 +7,10 @@
 
   function $(id) { return document.getElementById(id); }
 
-  var S = { chars: [], supports: [], pvps: [], patches: [], events: [], boards: [], banners: [], loaded: false };
+  var S = {
+    chars: [], supports: [], pvps: [], patches: [], events: [], boards: [], banners: [], loaded: false,
+    visibility: UI.getCommunityVisibility ? UI.getCommunityVisibility() : { boards: true, events: true }
+  };
   var F = { tab: 'char', grade: 'all', attr: 'all', type: 'all', sort: 'id', fav: false, q: '' };
   var pvpSelDate = '';
   var homeEventTimer = null;
@@ -22,11 +25,13 @@
     return Promise.all([
       safe(FB.getCharacters(), 'characters'), safe(FB.getSupportCharacters(), 'supportCharacters'),
       safe(FB.getPvpPatches(), 'pvpPatch'), safe(FB.getPatchNotes(), 'patchNotes'),
-      safe(FB.getEvents(), 'events'), safe(FB.getBoards(), 'boards'), safe(FB.getBanners(), 'banners')
+      safe(FB.getEvents(), 'events'), safe(FB.getBoards(), 'boards'), safe(FB.getBanners(), 'banners'),
+      safe(FB.getCommunityVisibility(), 'communityVisibility')
     ]).then(function (r) {
       S.chars = r[0]; S.supports = r[1];
       S.pvps = r[2].map(function (g, i) { g.uid = (g.docId || 'g') + '_' + i; return g; });
       S.patches = r[3]; S.events = r[4]; S.boards = r[5]; S.banners = r[6];
+      if (r[7] && !Array.isArray(r[7])) S.visibility = r[7];
       S.loaded = true;
     });
   }
@@ -137,7 +142,7 @@
     UI.ticker($('homeTicker'), tick);
 
     /* 진행 중이면서 실제 내용(제목·본문·이미지 중 하나라도)이 있는 이벤트만 */
-    var evs = S.events.filter(function (e) {
+    var evs = (S.visibility.events ? S.events : []).filter(function (e) {
       return e.status === 'ing' && (e.title || e.content || e.image);
     }).slice(0, 5);
     var noEv = !evs.length;
@@ -235,6 +240,8 @@
     }
 
     /* 4) 커뮤니티 */
+    var boardBox = $('homeBoardBox');
+    if (boardBox) boardBox.hidden = !S.visibility.boards;
     var bl = $('homeBoardList');
     if (!S.boards.length) UI.empty(bl, { title: '게시글이 없습니다.' });
     else {
@@ -1000,6 +1007,11 @@
 
     var r = parseHash();
     route(r.name, r.params);
+    document.addEventListener('fpp:community-visibility', function (event) {
+      S.visibility = event.detail || { boards: true, events: true };
+      var currentRoute = parseHash();
+      if (S.loaded && currentRoute.name === 'home') route(currentRoute.name, currentRoute.params);
+    });
 
     loadAll().then(function () {
       try {

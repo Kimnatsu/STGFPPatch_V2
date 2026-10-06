@@ -357,10 +357,36 @@ window.UI = (function () {
     { key: 'event', page: 'Community.html', hash: '#event', icon: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="4" y="9.5" width="16" height="4"/><path d="M5.5 13.5v6.5h13v-6.5M12 9.5v10.5"/><path d="M12 9.5S7.8 9.7 6.8 7.5C6 5.8 7.2 4.4 8.8 4.6c2.1.3 3.2 4.9 3.2 4.9zM12 9.5s4.2.2 5.2-2c.8-1.7-.4-3.1-2-2.9-2.1.3-3.2 4.9-3.2 4.9z"/></svg>', tabIcon: '<span class="btab-icon btab-icon--line ic-v2-navigation-community-event-line" aria-hidden="true"></span><span class="btab-icon btab-icon--fill ic-v2-navigation-community-event-fill" aria-hidden="true"></span>', tabLabel: { ko: '이벤트' } },
     { key: 'mainhome', page: 'Main.html', hash: '#home', exit: true, icon: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5h4A1.5 1.5 0 0 1 20 5v14a1.5 1.5 0 0 1-1.5 1.5h-4"/><path d="M10 16.5L5.5 12 10 7.5"/><path d="M5.5 12H15"/></svg>', tabIcon: '<span class="btab-icon ic-v2-navigation-login-line" aria-hidden="true"></span>', label: '메인 홈' }
   ];
+  var communityVisibility = { boards: true, events: true };
   function navForPage() {
-    return (document.body && document.body.getAttribute('data-page') === 'community') ? COMM_NAV : NAV;
+    if (document.body && document.body.getAttribute('data-page') === 'community') {
+      return COMM_NAV.filter(function (item) {
+        return !(item.key === 'board' && !communityVisibility.boards) &&
+          !(item.key === 'event' && !communityVisibility.events);
+      });
+    }
+    return NAV;
   }
   var activeNav = 'home';
+  function getCommunityVisibility() {
+    return { boards: communityVisibility.boards, events: communityVisibility.events };
+  }
+  function applyCommunityVisibility(next) {
+    communityVisibility = {
+      boards: !next || next.boards !== false,
+      events: !next || next.events !== false
+    };
+    var allSectionsOff = !communityVisibility.boards && !communityVisibility.events;
+    NAV_LABELS.community = allSectionsOff ? '패치노트' : '커뮤니티';
+    NAV[3].hash = allSectionsOff ? '#patch' : '#home';
+    if (document.getElementById('desktopNav')) {
+      buildDeskNav();
+      buildTabs();
+      buildDrawer();
+      setActiveNav(activeNav);
+    }
+    document.dispatchEvent(new CustomEvent('fpp:community-visibility', { detail: getCommunityVisibility() }));
+  }
 
   function toggleHeaderPopup(anchor, opener) {
     if (anchor.classList.contains('is-selected')) {
@@ -506,16 +532,16 @@ window.UI = (function () {
     var commHomeItems = [
       { key: 'comhome', page: 'Community.html', hash: '#home', icon: COMM_NAV[0].tabIcon || COMM_NAV[0].icon, label: '커뮤니티 홈' },
       { key: 'patch', page: 'Community.html', hash: '#patch', icon: COMM_NAV[1].tabIcon || COMM_NAV[1].icon, label: '패치노트' },
-      { key: 'board', page: 'Community.html', hash: '#board', icon: COMM_NAV[2].tabIcon || COMM_NAV[2].icon, label: '게시판' },
-      { key: 'event', page: 'Community.html', hash: '#event', icon: COMM_NAV[3].tabIcon || COMM_NAV[3].icon, label: '이벤트' }
     ];
+    if (communityVisibility.boards) commHomeItems.push({ key: 'board', page: 'Community.html', hash: '#board', icon: COMM_NAV[2].tabIcon || COMM_NAV[2].icon, label: '게시판' });
+    if (communityVisibility.events) commHomeItems.push({ key: 'event', page: 'Community.html', hash: '#event', icon: COMM_NAV[3].tabIcon || COMM_NAV[3].icon, label: '이벤트' });
     
     dw.innerHTML =
       '<div class="drawer-head"><span class="logo-txt">FPP</span>' +
       '<button class="icon-btn" id="btnDrawerClose" aria-label="메뉴 닫기"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
       '<div class="drawer-tabs">' +
       '<button class="drawer-tab active" data-tab="main">메인 홈</button>' +
-      '<button class="drawer-tab" data-tab="community">커뮤니티 홈</button>' +
+      '<button class="drawer-tab" data-tab="community">' + (communityVisibility.boards || communityVisibility.events ? '커뮤니티 홈' : '패치노트') + '</button>' +
       '</div>' +
       '<nav class="drawer-nav drawer-nav-main">' + mainHomeItems.map(function (n) {
         return '<a class="drawer-item" href="' + pageUrl(n.page + n.hash) + '">' + n.icon + '<span>' + n.label + '</span></a>';
@@ -1317,6 +1343,7 @@ window.UI = (function () {
     updateAuthArea();
     FB.onReady().then(function () {
       if (FB.ready) {
+        if (FB.watchCommunityVisibility) FB.watchCommunityVisibility(applyCommunityVisibility);
         FB.auth().onAuthStateChanged(function (u) {
           _fbUser = u;
           if (u) {
@@ -1357,6 +1384,7 @@ window.UI = (function () {
     currentUser: currentUser, userDoc: userDoc, saveUserPatch: saveUserPatch, onUser: onUser,
     loadFavs: loadFavs, isFav: isFav, toggleFav: toggleFav,
     setActiveNav: setActiveNav,
+    getCommunityVisibility: getCommunityVisibility,
     openModal: openModal, openPopup: openPopup, closePopups: closePopups,
     lockBody: lockBody, unlockBody: unlockBody,
     SET_ACTIONS: SET_ACTIONS,
