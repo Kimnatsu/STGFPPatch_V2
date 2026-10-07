@@ -271,87 +271,144 @@
       : S.patches.filter(function (patch) { return String(patch.date || '').slice(0, 7) === mainPatchMonth; });
   }
   function renderMainPatchMonth() {
-    var select = $('mainPatchMonth');
-    if (!select) return;
     var months = {};
     S.patches.forEach(function (patch) {
       var month = String(patch.date || '').slice(0, 7);
-      if (month) months[month] = true;
+      if (month) months[month] = (months[month] || 0) + 1;
     });
     var keys = Object.keys(months).sort().reverse();
-    select.innerHTML = '<option value="all">전체 기간</option>' + keys.map(function (month) {
-      return '<option value="' + UI.esc(month) + '">' + UI.esc(month.replace('-', '년 ') + '월') + '</option>';
-    }).join('');
-    if (mainPatchMonth !== 'all' && keys.indexOf(mainPatchMonth) < 0) mainPatchMonth = 'all';
-    select.value = mainPatchMonth;
+    var box = $('monthList');
+    box.innerHTML = '<button class="month-item' + (mainPatchMonth === 'all' ? ' is-on' : '') + '" data-m="all" type="button">전체 <small>' + S.patches.length + '</small></button>' +
+      keys.map(function (month) {
+        return '<button class="month-item' + (mainPatchMonth === month ? ' is-on' : '') + '" data-m="' + UI.esc(month) + '" type="button">' +
+          UI.esc(month.replace('-', '년 ') + '월') + '<small>' + months[month] + '</small></button>';
+      }).join('');
+    box.querySelectorAll('.month-item').forEach(function (button) {
+      button.addEventListener('click', function () {
+        mainPatchMonth = button.getAttribute('data-m');
+        mainPatchPage = 1;
+        renderMainPatchMonth();
+        renderMainPatchList();
+      });
+    });
+    var select = $('monthSelect');
+    if (select) {
+      select.innerHTML = '<option value="all">전체</option>' + keys.map(function (month) {
+        return '<option value="' + UI.esc(month) + '">' + UI.esc(month.replace('-', '년 ') + '월') + '</option>';
+      }).join('');
+      if (mainPatchMonth !== 'all' && keys.indexOf(mainPatchMonth) < 0) mainPatchMonth = 'all';
+      select.value = mainPatchMonth;
+    }
   }
   function renderMainPatchPager(totalPages) {
-    var pager = $('mainPatchPager');
-    if (!pager) return;
-    if (totalPages <= 1) { pager.innerHTML = ''; return; }
-    pager.innerHTML =
-      '<nav class="main-patch-pager" aria-label="패치노트 페이지 이동">' +
-      '<button type="button" data-main-patch-page="prev"' + (mainPatchPage <= 1 ? ' disabled' : '') + '>이전</button>' +
-      '<span>' + mainPatchPage + ' / ' + totalPages + '</span>' +
-      '<button type="button" data-main-patch-page="next"' + (mainPatchPage >= totalPages ? ' disabled' : '') + '>다음</button></nav>';
-    pager.querySelectorAll('[data-main-patch-page]').forEach(function (button) {
+    var arr = [];
+    if (totalPages <= 7) {
+      for (var i = 1; i <= totalPages; i++) arr.push(i);
+    } else {
+      arr.push(1);
+      if (mainPatchPage > 3) arr.push('dots');
+      for (var j = Math.max(2, mainPatchPage - 1); j <= Math.min(totalPages - 1, mainPatchPage + 1); j++) arr.push(j);
+      if (mainPatchPage < totalPages - 2) arr.push('dots');
+      arr.push(totalPages);
+    }
+    var left = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5l-7 7 7 7"/></svg>';
+    var right = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5l7 7-7 7"/></svg>';
+    var html = '<nav class="pg-nav" aria-label="페이지 이동">' +
+      '<button class="pg-btn pg-nav-arrow" type="button" data-pg="prev" aria-label="이전 페이지"' + (mainPatchPage === 1 ? ' disabled' : '') + '>' + left + '</button>';
+    arr.forEach(function (number) {
+      if (number === 'dots') { html += '<span class="pg-dots" aria-hidden="true">…</span>'; return; }
+      html += '<button class="pg-btn' + (number === mainPatchPage ? ' is-on' : '') + '" type="button" data-pg="' + number +
+        '" aria-label="' + number + ' 페이지로 이동"' + (number === mainPatchPage ? ' aria-current="page"' : '') + '>' + number + '</button>';
+    });
+    html += '<button class="pg-btn pg-nav-arrow" type="button" data-pg="next" aria-label="다음 페이지"' +
+      (mainPatchPage === totalPages ? ' disabled' : '') + '>' + right + '</button></nav>';
+    var el = $('patchContent');
+    el.insertAdjacentHTML('beforeend', html);
+    el.querySelectorAll('.pg-btn').forEach(function (button) {
       button.addEventListener('click', function () {
-        if (button.disabled) return;
-        mainPatchPage += button.getAttribute('data-main-patch-page') === 'next' ? 1 : -1;
+        if (button.disabled || button.classList.contains('is-on')) return;
+        var page = button.getAttribute('data-pg');
+        if (page === 'prev') mainPatchPage = Math.max(1, mainPatchPage - 1);
+        else if (page === 'next') mainPatchPage = Math.min(totalPages, mainPatchPage + 1);
+        else mainPatchPage = parseInt(page, 10) || 1;
         renderMainPatchList();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        var y = el.getBoundingClientRect().top + window.pageYOffset - 90;
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
       });
     });
   }
   function renderMainPatchList() {
-    var el = $('mainPatchContent');
-    var select = $('mainPatchMonth');
-    if (!el) return;
-    if (select) select.hidden = false;
+    var el = $('patchContent');
+    $('monthFilter').style.display = '';
     var list = filteredMainPatches();
     if (!list.length) {
       UI.empty(el, { title: '등록된 패치노트가 없습니다.' });
-      renderMainPatchPager(0);
       return;
     }
     var totalPages = Math.ceil(list.length / MAIN_PATCH_PAGE_SIZE);
     mainPatchPage = Math.max(1, Math.min(mainPatchPage, totalPages));
     var current = list.slice((mainPatchPage - 1) * MAIN_PATCH_PAGE_SIZE, mainPatchPage * MAIN_PATCH_PAGE_SIZE);
-    el.innerHTML = '<ul class="lst">' + current.map(function (patch) {
-      return rowHTML({
-        page: !S.visibility.boards && !S.visibility.events
-          ? '#patch/view/' + encodeURIComponent(patch.docId)
-          : 'Community.html#patch/view/' + encodeURIComponent(patch.docId),
-        badge: '<span class="badge badge--patch">패치노트</span>',
-        title: patch.title, author: patch.author, date: patch.date, ts: patch.ts, viewCount: patch.viewCount
-      }).replace('class="lst-row"', 'class="lst-row main-patch-list-row"');
-    }).join('') + '</ul>';
-    bindRows(el);
+    el.innerHTML = '<div class="pn-list">' + current.map(function (patch) {
+      var date = String(patch.date || '').split('-');
+      return '<div class="pn-row" data-view="' + UI.esc(patch.docId) + '" tabindex="0" role="button" aria-label="' + UI.esc(patch.title) + '">' +
+        '<div class="pn-date"><b>' + UI.esc(date[2] || '') + '</b><small>' + UI.esc((date[0] || '').slice(2) + '.' + (date[1] || '')) + '</small></div>' +
+        '<div class="pn-main"><div class="pn-title">' + UI.esc(patch.title) + '</div>' +
+        '<div class="pn-meta"><span>' + UI.esc(patch.author) + '</span><span>·</span><span>' + UI.esc(UI.fmtDate(patch.date)) +
+        '</span><span>·</span>' + viewMeta(patch.viewCount) + '</div></div>' +
+        (UI.isNew(patch.date) ? '<span class="lst-new">NEW</span>' : '') +
+        '<span class="pn-arrow">›</span></div>';
+    }).join('') + '</div>';
+    el.querySelectorAll('.pn-row').forEach(function (row) {
+      function open() { location.hash = '#patch/view/' + encodeURIComponent(row.getAttribute('data-view')); }
+      row.addEventListener('click', open);
+      row.addEventListener('keydown', function (event) { if (event.key === 'Enter') open(); });
+    });
     renderMainPatchPager(totalPages);
+    UI.watchReveals(el);
   }
   function renderMainPatchDetail(id) {
     var patch = S.patches.find(function (item) { return String(item.docId) === String(id); });
-    var el = $('mainPatchContent');
-    var select = $('mainPatchMonth');
-    if (select) select.hidden = true;
-    $('mainPatchPager').innerHTML = '';
+    var el = $('patchContent');
+    $('monthFilter').style.display = 'none';
     if (!patch) {
       UI.empty(el, { title: '패치노트를 찾을 수 없습니다.', btnText: '목록으로', btnHref: '#patch' });
       return;
     }
+    function actions() {
+      return '<div class="detail-actions">' +
+        '<button class="act-btn act-like" type="button" aria-pressed="false">' +
+        '<svg viewBox="0 0 24 24"><path d="M12 20.4l-7.2-7A4.8 4.8 0 0 1 12 6.6a4.8 4.8 0 0 1 7.2 6.8z"/></svg>' +
+        '<span>좋아요</span> <b class="like-n">…</b></button>' +
+        '<button class="act-btn act-share" type="button" aria-label="공유하기">' +
+        '<svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.4 10.8l6.8-4M8.4 13.2l6.8 4"/></svg>' +
+        '<span>공유하기</span></button></div>';
+    }
+    var related = S.patches.slice(0, 6).map(function (item) {
+      return rowHTML({
+        page: '#patch/view/' + encodeURIComponent(item.docId),
+        badge: '<span class="badge badge--patch">패치노트</span>',
+        title: item.title, author: item.author, date: item.date, ts: item.ts, viewCount: item.viewCount
+      });
+    }).join('');
     el.innerHTML =
       '<button class="detail-back" type="button" data-main-patch-back>' + UI.IC.back + ' 패치노트 목록</button>' +
-      '<article class="detail main-patch-detail">' +
+      '<article class="detail">' +
       '<div class="detail-head"><div class="detail-head-main"><span class="badge badge--patch">패치노트</span>' +
       '<h2 class="detail-title">' + UI.esc(patch.title) + '</h2></div>' +
       '<div class="detail-meta"><span>' + UI.esc(patch.author) + '</span><span>·</span><span>' + UI.esc(UI.fmtDate(patch.date)) +
       '</span><span>·</span>' + viewMeta(patch.viewCount) + '</div></div>' +
-      '<div class="detail-body">' + UI.renderContent(patch.content) + '</div></article>';
-    el.querySelector('[data-main-patch-back]').addEventListener('click', function () { location.hash = '#patch'; });
+      '<div class="detail-body">' + UI.renderContent(patch.content) + '</div>' + actions() + '</article>' +
+      '<div class="box detail-list-box"><div class="box-head"><h2 class="box-title">패치노트</h2>' +
+      '<button class="box-go" type="button" data-main-patch-back>목록으로</button></div>' +
+      '<div class="box-body"><ul class="lst">' + related + '</ul></div></div>';
+    el.querySelectorAll('[data-main-patch-back]').forEach(function (button) {
+      button.addEventListener('click', function () { location.hash = '#patch'; });
+    });
+    bindRows(el);
     var key = 'fpp_view_patch_' + patch.docId;
     var seen = false;
     try { seen = localStorage.getItem(key) === '1'; } catch (_) {}
-    if (!seen && FB.bumpViewCount) {
+    if (!seen && String(patch.docId).indexOf('local_') !== 0 && FB.bumpViewCount) {
       FB.bumpViewCount('patch', patch.docId).then(function (count) {
         if (count == null) return;
         patch.viewCount = count;
@@ -363,18 +420,53 @@
         }
       }).catch(function () {});
     }
+    var likeButton = el.querySelector('.act-like');
+    var likeCount = el.querySelector('.like-n');
+    var liked = false;
+    function paintLike(count) {
+      likeCount.textContent = count || 0;
+      likeButton.classList.toggle('on', liked);
+      likeButton.setAttribute('aria-pressed', String(liked));
+    }
+    FB.getLikeDoc('patch', patch.docId).then(function (doc) {
+      var user = UI.currentUser();
+      liked = !!(user && doc && doc.likedBy && doc.likedBy.indexOf(user.uid) > -1);
+      patch.likeCount = doc ? doc.likeCount : (patch.likeCount || 0);
+      paintLike(patch.likeCount);
+    }).catch(function () { paintLike(patch.likeCount || 0); });
+    likeButton.addEventListener('click', function () {
+      var user = UI.currentUser();
+      if (!user) {
+        UI.toast('로그인 후 이용할 수 있습니다.');
+        setTimeout(function () { location.href = UI.pageUrl('Login.html'); }, 700);
+        return;
+      }
+      FB.toggleGenericLike('patch', patch.docId, user.uid).then(function (nextLiked) {
+        liked = nextLiked;
+        patch.likeCount = Math.max(0, (parseInt(likeCount.textContent, 10) || 0) + (nextLiked ? 1 : -1));
+        paintLike(patch.likeCount);
+        FB.bumpUserLikeCount(user.uid, nextLiked ? 1 : -1);
+      }).catch(function (error) { UI.toast(FB.errMsg(error), 'err'); });
+    });
+    el.querySelector('.act-share').addEventListener('click', function () { UI.share(patch.title, location.href); });
+    el.querySelectorAll('.detail-body img').forEach(function (image) {
+      image.onerror = function () { image.style.display = 'none'; };
+    });
+    UI.watchReveals(el);
   }
   function renderMainPatches(params) {
     UI.setActiveNav('community');
     renderMainPatchMonth();
     if (params && params.view === 'view' && params.id) renderMainPatchDetail(params.id);
     else renderMainPatchList();
+    UI.watchReveals($('view-patch'));
   }
   function bindMainPatchPage() {
-    var select = $('mainPatchMonth');
+    var select = $('monthSelect');
     if (select) select.addEventListener('change', function () {
       mainPatchMonth = select.value;
       mainPatchPage = 1;
+      renderMainPatchMonth();
       renderMainPatchList();
     });
   }
@@ -1086,7 +1178,7 @@
   function pageBanners() {
     UI.fillPageBanner($('charBannerMedia'), 'characters', S.banners);
     UI.fillPageBanner($('pvpBannerMedia'), 'pvp', S.banners);
-    UI.fillPageBanner($('mainPatchBannerMedia'), 'patch', S.banners);
+    UI.fillPageBanner($('patchBannerMedia'), 'patch', S.banners);
   }
 
   /* ================= 부팅 ================= */

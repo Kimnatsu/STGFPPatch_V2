@@ -30,7 +30,7 @@ html[data-theme="light"] .page-veil{background:#eef3f8}
 (function () {
   /* <base>가 루트 에셋 경로를 가리키므로 모든 에셋을 동일한 기준으로 불러온다. */
   var B = './';
-  var CSS = ['css/common.css', 'css/Main.css'];
+  var CSS = ['css/common.css', 'css/Main.css', 'css/Community.css'];
   var JS = ['js/Firebase.js', 'js/common.js', 'js/Main.js'];
   var warned = false;
   function warn() {
@@ -117,19 +117,17 @@ html[data-theme="light"] .page-veil{background:#eef3f8}
   <section class="page" id="view-patch" hidden>
     <div class="banner banner--page" aria-label="패치노트 배너">
       <div class="banner-fallback" aria-hidden="true"></div>
-      <div class="banner-media" id="mainPatchBannerMedia"></div>
+      <div class="banner-media" id="patchBannerMedia"></div>
     </div>
-    <div class="wrap main-patch-wrap">
-      <div class="main-patch-toolbar">
-        <h1 class="main-patch-title">패치노트</h1>
-        <select id="mainPatchMonth" aria-label="패치노트 월별 필터">
-          <option value="all">전체 기간</option>
-        </select>
+    <div class="wrap">
+      <div class="patch-layout">
+        <div class="patch-content rv" id="patchContent"></div>
+        <aside class="month-filter rv" id="monthFilter" aria-label="월별 필터">
+          <h3 class="month-title">월별</h3>
+          <select id="monthSelect" class="month-select" aria-label="월별 선택"></select>
+          <div class="month-list" id="monthList"></div>
+        </aside>
       </div>
-      <div class="box main-patch-box">
-        <div class="box-body" id="mainPatchContent"></div>
-      </div>
-      <div id="mainPatchPager"></div>
     </div>
   </section>
 
