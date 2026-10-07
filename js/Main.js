@@ -154,15 +154,16 @@
     }).slice(0, 5);
     var noEv = !evs.length;
     var patchBox = $('homePatchBox');
-    if (patchBox) patchBox.classList.toggle('no-event', noEv);
+    if (patchBox) {
+      patchBox.classList.toggle('no-event', noEv);
+      patchBox.classList.toggle('no-board', !S.visibility.boards);
+    }
 
     /* 1) 패치노트 — 이벤트·게시판 모두 없으면 6개, 이벤트만 없고 게시판 박스가 있으면 데스크톱 12개 */
     var pl = $('homePatchList');
     if (!S.patches.length) UI.empty(pl, { title: '등록된 패치노트가 없습니다.' });
     else {
-      var noBoardBox = !S.visibility.boards;
-      var desktopExpanded = noEv && !noBoardBox && window.matchMedia('(min-width:768px)').matches;
-      var n = desktopExpanded ? 12 : 6;
+      var n = window.matchMedia('(min-width:768px)').matches ? 6 : 5;
       pl.innerHTML = '<ul class="lst">' + S.patches.slice(0, n).map(function (p) {
         var patchPage = !S.visibility.boards && !S.visibility.events
           ? '#patch/view/' + encodeURIComponent(p.docId)

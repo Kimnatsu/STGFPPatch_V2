@@ -524,14 +524,22 @@ window.UI = (function () {
   function buildDrawer() {
     var dw = $('navDrawer');
     if (!dw) return;
-    
+    var onlyMainTab = isMobileLayout() && !communityVisibility.boards && !communityVisibility.events;
+
     // 메인 홈 메뉴 항목
     var mainHomeItems = [
       { key: 'home', page: 'Main.html', hash: '#home', icon: NAV[0].tabIcon || NAV[0].icon, label: NAV_LABELS.home },
       { key: 'characters', page: 'Main.html', hash: '#characters', icon: NAV[1].tabIcon || NAV[1].icon, label: NAV_LABELS.characters },
-      { key: 'pvp', page: 'Main.html', hash: '#pvp', icon: NAV[2].tabIcon || NAV[2].icon, label: NAV_LABELS.pvp },
-      { key: 'cs', page: 'CustomerService.html', hash: '', icon: NAV[4].icon, label: NAV_LABELS.cs }
+      { key: 'pvp', page: 'Main.html', hash: '#pvp', icon: NAV[2].tabIcon || NAV[2].icon, label: NAV_LABELS.pvp }
     ];
+    if (onlyMainTab) {
+      mainHomeItems.push(
+        { key: 'patch', page: 'Main.html', hash: '#patch', icon: COMM_NAV[1].icon, label: '패치노트' },
+        { key: 'comhome', page: 'Community.html', hash: '#home', icon: COMM_NAV[0].icon, label: '커뮤니티' }
+      );
+    } else {
+      mainHomeItems.push({ key: 'cs', page: 'CustomerService.html', hash: '', icon: NAV[4].icon, label: NAV_LABELS.cs });
+    }
     
     // 커뮤니티 홈 메뉴 항목
     var commHomeItems = [
@@ -540,20 +548,24 @@ window.UI = (function () {
     ];
     if (communityVisibility.boards) commHomeItems.push({ key: 'board', page: 'Community.html', hash: '#board', icon: COMM_NAV[2].tabIcon || COMM_NAV[2].icon, label: '게시판' });
     if (communityVisibility.events) commHomeItems.push({ key: 'event', page: 'Community.html', hash: '#event', icon: COMM_NAV[3].tabIcon || COMM_NAV[3].icon, label: '이벤트' });
+
+    var drawerTabsHTML =
+      '<div class="drawer-tabs">' +
+      '<button class="drawer-tab active" data-tab="main">메인 홈</button>' +
+      (onlyMainTab ? '' : '<button class="drawer-tab" data-tab="community">' + (communityVisibility.boards || communityVisibility.events ? '커뮤니티 홈' : '패치노트') + '</button>') +
+      '</div>';
+    var communityNavHTML = onlyMainTab ? '' :
+      '<nav class="drawer-nav drawer-nav-community" style="display:none;">' + commHomeItems.map(function (n) {
+        return '<a class="drawer-item" href="' + pageUrl(n.page + n.hash) + '">' + n.icon + '<span>' + n.label + '</span></a>';
+      }).join('') + '</nav>';
     
     dw.innerHTML =
       '<div class="drawer-head"><span class="logo-txt">FPP</span>' +
       '<button class="icon-btn" id="btnDrawerClose" aria-label="메뉴 닫기"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
-      '<div class="drawer-tabs">' +
-      '<button class="drawer-tab active" data-tab="main">메인 홈</button>' +
-      '<button class="drawer-tab" data-tab="community">' + (communityVisibility.boards || communityVisibility.events ? '커뮤니티 홈' : '패치노트') + '</button>' +
-      '</div>' +
+      drawerTabsHTML +
       '<nav class="drawer-nav drawer-nav-main">' + mainHomeItems.map(function (n) {
         return '<a class="drawer-item" href="' + pageUrl(n.page + n.hash) + '">' + n.icon + '<span>' + n.label + '</span></a>';
-      }).join('') + '</nav>' +
-      '<nav class="drawer-nav drawer-nav-community" style="display:none;">' + commHomeItems.map(function (n) {
-        return '<a class="drawer-item" href="' + pageUrl(n.page + n.hash) + '">' + n.icon + '<span>' + n.label + '</span></a>';
-      }).join('') + '</nav>';
+      }).join('') + '</nav>' + communityNavHTML;
     
     // 탭 전환 이벤트
     var tabs = dw.querySelectorAll('.drawer-tab');
