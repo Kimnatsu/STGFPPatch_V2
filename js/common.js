@@ -180,7 +180,7 @@ window.UI = (function () {
   function notificationHref(n) {
     if (n.href) return pageUrl(n.href);
     if (!n.targetId) return '';
-    if (n.type === 'patch') return pageUrl('Community.html#patch/view/' + encodeURIComponent(n.targetId));
+    if (n.type === 'patch') return pageUrl(patchNotesPage() + '#patch/view/' + encodeURIComponent(n.targetId));
     if (n.type === 'event') return pageUrl('Community.html#event/view/' + encodeURIComponent(n.targetId));
     if (n.type === 'comment') return pageUrl((String(n.targetType).toLowerCase() === 'event' ? 'Community.html#event/view/' : 'Community.html#board/view/') + encodeURIComponent(n.targetId));
     return pageUrl('Main.html#pvp');
@@ -371,6 +371,9 @@ window.UI = (function () {
   function getCommunityVisibility() {
     return { boards: communityVisibility.boards, events: communityVisibility.events };
   }
+  function patchNotesPage() {
+    return communityVisibility.boards || communityVisibility.events ? 'Community.html' : 'Main.html';
+  }
   function applyCommunityVisibility(next) {
     communityVisibility = {
       boards: !next || next.boards !== false,
@@ -378,7 +381,9 @@ window.UI = (function () {
     };
     var allSectionsOff = !communityVisibility.boards && !communityVisibility.events;
     NAV_LABELS.community = allSectionsOff ? '패치노트' : '커뮤니티';
+    NAV[3].page = allSectionsOff ? 'Main.html' : 'Community.html';
     NAV[3].hash = allSectionsOff ? '#patch' : '#home';
+    COMM_NAV[1].page = allSectionsOff ? 'Main.html' : 'Community.html';
     if (document.getElementById('desktopNav')) {
       buildDeskNav();
       buildTabs();
@@ -531,7 +536,7 @@ window.UI = (function () {
     // 커뮤니티 홈 메뉴 항목
     var commHomeItems = [
       { key: 'comhome', page: 'Community.html', hash: '#home', icon: COMM_NAV[0].tabIcon || COMM_NAV[0].icon, label: '커뮤니티 홈' },
-      { key: 'patch', page: 'Community.html', hash: '#patch', icon: COMM_NAV[1].tabIcon || COMM_NAV[1].icon, label: '패치노트' },
+      { key: 'patch', page: COMM_NAV[1].page, hash: '#patch', icon: COMM_NAV[1].tabIcon || COMM_NAV[1].icon, label: '패치노트' },
     ];
     if (communityVisibility.boards) commHomeItems.push({ key: 'board', page: 'Community.html', hash: '#board', icon: COMM_NAV[2].tabIcon || COMM_NAV[2].icon, label: '게시판' });
     if (communityVisibility.events) commHomeItems.push({ key: 'event', page: 'Community.html', hash: '#event', icon: COMM_NAV[3].tabIcon || COMM_NAV[3].icon, label: '이벤트' });

@@ -14,6 +14,9 @@
   var F = { tab: 'char', grade: 'all', attr: 'all', type: 'all', sort: 'id', fav: false, q: '' };
   var pvpSelDate = '';
   var homeEventTimer = null;
+  var mainPatchMonth = 'all';
+  var mainPatchPage = 1;
+  var MAIN_PATCH_PAGE_SIZE = 10;
 
   /* 한 컬렉션이 실패해도 나머지는 표시 — 실패한 쪽은 빈 배열로 처리 */
   function safe(p, label) {
@@ -142,6 +145,10 @@
     UI.ticker($('homeTicker'), tick);
 
     /* 진행 중이면서 실제 내용(제목·본문·이미지 중 하나라도)이 있는 이벤트만 */
+    var patchLink = $('homePatchLink');
+    if (patchLink) {
+      patchLink.href = UI.pageUrl(!S.visibility.boards && !S.visibility.events ? 'Main.html#patch' : 'Community.html#patch');
+    }
     var evs = (S.visibility.events ? S.events : []).filter(function (e) {
       return e.status === 'ing' && (e.title || e.content || e.image);
     }).slice(0, 5);
@@ -155,7 +162,10 @@
     else {
       var n = (noEv && window.matchMedia('(min-width:768px)').matches) ? 12 : 5;
       pl.innerHTML = '<ul class="lst">' + S.patches.slice(0, n).map(function (p) {
-        return rowHTML({ page: 'Community.html#patch/view/' + p.docId, badge: '<span class="badge badge--patch">패치노트</span>', title: p.title, author: p.author, date: p.date, ts: p.ts, viewCount: p.viewCount });
+        var patchPage = !S.visibility.boards && !S.visibility.events
+          ? '#patch/view/' + encodeURIComponent(p.docId)
+          : 'Community.html#patch/view/' + encodeURIComponent(p.docId);
+        return rowHTML({ page: patchPage, badge: '<span class="badge badge--patch">패치노트</span>', title: p.title, author: p.author, date: p.date, ts: p.ts, viewCount: p.viewCount });
       }).join('') + '</ul>';
       bindRows(pl);
     }
@@ -252,6 +262,121 @@
       bindRows(bl);
     }
     UI.watchReveals($('view-home'));
+  }
+
+  /* ================= 메인 페이지 패치노트 ================= */
+  function filteredMainPatches() {
+    return mainPatchMonth === 'all'
+      ? S.patches
+      : S.patches.filter(function (patch) { return String(patch.date || '').slice(0, 7) === mainPatchMonth; });
+  }
+  function renderMainPatchMonth() {
+    var select = $('mainPatchMonth');
+    if (!select) return;
+    var months = {};
+    S.patches.forEach(function (patch) {
+      var month = String(patch.date || '').slice(0, 7);
+      if (month) months[month] = true;
+    });
+    var keys = Object.keys(months).sort().reverse();
+    select.innerHTML = '<option value="all">전체 기간</option>' + keys.map(function (month) {
+      return '<option value="' + UI.esc(month) + '">' + UI.esc(month.replace('-', '년 ') + '월') + '</option>';
+    }).join('');
+    if (mainPatchMonth !== 'all' && keys.indexOf(mainPatchMonth) < 0) mainPatchMonth = 'all';
+    select.value = mainPatchMonth;
+  }
+  function renderMainPatchPager(totalPages) {
+    var pager = $('mainPatchPager');
+    if (!pager) return;
+    if (totalPages <= 1) { pager.innerHTML = ''; return; }
+    pager.innerHTML =
+      '<nav class="main-patch-pager" aria-label="패치노트 페이지 이동">' +
+      '<button type="button" data-main-patch-page="prev"' + (mainPatchPage <= 1 ? ' disabled' : '') + '>이전</button>' +
+      '<span>' + mainPatchPage + ' / ' + totalPages + '</span>' +
+      '<button type="button" data-main-patch-page="next"' + (mainPatchPage >= totalPages ? ' disabled' : '') + '>다음</button></nav>';
+    pager.querySelectorAll('[data-main-patch-page]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (button.disabled) return;
+        mainPatchPage += button.getAttribute('data-main-patch-page') === 'next' ? 1 : -1;
+        renderMainPatchList();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+  }
+  function renderMainPatchList() {
+    var el = $('mainPatchContent');
+    var select = $('mainPatchMonth');
+    if (!el) return;
+    if (select) select.hidden = false;
+    var list = filteredMainPatches();
+    if (!list.length) {
+      UI.empty(el, { title: '등록된 패치노트가 없습니다.' });
+      renderMainPatchPager(0);
+      return;
+    }
+    var totalPages = Math.ceil(list.length / MAIN_PATCH_PAGE_SIZE);
+    mainPatchPage = Math.max(1, Math.min(mainPatchPage, totalPages));
+    var current = list.slice((mainPatchPage - 1) * MAIN_PATCH_PAGE_SIZE, mainPatchPage * MAIN_PATCH_PAGE_SIZE);
+    el.innerHTML = '<ul class="lst">' + current.map(function (patch) {
+      return rowHTML({
+        page: !S.visibility.boards && !S.visibility.events
+          ? '#patch/view/' + encodeURIComponent(patch.docId)
+          : 'Community.html#patch/view/' + encodeURIComponent(patch.docId),
+        badge: '<span class="badge badge--patch">패치노트</span>',
+        title: patch.title, author: patch.author, date: patch.date, ts: patch.ts, viewCount: patch.viewCount
+      }).replace('class="lst-row"', 'class="lst-row main-patch-list-row"');
+    }).join('') + '</ul>';
+    bindRows(el);
+    renderMainPatchPager(totalPages);
+  }
+  function renderMainPatchDetail(id) {
+    var patch = S.patches.find(function (item) { return String(item.docId) === String(id); });
+    var el = $('mainPatchContent');
+    var select = $('mainPatchMonth');
+    if (select) select.hidden = true;
+    $('mainPatchPager').innerHTML = '';
+    if (!patch) {
+      UI.empty(el, { title: '패치노트를 찾을 수 없습니다.', btnText: '목록으로', btnHref: '#patch' });
+      return;
+    }
+    el.innerHTML =
+      '<button class="detail-back" type="button" data-main-patch-back>' + UI.IC.back + ' 패치노트 목록</button>' +
+      '<article class="detail main-patch-detail">' +
+      '<div class="detail-head"><div class="detail-head-main"><span class="badge badge--patch">패치노트</span>' +
+      '<h2 class="detail-title">' + UI.esc(patch.title) + '</h2></div>' +
+      '<div class="detail-meta"><span>' + UI.esc(patch.author) + '</span><span>·</span><span>' + UI.esc(UI.fmtDate(patch.date)) +
+      '</span><span>·</span>' + viewMeta(patch.viewCount) + '</div></div>' +
+      '<div class="detail-body">' + UI.renderContent(patch.content) + '</div></article>';
+    el.querySelector('[data-main-patch-back]').addEventListener('click', function () { location.hash = '#patch'; });
+    var key = 'fpp_view_patch_' + patch.docId;
+    var seen = false;
+    try { seen = localStorage.getItem(key) === '1'; } catch (_) {}
+    if (!seen && FB.bumpViewCount) {
+      FB.bumpViewCount('patch', patch.docId).then(function (count) {
+        if (count == null) return;
+        patch.viewCount = count;
+        try { localStorage.setItem(key, '1'); } catch (_) {}
+        var countEl = el.querySelector('.view-count');
+        if (countEl) {
+          countEl.setAttribute('aria-label', '조회수 ' + count);
+          if (countEl.lastElementChild) countEl.lastElementChild.textContent = count;
+        }
+      }).catch(function () {});
+    }
+  }
+  function renderMainPatches(params) {
+    UI.setActiveNav('community');
+    renderMainPatchMonth();
+    if (params && params.view === 'view' && params.id) renderMainPatchDetail(params.id);
+    else renderMainPatchList();
+  }
+  function bindMainPatchPage() {
+    var select = $('mainPatchMonth');
+    if (select) select.addEventListener('change', function () {
+      mainPatchMonth = select.value;
+      mainPatchPage = 1;
+      renderMainPatchList();
+    });
   }
 
   /* ================= 캐릭터 ================= */
@@ -911,13 +1036,18 @@
   }
 
   /* ================= 라우팅 ================= */
-  var VIEWS = { home: 'view-home', characters: 'view-characters', pvp: 'view-pvp' };
+  var VIEWS = { home: 'view-home', patch: 'view-patch', characters: 'view-characters', pvp: 'view-pvp' };
   function route(name, params) {
     name = VIEWS[name] ? name : 'home';
     Object.keys(VIEWS).forEach(function (k) { $(VIEWS[k]).hidden = k !== name; });
     window.scrollTo({ top: 0 });
     if (!S.loaded) return;
+    if (name === 'patch' && (S.visibility.boards || S.visibility.events)) {
+      location.href = UI.pageUrl('Community.html' + location.hash);
+      return;
+    }
     if (name === 'home') renderHome();
+    if (name === 'patch') renderMainPatches(params);
     if (name === 'characters') {
       UI.setActiveNav('characters');
       if (params) {
@@ -936,8 +1066,15 @@
   function parseHash() {
     var h = location.hash.replace(/^#/, '') || 'home';
     var qi = h.indexOf('?');
-    var name = qi > -1 ? h.slice(0, qi) : h;
+    var routePath = qi > -1 ? h.slice(0, qi) : h;
+    var parts = routePath.split('/');
+    var name = parts[0] || 'home';
     var params = {};
+    if (parts[1] === 'view' && parts[2]) {
+      params.view = 'view';
+      try { params.id = decodeURIComponent(parts.slice(2).join('/')); }
+      catch (_) { params.id = parts.slice(2).join('/'); }
+    }
     if (qi > -1) {
       h.slice(qi + 1).split('&').forEach(function (kv) {
         var p = kv.split('=');
@@ -949,6 +1086,7 @@
   function pageBanners() {
     UI.fillPageBanner($('charBannerMedia'), 'characters', S.banners);
     UI.fillPageBanner($('pvpBannerMedia'), 'pvp', S.banners);
+    UI.fillPageBanner($('mainPatchBannerMedia'), 'patch', S.banners);
   }
 
   /* ================= 부팅 ================= */
@@ -983,6 +1121,7 @@
 
   function start() {
     bindCharPage();
+    bindMainPatchPage();
     UI.skelGrid($('charGrid'), 8);
     UI.skelRows($('homePatchList'), 4);
     UI.skelRows($('homeBoardList'), 4);
@@ -1010,7 +1149,7 @@
     document.addEventListener('fpp:community-visibility', function (event) {
       S.visibility = event.detail || { boards: true, events: true };
       var currentRoute = parseHash();
-      if (S.loaded && currentRoute.name === 'home') route(currentRoute.name, currentRoute.params);
+      if (S.loaded && (currentRoute.name === 'home' || currentRoute.name === 'patch')) route(currentRoute.name, currentRoute.params);
     });
 
     loadAll().then(function () {

@@ -90,7 +90,7 @@ html[data-theme="light"] .page-veil{background:#eef3f8}
     <div class="wrap">
       <div class="home-grid">
         <div class="box box--patch rv" id="homePatchBox">
-          <div class="box-head"><h2 class="box-title">패치노트</h2><a class="box-go" href="ko/Community.html#patch">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
+          <div class="box-head"><h2 class="box-title">패치노트</h2><a class="box-go" id="homePatchLink" href="ko/Community.html#patch">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
           <div class="box-body" id="homePatchList"></div>
         </div>
         <div class="box box--pvp rv">
@@ -110,6 +110,26 @@ html[data-theme="light"] .page-veil{background:#eef3f8}
           <div class="box-body" id="homeBoardList"></div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ================= 패치노트 ================= -->
+  <section class="page" id="view-patch" hidden>
+    <div class="banner banner--page" aria-label="패치노트 배너">
+      <div class="banner-fallback" aria-hidden="true"></div>
+      <div class="banner-media" id="mainPatchBannerMedia"></div>
+    </div>
+    <div class="wrap main-patch-wrap">
+      <div class="main-patch-toolbar">
+        <h1 class="main-patch-title">패치노트</h1>
+        <select id="mainPatchMonth" aria-label="패치노트 월별 필터">
+          <option value="all">전체 기간</option>
+        </select>
+      </div>
+      <div class="box main-patch-box">
+        <div class="box-body" id="mainPatchContent"></div>
+      </div>
+      <div id="mainPatchPager"></div>
     </div>
   </section>
 

@@ -612,6 +612,10 @@
       showPage('patch');
       return;
     }
+    if (r.page === 'patch' && !S.visibility.boards && !S.visibility.events) {
+      location.href = UI.pageUrl('Main.html' + location.hash);
+      return;
+    }
     if ((r.page === 'board' && !S.visibility.boards) || (r.page === 'event' && !S.visibility.events)) {
       location.hash = '#patch';
       return;
