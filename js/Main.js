@@ -156,11 +156,13 @@
     var patchBox = $('homePatchBox');
     if (patchBox) patchBox.classList.toggle('no-event', noEv);
 
-    /* 1) 패치노트 — 이벤트 없으면 데스크톱에서 확장·12개 */
+    /* 1) 패치노트 — 이벤트·게시판 모두 없으면 6개, 이벤트만 없고 게시판 박스가 있으면 데스크톱 12개 */
     var pl = $('homePatchList');
     if (!S.patches.length) UI.empty(pl, { title: '등록된 패치노트가 없습니다.' });
     else {
-      var n = (noEv && window.matchMedia('(min-width:768px)').matches) ? 12 : 5;
+      var noBoardBox = !S.visibility.boards;
+      var desktopExpanded = noEv && !noBoardBox && window.matchMedia('(min-width:768px)').matches;
+      var n = desktopExpanded ? 12 : 6;
       pl.innerHTML = '<ul class="lst">' + S.patches.slice(0, n).map(function (p) {
         var patchPage = !S.visibility.boards && !S.visibility.events
           ? '#patch/view/' + encodeURIComponent(p.docId)
