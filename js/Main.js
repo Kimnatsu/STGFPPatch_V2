@@ -75,13 +75,39 @@
   var BNAME = { buff: '버프', nerf: '너프', fix: '기능수정' };
   var BSYM = { buff: '▲', nerf: '▼', fix: '✦' };
 
+  function pvpCharacter(g) {
+    if (!g) return null;
+    if (g.supportCharId != null && String(g.supportCharId).trim() !== '') {
+      return findChar(g.supportCharId, 'support');
+    }
+    return g.charId != null ? findChar(g.charId) : null;
+  }
+  function pvpCharacterKey(g) {
+    if (g.supportCharId != null && String(g.supportCharId).trim() !== '') return 'support:' + String(g.supportCharId);
+    if (g.charId != null && String(g.charId).trim() !== '') return 'char:' + String(g.charId);
+    return 'name:' + (g.name || g.docId || g.uid || '');
+  }
+  /* PvP 문서의 현질 서폿 ID도 등록된 서폿 캐릭터 데이터에서 조회 */
+  function pvpCharacterName(g) {
+    if (!g) return '';
+    var c = pvpCharacter(g);
+    var name = (c && c.name) || g.name;
+    if (name != null && String(name).trim()) return String(name).trim();
+    if (g.supportCharId != null && String(g.supportCharId).trim() !== '') return 'No.' + g.supportCharId;
+    if (g.charId != null && String(g.charId).trim() !== '') return 'No.' + g.charId;
+    return '';
+  }
+
   /* 같은 캐릭터의 버프/너프/기능수정 그룹을 하나의 아이콘으로 합침 (등장 순서 유지) */
   function mergePvpByChar(groups) {
     var map = {}, order = [];
     (groups || []).forEach(function (g) {
-      var key = g.charId != null ? String(g.charId) : ('name:' + (g.name || g.docId));
+      var key = pvpCharacterKey(g);
       if (!map[key]) {
-        map[key] = { charId: g.charId, name: g.name, image: g.image, date: g.date, types: [], groups: [] };
+        map[key] = {
+          charId: g.charId, supportCharId: g.supportCharId,
+          name: g.name, image: g.image, date: g.date, types: [], groups: []
+        };
         order.push(map[key]);
       }
       var m = map[key];
@@ -137,8 +163,7 @@
     if (S.pvps.length) {
       var latestDate = String(S.pvps[0].date || '');
       S.pvps.filter(function (g) { return String(g.date) === latestDate; }).forEach(function (g) {
-        var c = g.charId != null ? findChar(g.charId) : null;
-        var nm = (c && c.name) || g.name || '';
+        var nm = pvpCharacterName(g);
         tick.push((nm ? nm + ' ' : '') + (BNAME[g.type] || '수정') + ' · ' + UI.fmtDate(g.date));
       });
     }
@@ -186,8 +211,8 @@
     if (!orbs.length) UI.empty(pg, { title: 'PvP 패치 내역이 없습니다.' });
     else {
       pg.innerHTML = orbs.map(function (o, i) {
-        var c = o.charId != null ? findChar(o.charId) : null;
-        var nm = (c && c.name) || o.name || ('No.' + o.charId);
+        var c = pvpCharacter(o);
+        var nm = pvpCharacterName(o);
         var img = (c && c.image) || o.image || UI.PLACEHOLDER_IMG;
         var label = o.types.map(function (t) { return BNAME[t] || '수정'; }).join('·');
         return '<button class="orb" type="button" data-i="' + i + '" aria-label="' + UI.esc(nm) + ' — ' + UI.esc(label) + '">' +
@@ -1079,8 +1104,8 @@
         return;
       }
       colEl.innerHTML = '<div class="pvp-col-grid">' + groups.map(function (g) {
-        var c = g.charId != null ? findChar(g.charId) : null;
-        var name = (c && c.name) || g.name || ('No.' + g.charId);
+        var c = pvpCharacter(g);
+        var name = pvpCharacterName(g);
         var img = (c && c.image) || g.image || UI.PLACEHOLDER_IMG;
         return '<button class="orb" type="button" data-gid="' + UI.esc(g.uid) + '" aria-label="' + UI.esc(name) + ' (' + BNAME[kind] + ')">' +
           '<span class="orb-img"><img src="' + UI.esc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
@@ -1097,11 +1122,11 @@
   /* PvP 패치 정보 팝업 — 버프/너프/기능수정 한 번에 */
   function openPvpPatchDetail(g) {
     if (!g) return;
-    var c = g.charId != null ? findChar(g.charId) : null;
-    var name = (c && c.name) || g.name || ('No.' + g.charId);
+    var c = pvpCharacter(g);
+    var name = pvpCharacterName(g);
     var img = (c && c.image) || g.image || UI.PLACEHOLDER_IMG;
     var same = S.pvps.filter(function (x) {
-      return String(x.charId) === String(g.charId) && String(x.date) === String(g.date);
+      return pvpCharacterKey(x) === pvpCharacterKey(g) && String(x.date) === String(g.date);
     });
     /* 내역이 없는 타입(버프/너프/기능수정)은 섹션 자체를 미노출 */
     var sections = ['buff', 'nerf', 'fix'].map(function (k) {

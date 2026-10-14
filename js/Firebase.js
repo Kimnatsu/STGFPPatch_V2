@@ -212,6 +212,7 @@ window.FB = (function () {
         var base = {
           docId: id,
           charId: pick(d, 'charId', 'characterId', 'id'),
+          supportCharId: pick(d, 'supportCharId', 'supportCharacterId'),
           name: pick(d, 'name', 'characterName'),
           image: absImg(pick(d, 'image', 'imageUrl', 'img')),
           date: dateKey(pick(d, 'patchDate', 'displayStart', 'date', 'updatedAt'))
@@ -223,22 +224,32 @@ window.FB = (function () {
           var buckets = {};
           typed.forEach(function (p) {
             var t = normPvpType(pick(p, 'type', 'patchType', 'kind'));
-            var key = t + '|' + (pick(p, 'charId', 'characterId') != null ? pick(p, 'charId', 'characterId') : base.charId);
-            if (!buckets[key]) buckets[key] = { type: t, charId: pick(p, 'charId', 'characterId') != null ? pick(p, 'charId', 'characterId') : base.charId, items: [] };
+            var itemCharId = pick(p, 'charId', 'characterId');
+            var itemSupportCharId = pick(p, 'supportCharId', 'supportCharacterId');
+            if (itemCharId == null) itemCharId = base.charId;
+            if (itemSupportCharId == null) itemSupportCharId = base.supportCharId;
+            var key = t + '|' + (itemCharId != null ? 'char:' + itemCharId : '') +
+              '|' + (itemSupportCharId != null ? 'support:' + itemSupportCharId : '');
+            if (!buckets[key]) buckets[key] = {
+              type: t, charId: itemCharId, supportCharId: itemSupportCharId, items: []
+            };
             buckets[key].items.push({ text: pick(p, 'text', 'content', 'desc', 'patch', 'detail', 'note') || '' });
           });
           Object.keys(buckets).forEach(function (k) {
             var b = buckets[k];
-            groups.push({ docId: id, type: b.type, charId: b.charId, name: base.name, image: base.image, date: base.date, items: b.items });
+            groups.push({
+              docId: id, type: b.type, charId: b.charId, supportCharId: b.supportCharId,
+              name: base.name, image: base.image, date: base.date, items: b.items
+            });
           });
           /* 타입 없는 나머지 항목은 문서 기본 타입으로 */
           var untyped = raw.filter(function (p) { return !(p && typeof p === 'object' && pick(p, 'type', 'patchType', 'kind')); });
           if (untyped.length) {
-            groups.push({ docId: id, type: normPvpType(pick(d, 'type', 'patchType', 'kind')), charId: base.charId, name: base.name, image: base.image, date: base.date,
+            groups.push({ docId: id, type: normPvpType(pick(d, 'type', 'patchType', 'kind')), charId: base.charId, supportCharId: base.supportCharId, name: base.name, image: base.image, date: base.date,
               items: untyped.map(function (p) { return typeof p === 'string' ? { text: p } : { text: pick(p, 'text', 'content', 'desc') || '' }; }) });
           }
         } else {
-          groups.push({ docId: id, type: normPvpType(pick(d, 'type', 'patchType', 'kind')), charId: base.charId, name: base.name, image: base.image, date: base.date,
+          groups.push({ docId: id, type: normPvpType(pick(d, 'type', 'patchType', 'kind')), charId: base.charId, supportCharId: base.supportCharId, name: base.name, image: base.image, date: base.date,
             items: raw.map(function (p) { return typeof p === 'string' ? { text: p } : { text: pick(p, 'text', 'content', 'desc', 'patch', 'detail') || '' }; }) });
         }
       });
