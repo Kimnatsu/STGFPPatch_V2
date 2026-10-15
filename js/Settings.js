@@ -564,8 +564,10 @@
   function applyBoardVisibility(visibility) {
     var hidden = !!visibility && visibility.boards === false;
     var stats = document.querySelector('.settings-stats');
+    var profileStats = $('profileSettingStats');
     var writeButton = document.querySelector('.settings-write-button');
     if (stats) stats.hidden = hidden;
+    if (profileStats) profileStats.hidden = hidden;
     if (writeButton) writeButton.hidden = hidden;
   }
 
