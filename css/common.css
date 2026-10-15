@@ -1203,7 +1203,7 @@ main,.app-footer{animation:pageRise .3s var(--ease) both}
   .foot-top{align-items:flex-start;flex-direction:column;gap:15px}
   .foot-nav a{padding:2px 9px}
   .foot-nav a:first-child{padding-left:0}
-  .foot-socials{gap:15px}
+  .foot-socials{align-self:flex-end;justify-content:flex-end;gap:15px}
   .foot-bottom{padding-top:12px}
 }
 
