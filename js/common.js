@@ -417,6 +417,9 @@ window.UI = (function () {
     NAV[3].page = allSectionsOff ? 'Main.html' : 'Community.html';
     NAV[3].hash = allSectionsOff ? '#patch' : '#home';
     COMM_NAV[1].page = allSectionsOff ? 'Main.html' : 'Community.html';
+    document.querySelectorAll('.profile-menu-stats, .profile-card-stats').forEach(function (stats) {
+      stats.hidden = !communityVisibility.boards;
+    });
     if (document.getElementById('desktopNav')) {
       buildDeskNav();
       buildTabs();
@@ -568,7 +571,7 @@ window.UI = (function () {
     if (onlyMainTab) {
       mainHomeItems.push(
         { key: 'patch', page: 'Main.html', hash: '#patch', icon: COMM_NAV[1].icon, label: '패치노트' },
-        { key: 'comhome', page: 'Community.html', hash: '#home', icon: COMM_NAV[0].icon, label: '커뮤니티' }
+        { key: 'cs', page: 'CustomerService.html', hash: '', icon: NAV[4].icon, label: NAV_LABELS.cs }
       );
     } else {
       mainHomeItems.push({ key: 'cs', page: 'CustomerService.html', hash: '', icon: NAV[4].icon, label: NAV_LABELS.cs });
@@ -685,7 +688,7 @@ window.UI = (function () {
     var pop = openPopup(anchor,
       '<div class="pop-head"><b>즐겨찾기</b></div>' +
       '<div class="pop-tabs"><button class="pop-tab is-on" data-ft="char" type="button">캐릭터</button>' +
-      '<button class="pop-tab" data-ft="support" type="button">현질 서폿 캐릭터</button></div>' +
+      '<button class="pop-tab" data-ft="support" type="button">현질 서포터</button></div>' +
       '<div class="pop-body" id="favBody"></div>', '320px');
     pop.el.classList.add('pop--fav');
     var kind = 'char';
@@ -771,7 +774,7 @@ window.UI = (function () {
       '<button class="profile-copy" id="pfCopy" type="button" aria-label="닉네임 복사">' +
       '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button></div></div>' +
       '</div><button class="profile-logout" id="pfOut" type="button">로그아웃</button></div>' +
-      '<div class="profile-menu-stats">' +
+      '<div class="profile-menu-stats"' + (communityVisibility.boards ? '' : ' hidden') + '>' +
       '<div class="profile-stat-row"><span class="profile-stat-icon profile-stat-icon--post" aria-hidden="true"><span class="menu-icon ic-v2-community-write-line"></span></span><span class="profile-stat-label">게시글 작성</span><b>' + (c.posts || 0) + '</b></div>' +
       '<div class="profile-stat-row"><span class="profile-stat-icon profile-stat-icon--comment" aria-hidden="true"><span class="menu-icon ic-v2-community-reply-line"></span></span><span class="profile-stat-label">댓글 작성</span><b>' + (c.comments || 0) + '</b></div>' +
       '<div class="profile-stat-row"><span class="profile-stat-icon profile-stat-icon--like" aria-hidden="true"><span class="menu-icon ic-v2-community-like-line"></span></span><span class="profile-stat-label">좋아요 한 글</span><b>' + (c.likes || 0) + '</b></div>' +
@@ -1023,7 +1026,7 @@ window.UI = (function () {
         '<div class="profile-card-avatar">' +
         '<img id="profileSettingAvatar" src="' + esc(avatarOf(draftIcon)) + '" alt="프로필 이미지"></div>' +
         '<b class="profile-card-name" id="profileSettingName">' + esc(initialNick) + '</b>' +
-        '<div class="profile-card-stats">' +
+        '<div class="profile-card-stats"' + (communityVisibility.boards ? '' : ' hidden') + '>' +
         '<div><b>' + ((ud.counts && ud.counts.posts) || 0) + '</b><small>게시글</small></div>' +
         '<div><b>' + ((ud.counts && ud.counts.comments) || 0) + '</b><small>댓글</small></div>' +
         '<div><b>' + ((ud.counts && ud.counts.likes) || 0) + '</b><small>좋아요</small></div>' +
