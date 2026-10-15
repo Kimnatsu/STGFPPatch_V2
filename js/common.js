@@ -185,6 +185,37 @@ window.UI = (function () {
     if (n.type === 'comment') return pageUrl((String(n.targetType).toLowerCase() === 'event' ? 'Community.html#event/view/' : 'Community.html#board/view/') + encodeURIComponent(n.targetId));
     return pageUrl('Main.html#pvp');
   }
+  function notificationMessage(n) {
+    n = n || {};
+    function value(v) {
+      v = String(v == null ? '' : v).trim();
+      return v === '새 알림이 있습니다.' ? '' : v;
+    }
+    var title = value(n.targetTitle) || value(n.title) || value(n.body);
+    var character = value(n.characterName) || value(n.title) || value(n.body) || '즐겨찾기 캐릭터';
+    if (n.type === 'patch') {
+      if (/^\[패치노트\]/.test(title)) return title;
+      return '[패치노트] 최신 ' + (title || '패치노트') + ' 등록! 지금 확인해보세요.';
+    }
+    if (n.type === 'fav') {
+      if (/^즐겨찾기한 .+의 밸런스 패치/.test(title)) return title;
+      return '즐겨찾기한 ' + character + '의 밸런스 패치! 지금 바로 확인해보세요.';
+    }
+    if (n.type === 'comment') {
+      return n.isReply ?
+        '작성하신 댓글에 대댓글이 달렸어요! 지금 확인해 보세요.' :
+        '작성하신 게시글에 댓글이 달렸어요! 지금 확인해 보세요.';
+    }
+    if (n.type === 'event') {
+      var eventTitle = title.replace(/^\[이벤트\]\s*/, '').replace(/\s*이벤트\s*종료\s*임박.*$/i, '').trim();
+      if (n.isEndingSoon || /종료\s*임박|ending.?soon|deadline/i.test(String(n.subType || '') + ' ' + String(n.title || '') + ' ' + String(n.body || ''))) {
+        var eventName = eventTitle.replace(/\s*이벤트$/i, '').trim();
+        return (eventName ? eventName + ' 이벤트' : '이벤트') + ' 종료 임박! 놓치기 전에 확인해 보세요.';
+      }
+      return '새로운 이벤트가 시작되었어요! 지금 바로 확인해 보세요.';
+    }
+    return title || '새 알림이 있습니다.';
+  }
   function notificationIcon(type) {
     var paths = {
       patch: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9.5 12h6M9.5 15.5h4"/>',
@@ -212,8 +243,7 @@ window.UI = (function () {
       html += '<div class="notify-list">' + items.map(function (n) {
         return '<button class="notify-row' + (n.read ? '' : ' is-unread') + '" type="button" data-notify-id="' + esc(n.docId) + '">' +
           '<span class="notify-icon notify-icon--' + esc(n.type) + '">' + notificationIcon(n.type) + '</span>' +
-          '<span class="notify-copy"><b>' + esc(n.title) + '</b>' +
-          (n.body ? '<small>' + esc(n.body) + '</small>' : '') +
+          '<span class="notify-copy"><b>' + esc(notificationMessage(n)) + '</b>' +
           '<time>' + esc(notifyTime(n.createdAt || n.date)) + '</time></span>' +
           (n.read ? '' : '<i class="notify-unread-dot" aria-hidden="true"></i>') + '</button>';
       }).join('') + '</div>';
@@ -229,7 +259,10 @@ window.UI = (function () {
       renderNotificationPopup(pop);
     });
     var allBtn = pop.el.querySelector('#notifyAll');
-    if (allBtn) allBtn.addEventListener('click', function () { toast('현재 받은 알림을 모두 표시하고 있습니다.'); });
+    if (allBtn) allBtn.addEventListener('click', function () {
+      closePopups();
+      openMyInfoPopup('notifications');
+    });
     pop.el.querySelectorAll('[data-notify-id]').forEach(function (row) {
       row.addEventListener('click', function () {
         var n = notificationState.items.filter(function (x) { return String(x.docId) === String(row.getAttribute('data-notify-id')); })[0];
@@ -979,6 +1012,7 @@ window.UI = (function () {
         '<aside class="profile-settings-nav">' +
         '<button class="profile-nav-item is-on" type="button" data-profile-panel="profile" aria-selected="true">프로필 정보</button>' +
         '<button class="profile-nav-item" type="button" data-profile-panel="my-info" aria-selected="false">내 정보</button>' +
+        '<button class="profile-nav-item" type="button" data-profile-panel="notifications" aria-selected="false">알림 정보</button>' +
         '</aside>' +
         '<section class="profile-settings-content">' +
         '<div class="profile-panel" id="profileInfoPanel">' +
@@ -1016,6 +1050,14 @@ window.UI = (function () {
         '</div>' +
         '<div class="my-info-delete-wrap"><button class="my-info-delete" id="myInfoDelete" type="button">회원탈퇴 <span aria-hidden="true">›</span></button></div>' +
         '</div>' +
+        '<div class="profile-panel profile-notifications-panel" id="profileNotificationsPanel" hidden>' +
+        '<div class="profile-notify-filters" role="tablist" aria-label="알림 종류">' +
+        '<button class="profile-notify-filter is-on" type="button" data-notify-filter="all" role="tab" aria-selected="true">전체 알림</button>' +
+        '<button class="profile-notify-filter" type="button" data-notify-filter="unread" role="tab" aria-selected="false">읽지 않음</button>' +
+        '<button class="profile-notify-filter" type="button" data-notify-filter="read" role="tab" aria-selected="false">읽은 알림</button>' +
+        '</div>' +
+        '<div class="profile-notification-list" id="profileNotificationList" role="tabpanel" aria-live="polite"></div>' +
+        '</div>' +
         '</section></div>' +
         '<div class="profile-settings-footer">' +
         '<button class="btn btn--ghost" id="profileClose" type="button">닫기</button>' +
@@ -1030,6 +1072,12 @@ window.UI = (function () {
     var avatarImg = m.body.querySelector('#profileSettingAvatar');
     var profilePanel = m.body.querySelector('#profileInfoPanel');
     var myInfoPanel = m.body.querySelector('#myInfoPanel');
+    var notificationsPanel = m.body.querySelector('#profileNotificationsPanel');
+    var notificationListEl = m.body.querySelector('#profileNotificationList');
+    var notificationFilter = 'all';
+    var notificationVisibleCount = 10;
+    var notificationBatchLoading = false;
+    var notificationBatchToken = 0;
 
     function currentNick() { return nickInput.value.trim(); }
     function isDirty() { return draftIcon !== initialIcon || currentNick() !== initialNick; }
@@ -1045,16 +1093,118 @@ window.UI = (function () {
       syncDraft();
     }
     function selectPanel(panel) {
-      var showProfile = panel === 'profile';
-      profilePanel.hidden = !showProfile;
-      myInfoPanel.hidden = showProfile;
+      profilePanel.hidden = panel !== 'profile';
+      myInfoPanel.hidden = panel !== 'my-info';
+      notificationsPanel.hidden = panel !== 'notifications';
       m.body.querySelectorAll('.profile-nav-item').forEach(function (item) {
         var active = item.getAttribute('data-profile-panel') === panel;
         item.classList.toggle('is-on', active);
         item.setAttribute('aria-selected', String(active));
       });
-      saveBtn.hidden = !showProfile;
+      saveBtn.hidden = panel !== 'profile';
+      if (panel === 'notifications') {
+        notificationListEl.innerHTML = '<div class="notify-loading">알림을 불러오는 중…</div>';
+        loadNotifications(true).then(function () {
+          if (m.el.isConnected && !notificationsPanel.hidden) renderProfileNotifications(true);
+        });
+      }
     }
+    function filteredProfileNotifications() {
+      var items = notificationState.items.slice();
+      if (notificationFilter === 'unread') return items.filter(function (n) { return !n.read; });
+      if (notificationFilter === 'read') return items.filter(function (n) { return !!n.read; });
+      return items;
+    }
+    function profileNotificationRows(items) {
+      return items.map(function (n) {
+        return '<button class="profile-notification-row' + (n.read ? '' : ' is-unread') + '" type="button" data-profile-notify-id="' + esc(n.docId) + '">' +
+          '<span class="notify-icon notify-icon--' + esc(n.type) + '">' + notificationIcon(n.type) + '</span>' +
+          '<span class="profile-notification-copy"><b>' + esc(notificationMessage(n)) + '</b>' +
+          '<time>' + esc(notifyTime(n.createdAt || n.date)) + '</time></span>' +
+          (n.read ? '' : '<i class="notify-unread-dot" aria-hidden="true"></i>') + '</button>';
+      }).join('');
+    }
+    function renderProfileNotifications(reset) {
+      if (reset) notificationVisibleCount = 10;
+      var items = filteredProfileNotifications();
+      m.body.querySelectorAll('[data-notify-filter]').forEach(function (button) {
+        var active = button.getAttribute('data-notify-filter') === notificationFilter;
+        button.classList.toggle('is-on', active);
+        button.setAttribute('aria-selected', String(active));
+      });
+      var visible = items.slice(0, notificationVisibleCount);
+      if (!items.length) {
+        notificationListEl.innerHTML = '<div class="empty profile-notification-empty"><p>' +
+          (notificationFilter === 'unread' ? '읽지 않은 알림이 없습니다.' : notificationFilter === 'read' ? '읽은 알림이 없습니다.' : '알림이 없습니다.') +
+          '</p></div>';
+        return;
+      }
+      notificationListEl.innerHTML = profileNotificationRows(visible);
+      bindProfileNotificationRows();
+    }
+    function bindProfileNotificationRows() {
+      notificationListEl.querySelectorAll('[data-profile-notify-id]').forEach(function (row) {
+        if (row.getAttribute('data-notify-bound') === 'true') return;
+        row.setAttribute('data-notify-bound', 'true');
+        row.addEventListener('click', function () {
+          var n = notificationState.items.filter(function (item) {
+            return String(item.docId) === String(row.getAttribute('data-profile-notify-id'));
+          })[0];
+          if (!n) return;
+          markNotificationRead(n);
+          var href = notificationHref(n);
+          if (href) {
+            m.close();
+            location.href = href;
+          } else {
+            renderProfileNotifications(false);
+          }
+        });
+      });
+    }
+    function loadMoreProfileNotifications() {
+      if (notificationBatchLoading) return;
+      var items = filteredProfileNotifications();
+      if (notificationVisibleCount >= items.length) return;
+      notificationBatchLoading = true;
+      var batchToken = ++notificationBatchToken;
+      var currentTop = notificationListEl.scrollTop;
+      var loader = document.createElement('div');
+      loader.className = 'profile-notify-loading';
+      loader.setAttribute('role', 'status');
+      loader.textContent = '알림을 불러오는 중…';
+      notificationListEl.appendChild(loader);
+      window.setTimeout(function () {
+        if (batchToken !== notificationBatchToken || !m.el.isConnected || notificationsPanel.hidden) {
+          if (loader.parentNode) loader.parentNode.removeChild(loader);
+          notificationBatchLoading = false;
+          return;
+        }
+        if (loader.parentNode) loader.parentNode.removeChild(loader);
+        var currentItems = filteredProfileNotifications();
+        var nextCount = Math.min(currentItems.length, notificationVisibleCount + 10);
+        notificationListEl.insertAdjacentHTML('beforeend', profileNotificationRows(currentItems.slice(notificationVisibleCount, nextCount)));
+        notificationVisibleCount = nextCount;
+        bindProfileNotificationRows();
+        notificationListEl.scrollTop = currentTop;
+        notificationBatchLoading = false;
+      }, 120);
+    }
+    notificationListEl.addEventListener('scroll', function () {
+      if (notificationListEl.scrollTop + notificationListEl.clientHeight >= notificationListEl.scrollHeight - 120) {
+        loadMoreProfileNotifications();
+      }
+    });
+    m.body.querySelectorAll('[data-notify-filter]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        notificationFilter = button.getAttribute('data-notify-filter');
+        notificationVisibleCount = 10;
+          notificationBatchToken++;
+          notificationBatchLoading = false;
+        renderProfileNotifications(false);
+        notificationListEl.scrollTop = 0;
+      });
+    });
     function confirmAccountDelete() {
       var cf = openModal({
         title: '탈퇴 확인',
@@ -1123,7 +1273,7 @@ window.UI = (function () {
         toast(FB.errMsg(e), 'err');
       });
     });
-    selectPanel(initialPanel === 'my-info' ? 'my-info' : 'profile');
+    selectPanel(initialPanel === 'my-info' ? 'my-info' : initialPanel === 'notifications' ? 'notifications' : 'profile');
   }
 
   function openProfileImagePicker(currentIcon, onRegister) {

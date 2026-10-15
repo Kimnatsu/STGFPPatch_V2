@@ -652,9 +652,10 @@ window.FB = (function () {
   /* ---------- 알림 ---------- */
   function normNotification(d, id, path) {
     var rawType = String(pick(d, 'type', 'notificationType', 'category', 'kind') || '').toLowerCase();
-    var type = rawType === 'favorite' || rawType === 'favourite' || rawType === 'fav' ? 'fav' :
-      rawType === 'patch' || rawType === 'patchnote' ? 'patch' :
-      rawType === 'event' ? 'event' : 'comment';
+    var subType = String(pick(d, 'subType', 'notificationSubtype', 'commentType', 'eventStatus', 'action', 'kind') || '').toLowerCase();
+    var type = /^(favorite|favourite|fav)/.test(rawType) ? 'fav' :
+      /^patch/.test(rawType) ? 'patch' :
+      /^event/.test(rawType) ? 'event' : 'comment';
     var createdAt = pick(d, 'createdAt', 'timestamp', 'date', 'updatedAt') || null;
     var ts = createdAt && createdAt.seconds ? createdAt.seconds :
       (typeof createdAt === 'number' ? (createdAt > 1e12 ? Math.floor(createdAt / 1000) : createdAt) : 0);
@@ -664,6 +665,13 @@ window.FB = (function () {
       type: type,
       title: pick(d, 'title', 'message', 'text') || '새 알림이 있습니다.',
       body: pick(d, 'body', 'description', 'content') || '',
+      targetTitle: pick(d, 'targetTitle', 'contentTitle', 'patchTitle', 'postTitle', 'eventTitle') || '',
+      characterName: pick(d, 'characterName', 'charName', 'character', 'targetName') || '',
+      subType: subType,
+      isReply: d.isReply === true || d.reply === true || !!pick(d, 'replyToId', 'replyId', 'parentCommentId', 'commentParentId') ||
+        /reply|recomment|답글|대댓글/.test(rawType + ' ' + subType),
+      isEndingSoon: d.isEndingSoon === true || d.eventEndingSoon === true || d.isDeadline === true ||
+        /ending.?soon|deadline|종료.?임박/.test(rawType + ' ' + subType),
       date: dateKey(createdAt),
       ts: ts,
       createdAt: createdAt,
