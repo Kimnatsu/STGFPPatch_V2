@@ -1196,7 +1196,7 @@ main,.app-footer{animation:pageRise .3s var(--ease) both}
 }
 .foot-brand{display:inline-flex;align-items:center;gap:9px;color:#d8dce2;font-size:11px;font-weight:700}
 .foot-brand img{width:39px;height:39px;object-fit:contain;border-radius:4px}
-.foot-bottom small{color:#727983;font-size:9px}
+.foot-bottom small{color:#727983;font-size:12px}
 @media (max-width:767px){
   .app-footer{margin-top:48px;padding:22px 0 calc(96px + env(safe-area-inset-bottom))}
   .foot-in{gap:16px}
