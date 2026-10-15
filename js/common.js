@@ -225,6 +225,27 @@ window.UI = (function () {
     };
     return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (paths[type] || paths.comment) + '</svg>';
   }
+  function notificationSkeletonRows(count, profile) {
+    var rows = '';
+    for (var i = 0; i < (count || 4); i++) {
+      var titleWidth = (64 + (i % 3) * 9) + '%';
+      var timeWidth = (24 + (i % 2) * 8) + '%';
+      var copyClass = profile ? 'profile-notification-copy' : 'notify-copy';
+      var rowClass = profile ? 'profile-notification-row' : 'notify-row';
+      rows += '<div class="' + rowClass + ' notification-skeleton-row" aria-hidden="true">' +
+        '<span class="notify-icon notify-skeleton-icon"><span class="skel notification-skeleton-avatar"></span></span>' +
+        '<span class="' + copyClass + '"><b><span class="skel notification-skeleton-title" style="width:' + titleWidth + '"></span></b>' +
+        '<time><span class="skel notification-skeleton-time" style="width:' + timeWidth + '"></span></time></span>' +
+        '<i class="skel notification-skeleton-dot"></i></div>';
+    }
+    return rows;
+  }
+  function notificationPopupSkeleton() {
+    return '<div class="notify-popup" aria-busy="true">' +
+      '<div class="notify-head"><b>알림 <span class="skel notification-skeleton-count" aria-hidden="true"></span></b>' +
+      '<div class="notify-head-actions" aria-hidden="true"><span class="skel notification-skeleton-action"></span><span class="skel notification-skeleton-action"></span></div></div>' +
+      '<div class="notify-list notification-skeleton-list" aria-hidden="true">' + notificationSkeletonRows(4, false) + '</div></div>';
+  }
   function markNotificationRead(n) {
     if (!n || n.read) return;
     n.read = true;
@@ -276,7 +297,7 @@ window.UI = (function () {
   }
   function openNotifyPopup(anchor) {
     var u = currentUser();
-    var pop = openPopup(anchor, '<div class="notify-popup"><div class="notify-loading">알림을 불러오는 중…</div></div>', '390px', 'pop--notifications');
+    var pop = openPopup(anchor, notificationPopupSkeleton(), '390px', 'pop--notifications');
     if (!u) {
       pop.el.innerHTML = '<div class="notify-popup"><div class="empty notify-empty"><p>로그인 후 알림을 확인할 수 있습니다.</p><a class="btn btn--gold btn--sm" href="' + pageUrl('Login.html') + '">로그인</a></div></div>';
       return;
@@ -1106,7 +1127,8 @@ window.UI = (function () {
       });
       saveBtn.hidden = panel !== 'profile';
       if (panel === 'notifications') {
-        notificationListEl.innerHTML = '<div class="notify-loading">알림을 불러오는 중…</div>';
+        notificationListEl.setAttribute('aria-busy', 'true');
+        notificationListEl.innerHTML = notificationSkeletonRows(5, true);
         loadNotifications(true).then(function () {
           if (m.el.isConnected && !notificationsPanel.hidden) renderProfileNotifications(true);
         });
@@ -1129,6 +1151,7 @@ window.UI = (function () {
     }
     function renderProfileNotifications(reset) {
       if (reset) notificationVisibleCount = 10;
+      notificationListEl.removeAttribute('aria-busy');
       var items = filteredProfileNotifications();
       m.body.querySelectorAll('[data-notify-filter]').forEach(function (button) {
         var active = button.getAttribute('data-notify-filter') === notificationFilter;
@@ -1173,17 +1196,20 @@ window.UI = (function () {
       var batchToken = ++notificationBatchToken;
       var currentTop = notificationListEl.scrollTop;
       var loader = document.createElement('div');
-      loader.className = 'profile-notify-loading';
-      loader.setAttribute('role', 'status');
-      loader.textContent = '알림을 불러오는 중…';
+      loader.className = 'profile-notify-skeleton-batch';
+      loader.setAttribute('aria-hidden', 'true');
+      loader.innerHTML = notificationSkeletonRows(3, true);
+      notificationListEl.setAttribute('aria-busy', 'true');
       notificationListEl.appendChild(loader);
       window.setTimeout(function () {
         if (batchToken !== notificationBatchToken || !m.el.isConnected || notificationsPanel.hidden) {
           if (loader.parentNode) loader.parentNode.removeChild(loader);
+          notificationListEl.removeAttribute('aria-busy');
           notificationBatchLoading = false;
           return;
         }
         if (loader.parentNode) loader.parentNode.removeChild(loader);
+        notificationListEl.removeAttribute('aria-busy');
         var currentItems = filteredProfileNotifications();
         var nextCount = Math.min(currentItems.length, notificationVisibleCount + 10);
         notificationListEl.insertAdjacentHTML('beforeend', profileNotificationRows(currentItems.slice(notificationVisibleCount, nextCount)));

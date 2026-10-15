@@ -11,8 +11,27 @@
 
   function el(id) { return document.getElementById(id); }
   function setLoading(btn, on) {
-    if (on) { btn.dataset.tx = btn.innerHTML; btn.innerHTML = '<span class="spin"></span> 처리 중…'; btn.disabled = true; }
-    else { if (btn.dataset.tx) btn.innerHTML = btn.dataset.tx; btn.disabled = false; }
+    if (on) {
+      btn.dataset.tx = btn.innerHTML;
+      btn.dataset.loadingAriaLabel = btn.getAttribute('aria-label') || '';
+      var icon = btn.querySelector('svg');
+      var labelWidth = Math.min(150, Math.max(48, btn.textContent.replace(/\s+/g, ' ').trim().length * 7));
+      btn.innerHTML = '<span class="login-loading-content">' + (icon ? icon.outerHTML : '') +
+        '<span class="skel login-loading-label" style="width:' + labelWidth + 'px" aria-hidden="true"></span></span>';
+      btn.setAttribute('aria-busy', 'true');
+      btn.setAttribute('aria-label', '처리 중');
+      btn.classList.add('is-loading');
+      btn.disabled = true;
+    } else {
+      if (btn.dataset.tx) btn.innerHTML = btn.dataset.tx;
+      btn.removeAttribute('aria-busy');
+      if (btn.dataset.loadingAriaLabel) btn.setAttribute('aria-label', btn.dataset.loadingAriaLabel);
+      else btn.removeAttribute('aria-label');
+      delete btn.dataset.tx;
+      delete btn.dataset.loadingAriaLabel;
+      btn.classList.remove('is-loading');
+      btn.disabled = false;
+    }
   }
   function updateInputActions(input) {
     var wrap = input.closest('.login-input-wrap');

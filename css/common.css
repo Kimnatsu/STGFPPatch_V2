@@ -412,9 +412,6 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 .btn--sm{padding:8px 14px;min-height:38px;font-size:12.5px}
 .btn--block{width:100%}
 .btn[disabled]{opacity:.6;cursor:not-allowed;transform:none!important}
-.spin{width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:currentColor;border-radius:50%;display:inline-block;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
 /* ---------- 입력 ---------- */
 input,select,textarea{
   font:inherit;color:var(--text);background:var(--surface-2);
@@ -603,7 +600,15 @@ select{appearance:none;-webkit-appearance:none;cursor:pointer;
 .notify-copy small{font-size:11.5px;line-height:1.4;color:var(--text-2);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .notify-copy time{font-size:11px;color:var(--text-3)}
 .notify-unread-dot{width:6px;height:6px;flex:none;margin-top:7px;border-radius:50%;background:var(--red)}
-.notify-loading{padding:28px 16px;color:var(--text-3);font-size:13px;text-align:center}
+.notification-skeleton-row{pointer-events:none}
+.notify-skeleton-icon{background:transparent!important}
+.notification-skeleton-avatar{display:block;width:100%;height:100%;border-radius:50%}
+.notification-skeleton-title{display:block;height:12px;border-radius:5px}
+.notification-skeleton-time{display:block;height:9px;border-radius:4px}
+.notification-skeleton-dot{display:block;width:6px;height:6px;flex:none;margin-top:7px;border-radius:50%}
+.notification-skeleton-count{display:inline-block;width:18px;height:14px;margin-left:4px;border-radius:5px;vertical-align:-2px}
+.notification-skeleton-action{display:inline-block;width:48px;height:10px;border-radius:5px}
+.notification-skeleton-action:last-child{width:42px}
 .notify-empty{padding:38px 16px}
 .notify-empty small{display:block;margin-top:6px}
 
@@ -992,7 +997,6 @@ body.body-lock{
 .profile-notification-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:5px}
 .profile-notification-copy b{font-size:13px;line-height:1.55;color:var(--text);font-weight:800}
 .profile-notification-copy time{font-size:11px;color:var(--text-3)}
-.profile-notify-loading{padding:12px;text-align:center;color:var(--text-3);font-size:11px}
 .profile-notification-empty{padding:32px 14px}
 .my-info-action{
   padding:5px 10px;border:1px solid var(--line-2);border-radius:var(--r-sm);
@@ -1132,6 +1136,7 @@ body.body-lock{
 /* ---------- 스켈레톤/빈 상태 ---------- */
 .skel{background:linear-gradient(100deg,var(--surface-2) 40%,var(--surface-3) 50%,var(--surface-2) 60%);background-size:200% 100%;animation:skelMove 1.3s ease-in-out infinite;border-radius:6px}
 @keyframes skelMove{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none;background-position:50% 0}}
 .skel-row{padding:12px 8px;display:flex;flex-direction:column;gap:8px}
 .skel-cards{display:grid;gap:14px;grid-template-columns:1fr}
 @media (min-width:560px){.skel-cards{grid-template-columns:repeat(2,1fr)}}

@@ -113,6 +113,12 @@
   function renderDashboardFavorites() {
     var body = $('dashboardFavoriteBody');
     if (!body) return;
+    if (state.user && !state.userDoc) {
+      body.setAttribute('aria-busy', 'true');
+      body.innerHTML = favoriteSkeletonMarkup(4);
+      return;
+    }
+    body.removeAttribute('aria-busy');
     var settings = state.userDoc || {};
     var key = state.favoriteTab === 'support' ? 'favSupports' : 'favChars';
     var ids = Array.isArray(settings[key]) ? settings[key] : [];
@@ -125,6 +131,11 @@
         '<span>추가해보세요</span>' +
         '<a class="settings-favorite-button" href="ko/' + page + '">캐릭터 페이지로</a>' +
         '</div>';
+      return;
+    }
+    if (state.user && !state.favoriteCatalogLoaded) {
+      body.setAttribute('aria-busy', 'true');
+      body.innerHTML = favoriteSkeletonMarkup(Math.min(ids.length, 4));
       return;
     }
     var itemPage = state.favoriteTab === 'support' ? 'Main.html#characters?tab=support&' : 'Main.html#characters?';
@@ -187,10 +198,31 @@
 
   function renderDashboard() {
     var counts = dashboardCounts();
-    if ($('dashboardPosts')) $('dashboardPosts').textContent = counts.posts || 0;
-    if ($('dashboardComments')) $('dashboardComments').textContent = counts.comments || 0;
-    if ($('dashboardLikes')) $('dashboardLikes').textContent = counts.likes || 0;
+    var loading = !!state.user && !state.userDoc;
+    var stats = document.querySelector('.settings-stats');
+    if (stats) stats.setAttribute('aria-busy', String(loading));
+    [['dashboardPosts', counts.posts], ['dashboardComments', counts.comments], ['dashboardLikes', counts.likes]].forEach(function (item) {
+      var target = $(item[0]);
+      if (!target) return;
+      if (loading) {
+        target.innerHTML = '<span class="skel settings-stat-skeleton" aria-hidden="true"></span>';
+        target.setAttribute('aria-label', '활동 통계를 불러오는 중');
+      } else {
+        target.textContent = item[1] || 0;
+        target.removeAttribute('aria-label');
+      }
+    });
     renderDashboardFavorites();
+  }
+
+  function favoriteSkeletonMarkup(count) {
+    var cards = '';
+    for (var i = 0; i < count; i++) {
+      cards += '<div class="settings-favorite-item settings-favorite-skeleton" aria-hidden="true">' +
+        '<span class="settings-favorite-item-icon"><span class="skel"></span></span>' +
+        '<span class="skel settings-favorite-skeleton-title"></span></div>';
+    }
+    return '<div class="settings-favorite-grid settings-favorite-skeleton-grid" aria-hidden="true">' + cards + '</div>';
   }
 
   function closeSettings() {
@@ -293,8 +325,10 @@
   function loadNotices() {
     var list = $('noticeList');
     if (!list || list.dataset.loaded === 'true') return;
-    list.innerHTML = '<div class="settings-loading">공지사항을 불러오는 중입니다.</div>';
+    list.setAttribute('aria-busy', 'true');
+    list.innerHTML = noticeSkeletonMarkup(4);
     if (typeof FB === 'undefined') {
+      list.removeAttribute('aria-busy');
       list.innerHTML = '<div class="settings-empty">공지사항을 불러올 수 없습니다.</div>';
       return;
     }
@@ -303,6 +337,7 @@
     }).then(function (items) {
       state.notices = items || [];
       list.dataset.loaded = 'true';
+      list.removeAttribute('aria-busy');
       if (!state.notices.length) {
         list.innerHTML = '<div class="settings-empty">등록된 공지사항이 없습니다.</div>';
         return;
@@ -316,8 +351,19 @@
         button.addEventListener('click', function () { openNotice(Number(button.dataset.noticeIndex)); });
       });
     }).catch(function () {
+      list.removeAttribute('aria-busy');
       list.innerHTML = '<div class="settings-empty">공지사항을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>';
     });
+  }
+
+  function noticeSkeletonMarkup(count) {
+    var rows = '';
+    for (var i = 0; i < (count || 4); i++) {
+      rows += '<div class="notice-skeleton-row" aria-hidden="true"><div class="notice-skeleton-title">' +
+        '<span class="skel notice-skeleton-badge"></span><span class="skel notice-skeleton-heading"></span></div>' +
+        '<span class="skel notice-skeleton-meta"></span></div>';
+    }
+    return '<div class="notice-skeleton-list" aria-hidden="true">' + rows + '</div>';
   }
 
   function openNotice(index) {
@@ -346,6 +392,19 @@
     }
     login.hidden = true;
     card.hidden = false;
+    if (!state.userDoc) {
+      card.setAttribute('aria-busy', 'true');
+      card.innerHTML = NOTIFY_ROWS.map(function (_, index) {
+        var titleWidth = 38 + (index % 3) * 10;
+        var detailWidth = 56 + (index % 2) * 12;
+        return '<div class="notify-row settings-notify-skeleton" aria-hidden="true">' +
+          '<span class="notify-copy"><strong><span class="skel settings-notify-title" style="width:' + titleWidth + '%"></span></strong>' +
+          '<small><span class="skel settings-notify-detail" style="width:' + detailWidth + '%"></span></small></span>' +
+          '<span class="notify-switch settings-notify-switch"><i class="skel"></i></span></div>';
+      }).join('');
+      return;
+    }
+    card.removeAttribute('aria-busy');
     var settings = currentSettings();
     card.innerHTML = NOTIFY_ROWS.map(function (row) {
       var on = settings[row[0]] === true;
@@ -368,6 +427,15 @@
     }
     login.hidden = true;
     card.hidden = false;
+    if (!state.userDoc) {
+      card.setAttribute('aria-busy', 'true');
+      card.innerHTML =
+        '<div class="settings-info-row"><span>닉네임</span><span class="skel settings-info-skeleton"></span></div>' +
+        '<div class="settings-info-row"><span>이메일</span><span class="skel settings-info-skeleton"></span></div>' +
+        '<div class="settings-info-row"><span>회원번호</span><span class="skel settings-info-skeleton"></span></div>';
+      return;
+    }
+    card.removeAttribute('aria-busy');
     var profile = state.userDoc || {};
     var nickname = profile.nickname || state.user.displayName || '선원';
     var email = state.user.email || '이메일 없음';
@@ -402,14 +470,22 @@
 
   function prepareProfileEditor() {
     var form = $('profileSettingsForm');
+    var loading = $('profileSettingsLoading');
     var login = $('profileSettingsLogin');
     if (!state.user) {
       if (form) form.hidden = true;
+      if (loading) loading.hidden = true;
       if (login) login.hidden = false;
       state.profileEditorUid = null;
       return;
     }
     if (login) login.hidden = true;
+    if (!state.userDoc) {
+      if (form) form.hidden = true;
+      if (loading) loading.hidden = false;
+      return;
+    }
+    if (loading) loading.hidden = true;
     if (form) form.hidden = false;
     if (state.profileEditorUid !== state.user.uid) {
       var profile = state.userDoc || {};
@@ -590,9 +666,11 @@
         state.userDoc = null;
         state.profileEditorUid = null;
         renderMobileHeader();
+        renderDashboard();
+        if (state.view === 'notify') renderNotifications();
+        if (state.view === 'myInfo') renderMyInfo();
+        if (state.view === 'profileInfo') prepareProfileEditor();
         if (!user) {
-          renderNotifications();
-          if (state.view === 'profileInfo') prepareProfileEditor();
           return;
         }
         FB.getUserDoc(user.uid).then(function (profile) {

@@ -37,6 +37,10 @@ html[data-theme="light"] .login-logo-image--light{display:block}
   content:"";position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,var(--gold),var(--red) 55%,var(--blue));
 }
+.login-loading-content{display:inline-flex;min-width:0;align-items:center;justify-content:center;gap:9px}
+.login-loading-content svg{flex:none}
+.login-loading-label{display:inline-block;max-width:150px;height:10px;border-radius:5px}
+.btn.is-loading{cursor:wait}
 
 .login-links{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
 .login-links--center{justify-content:center}
