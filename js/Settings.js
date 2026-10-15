@@ -3,7 +3,7 @@
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = { view: 'blank', notices: [], noticeDetail: null, user: null, userDoc: null, favoriteTab: 'char', favoriteCatalog: { chars: [], supports: [] }, favoriteCatalogLoaded: false, toastTimer: null, deferredInstall: null };
+  var state = { view: 'blank', notices: [], noticeDetail: null, user: null, userDoc: null, favoriteTab: 'char', favoriteCatalog: { chars: [], supports: [] }, favoriteCatalogLoaded: false, toastTimer: null, deferredInstall: null, profileEditorUid: null, profileDraftIcon: 0, profileInitialIcon: 0, profileInitialNickname: '', profileSaving: false, avatarPickerIcon: 0 };
   var NOTIFY_ROWS = [
     ['patch', '패치노트 알림', '새로운 패치노트가 등록되면 알려드립니다.'],
     ['fav', '즐겨찾기 알림', '즐겨찾기한 캐릭터의 밸런스 패치를 알려드립니다.'],
@@ -84,8 +84,7 @@
     if (!state.user) {
       userBox.innerHTML =
         '<span class="settings-mobile-profile settings-mobile-profile-icon ic-v2-navigation-profile-fill" aria-hidden="true"></span>' +
-        '<a class="settings-mobile-login" href="ko/Login.html">' +
-        '<span>로그인 해주세요</span><span class="settings-mobile-login-icon ic-v2-control-arrow-right-line" aria-hidden="true"></span></a>';
+        '<span class="settings-mobile-login"><span>로그인 해주세요</span><span class="settings-mobile-login-icon ic-v2-control-arrow-right-line" aria-hidden="true"></span></span>';
       return;
     }
     var nickname = (state.userDoc && state.userDoc.nickname) || state.user.displayName || '선원';
@@ -198,10 +197,6 @@
     location.href = 'ko/Main.html#home';
   }
 
-  function setProgress(view) {
-    $('settingsProgress').style.width = (view === 'blank' ? 0 : view === 'main' ? 25 : 100) + '%';
-  }
-
   function setHeaderSelection(view) {
     var settings = $('settingsMobileSettings');
     var notify = $('settingsMobileNotify');
@@ -213,6 +208,7 @@
     var headerTitles = {
       main: '설정',
       myInfo: '내 정보',
+      profileInfo: '정보 설정',
       notice: '공지사항',
       notify: '알림',
       theme: '테마',
@@ -243,12 +239,12 @@
       section.setAttribute('aria-hidden', String(!active));
     });
     state.view = view;
-    setProgress(view);
     setHeaderSelection(view);
     if (addHistory) history.pushState({ settingsView: view }, '', view === 'main' ? '#Setting' : '#setting-' + view);
     if (view === 'notice') loadNotices();
     if (view === 'notify') renderNotifications();
     if (view === 'myInfo') renderMyInfo();
+    if (view === 'profileInfo') prepareProfileEditor();
     if (view === 'theme') applyTheme(readTheme());
     if (view === 'appIcon') renderAppIcons();
     if (view === 'blank') renderDashboard();
@@ -285,7 +281,8 @@
       return;
     }
     if (state.view !== 'main') {
-      if (history.state && history.state.settingsView) history.back();
+      if (history.state && history.state.settingsView && history.length > 1) history.back();
+      else if (state.view === 'profileInfo') closeSettings();
       else showView('main', false);
       return;
     }
@@ -379,6 +376,119 @@
       '<div class="settings-info-row"><span>닉네임</span><strong>' + esc(nickname) + '</strong></div>' +
       '<div class="settings-info-row"><span>이메일</span><strong>' + esc(email) + '</strong></div>' +
       '<div class="settings-info-row"><span>회원번호</span><strong>' + esc(memberId) + '</strong></div>';
+  }
+
+  function updateProfilePreview() {
+    var src = avatarOf(state.profileDraftIcon);
+    if ($('profileSettingCover')) $('profileSettingCover').src = src;
+    if ($('profileSettingAvatar')) $('profileSettingAvatar').src = src;
+    var input = $('settingsProfileNickname');
+    if ($('profileSettingName')) $('profileSettingName').textContent = input && input.value.trim() ? input.value.trim() : '선원';
+    var counts = (state.userDoc && state.userDoc.counts) || {};
+    if ($('profilePosts')) $('profilePosts').textContent = counts.posts || 0;
+    if ($('profileComments')) $('profileComments').textContent = counts.comments || 0;
+    if ($('profileLikes')) $('profileLikes').textContent = counts.likes || 0;
+  }
+
+  function syncProfileEditor() {
+    var input = $('settingsProfileNickname');
+    var save = $('settingsProfileSave');
+    if (!input || !save) return;
+    updateProfilePreview();
+    var nickname = input.value.trim();
+    var changed = state.profileDraftIcon !== state.profileInitialIcon || nickname !== state.profileInitialNickname;
+    save.disabled = state.profileSaving || !nickname || !changed;
+  }
+
+  function prepareProfileEditor() {
+    var form = $('profileSettingsForm');
+    var login = $('profileSettingsLogin');
+    if (!state.user) {
+      if (form) form.hidden = true;
+      if (login) login.hidden = false;
+      state.profileEditorUid = null;
+      return;
+    }
+    if (login) login.hidden = true;
+    if (form) form.hidden = false;
+    if (state.profileEditorUid !== state.user.uid) {
+      var profile = state.userDoc || {};
+      var icon = parseInt(profile.profileIcon, 10);
+      if (isNaN(icon)) icon = 0;
+      state.profileDraftIcon = Math.abs(icon) % PROFILE_ICON_FILES.length;
+      state.profileInitialIcon = state.profileDraftIcon;
+      state.profileInitialNickname = profile.nickname || state.user.displayName || '선원';
+      state.profileEditorUid = state.user.uid;
+      $('settingsProfileNickname').value = state.profileInitialNickname;
+    }
+    syncProfileEditor();
+  }
+
+  function openSettingsAvatarPicker() {
+    if (!state.user) return;
+    var overlay = $('settingsAvatarOverlay');
+    var grid = $('settingsAvatarGrid');
+    if (!overlay || !grid) return;
+    state.avatarPickerIcon = state.profileDraftIcon;
+    grid.innerHTML = PROFILE_ICON_FILES.map(function (filename, index) {
+      var selected = index === state.avatarPickerIcon;
+      return '<button class="settings-avatar-item' + (selected ? ' is-selected' : '') + '" type="button" data-settings-avatar="' + index + '" aria-label="' + esc(filename.replace(/\.png$/i, '')) + '" aria-pressed="' + selected + '">' +
+        '<img src="img/avatars/' + esc(filename) + '" alt=""></button>';
+    }).join('');
+    $('settingsAvatarPreview').src = avatarOf(state.avatarPickerIcon);
+    overlay.hidden = false;
+    grid.querySelectorAll('[data-settings-avatar]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        state.avatarPickerIcon = Number(button.getAttribute('data-settings-avatar')) || 0;
+        $('settingsAvatarPreview').src = avatarOf(state.avatarPickerIcon);
+        grid.querySelectorAll('[data-settings-avatar]').forEach(function (item) {
+          var selected = item === button;
+          item.classList.toggle('is-selected', selected);
+          item.setAttribute('aria-pressed', String(selected));
+        });
+      });
+    });
+  }
+
+  function closeSettingsAvatarPicker() {
+    var overlay = $('settingsAvatarOverlay');
+    if (overlay) overlay.hidden = true;
+  }
+
+  function registerSettingsAvatar() {
+    state.profileDraftIcon = state.avatarPickerIcon;
+    closeSettingsAvatarPicker();
+    syncProfileEditor();
+  }
+
+  function saveProfileSettings() {
+    if (!state.user) {
+      showToast('로그인이 필요합니다.');
+      return;
+    }
+    var nickname = $('settingsProfileNickname').value.trim();
+    if (!nickname) {
+      showToast('닉네임을 입력해 주세요.');
+      $('settingsProfileNickname').focus();
+      return;
+    }
+    if (state.profileSaving) return;
+    state.profileSaving = true;
+    syncProfileEditor();
+    FB.updateUserDoc(state.user.uid, { profileIcon: state.profileDraftIcon, nickname: nickname }).then(function () {
+      state.userDoc = Object.assign({}, state.userDoc || {}, { profileIcon: state.profileDraftIcon, nickname: nickname });
+      state.profileInitialIcon = state.profileDraftIcon;
+      state.profileInitialNickname = nickname;
+      state.profileEditorUid = state.user.uid;
+      renderMobileHeader();
+      showToast('프로필이 저장되었습니다.');
+    }).catch(function (error) {
+      var message = typeof FB.errMsg === 'function' ? FB.errMsg(error) : '프로필을 저장하지 못했습니다.';
+      showToast(message);
+    }).then(function () {
+      state.profileSaving = false;
+      syncProfileEditor();
+    });
   }
 
   function toggleNotification(button) {
@@ -476,9 +586,11 @@
       auth.onAuthStateChanged(function (user) {
         state.user = user;
         state.userDoc = null;
+        state.profileEditorUid = null;
         renderMobileHeader();
         if (!user) {
           renderNotifications();
+          if (state.view === 'profileInfo') prepareProfileEditor();
           return;
         }
         FB.getUserDoc(user.uid).then(function (profile) {
@@ -486,12 +598,14 @@
           renderMobileHeader();
           renderDashboard();
           loadFavoriteCatalog();
+           if (state.view === 'profileInfo') prepareProfileEditor();
            if (state.view === 'notify') renderNotifications();
            if (state.view === 'myInfo') renderMyInfo();
           if (state.view === 'appIcon') renderAppIcons();
         }).catch(function () {
           state.userDoc = {};
           renderDashboard();
+           if (state.view === 'profileInfo') prepareProfileEditor();
            if (state.view === 'notify') renderNotifications();
            if (state.view === 'myInfo') renderMyInfo();
         });
@@ -506,7 +620,13 @@
       return;
     }
     applyTheme(readTheme());
-    $('settingsMobileBack').addEventListener('click', goToSettingsMain);
+    $('settingsMobileBack').addEventListener('click', function () {
+      if (state.view === 'profileInfo') goBack();
+      else goToSettingsMain();
+    });
+    $('settingsMobileUser').addEventListener('click', function () {
+      showView('profileInfo', true);
+    });
     $('settingsMobileSettings').addEventListener('click', function () {
       showView('main', true);
     });
@@ -518,6 +638,18 @@
       showView('notify', true);
     });
     $('settingsMobileClose').addEventListener('click', closeSettings);
+    $('settingsProfileImage').addEventListener('click', openSettingsAvatarPicker);
+    $('settingsProfileNickname').addEventListener('input', syncProfileEditor);
+    $('settingsProfileSave').addEventListener('click', saveProfileSettings);
+    $('settingsAvatarClose').addEventListener('click', closeSettingsAvatarPicker);
+    $('settingsAvatarCancel').addEventListener('click', closeSettingsAvatarPicker);
+    $('settingsAvatarRegister').addEventListener('click', registerSettingsAvatar);
+    $('settingsAvatarOverlay').addEventListener('click', function (event) {
+      if (event.target === $('settingsAvatarOverlay')) closeSettingsAvatarPicker();
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') closeSettingsAvatarPicker();
+    });
     $('noticeDetailBack').addEventListener('click', goBack);
     document.querySelectorAll('[data-open]').forEach(function (button) {
       button.addEventListener('click', function () { showView(button.dataset.open, true); });
@@ -548,14 +680,10 @@
     renderMobileHeader();
     renderDashboard();
     var initial = (location.hash === '#Setting' || location.hash === '#setting') ? 'main' : location.hash.replace(/^#setting-/, '');
-    if (['blank', 'main', 'myInfo', 'notice', 'notify', 'theme', 'appIcon'].indexOf(initial) > -1) {
-      if (initial === 'main' && location.hash === '#setting-main') {
-        history.replaceState({ settingsView: 'main' }, '', '#Setting');
-      }
-      if (initial !== state.view) showView(initial, false);
-      else setHeaderSelection(initial);
-    } else {
-      setHeaderSelection('blank');
-    }
+    if (['blank', 'main', 'myInfo', 'profileInfo', 'notice', 'notify', 'theme', 'appIcon'].indexOf(initial) < 0) initial = 'blank';
+    if (initial === 'main' && location.hash === '#setting-main') history.replaceState({ settingsView: 'main' }, '', '#Setting');
+    else history.replaceState({ settingsView: initial }, '', location.href);
+    if (initial !== state.view) showView(initial, false);
+    else setHeaderSelection(initial);
   });
 })();
