@@ -1011,8 +1011,8 @@ window.UI = (function () {
         '<div class="profile-settings-shell">' +
         '<aside class="profile-settings-nav">' +
         '<button class="profile-nav-item is-on" type="button" data-profile-panel="profile" aria-selected="true">프로필 정보</button>' +
-        '<button class="profile-nav-item" type="button" data-profile-panel="my-info" aria-selected="false">내 정보</button>' +
         '<button class="profile-nav-item" type="button" data-profile-panel="notifications" aria-selected="false">알림 정보</button>' +
+        '<button class="profile-nav-item" type="button" data-profile-panel="my-info" aria-selected="false">내 정보</button>' +
         '</aside>' +
         '<section class="profile-settings-content">' +
         '<div class="profile-panel" id="profileInfoPanel">' +
