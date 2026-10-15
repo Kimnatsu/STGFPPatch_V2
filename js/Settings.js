@@ -451,6 +451,23 @@
       : window.innerWidth <= 767;
   }
 
+  function applyBoardVisibility(visibility) {
+    var hidden = !!visibility && visibility.boards === false;
+    var stats = document.querySelector('.settings-stats');
+    var writeButton = document.querySelector('.settings-write-button');
+    if (stats) stats.hidden = hidden;
+    if (writeButton) writeButton.hidden = hidden;
+  }
+
+  function initCommunityVisibility() {
+    if (typeof FB === 'undefined') return;
+    FB.onReady().then(function () {
+      if (FB.ready && FB.watchCommunityVisibility) {
+        FB.watchCommunityVisibility(applyBoardVisibility);
+      }
+    });
+  }
+
   function initAuth() {
     if (typeof FB === 'undefined') return;
     FB.onReady().then(function () {
@@ -527,6 +544,7 @@
       else showView('main', false);
     });
     initAuth();
+    initCommunityVisibility();
     renderMobileHeader();
     renderDashboard();
     var initial = (location.hash === '#Setting' || location.hash === '#setting') ? 'main' : location.hash.replace(/^#setting-/, '');
