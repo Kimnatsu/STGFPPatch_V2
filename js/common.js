@@ -1392,23 +1392,85 @@ window.UI = (function () {
     paint(slides[0]);
     if (slides.length > 1) {
       var idx = 0, timer = null;
+      var isHomeBanner = parent.classList.contains('banner--home');
       var dots = document.createElement('div');
-      dots.className = 'banner-dots';
-      dots.innerHTML = list.map(function (_, i) { return '<button class="bdot' + (i === 0 ? ' on' : '') + '" type="button" aria-label="배너 ' + (i + 1) + '"></button>'; }).join('');
-      parent.appendChild(dots);
-      function show(i) {
-        idx = (i + slides.length) % slides.length;
-        slides.forEach(function (s, j) { s.classList.toggle('on', j === idx); });
-        dots.querySelectorAll('.bdot').forEach(function (d, j) { d.classList.toggle('on', j === idx); });
-        paint(slides[idx]);
+      dots.className = 'banner-dots' + (isHomeBanner ? ' banner-dots--pill' : '');
+      if (isHomeBanner) {
+        dots.innerHTML =
+          '<span class="banner-count" aria-live="polite">1/' + slides.length + '</span>' +
+          '<button class="banner-toggle" type="button" aria-label="배너 자동 재생 일시정지" title="배너 자동 재생 일시정지" aria-pressed="false">' +
+          '<span class="banner-toggle-icon" aria-hidden="true"></span></button>';
+      } else {
+        dots.innerHTML = list.map(function (_, i) {
+          return '<button class="bdot' + (i === 0 ? ' on' : '') + '" type="button" aria-label="배너 ' + (i + 1) + '"></button>';
+        }).join('');
       }
-      function restart() { clearInterval(timer); timer = setInterval(function () { show(idx + 1); }, 4600); }
-      restart();
-      dots.querySelectorAll('.bdot').forEach(function (d, i) {
-        d.addEventListener('click', function () { show(i); restart(); });
-      });
-      parent.addEventListener('mouseenter', function () { clearInterval(timer); });
-      parent.addEventListener('mouseleave', function () { restart(); });
+      parent.appendChild(dots);
+      if (isHomeBanner) {
+        var count = dots.querySelector('.banner-count');
+        var toggle = dots.querySelector('.banner-toggle');
+        var duration = 6000;
+        var elapsed = 0;
+        var lastFrame = null;
+        var frameId = null;
+        var paused = false;
+
+        function setProgress() {
+          dots.style.setProperty('--banner-progress', Math.min(100, elapsed / duration * 100) + '%');
+        }
+        function showHome(i) {
+          idx = (i + slides.length) % slides.length;
+          slides.forEach(function (s, j) { s.classList.toggle('on', j === idx); });
+          count.textContent = (idx + 1) + '/' + slides.length;
+          paint(slides[idx]);
+        }
+        function tick(timestamp) {
+          if (paused) { frameId = null; return; }
+          if (lastFrame !== null) elapsed += timestamp - lastFrame;
+          lastFrame = timestamp;
+          if (elapsed >= duration) {
+            elapsed = 0;
+            showHome(idx + 1);
+          }
+          setProgress();
+          frameId = requestAnimationFrame(tick);
+        }
+        function startProgress() {
+          lastFrame = null;
+          if (frameId === null && !paused) frameId = requestAnimationFrame(tick);
+        }
+
+        setProgress();
+        toggle.addEventListener('click', function () {
+          paused = !paused;
+          toggle.classList.toggle('is-paused', paused);
+          toggle.setAttribute('aria-pressed', paused ? 'true' : 'false');
+          toggle.setAttribute('aria-label', paused ? '배너 자동 재생 시작' : '배너 자동 재생 일시정지');
+          toggle.title = paused ? '배너 자동 재생 시작' : '배너 자동 재생 일시정지';
+          if (paused) {
+            if (frameId !== null) cancelAnimationFrame(frameId);
+            frameId = null;
+            lastFrame = null;
+          } else {
+            startProgress();
+          }
+        });
+        startProgress();
+      } else {
+        function show(i) {
+          idx = (i + slides.length) % slides.length;
+          slides.forEach(function (s, j) { s.classList.toggle('on', j === idx); });
+          dots.querySelectorAll('.bdot').forEach(function (d, j) { d.classList.toggle('on', j === idx); });
+          paint(slides[idx]);
+        }
+        function restart() { clearInterval(timer); timer = setInterval(function () { show(idx + 1); }, 4600); }
+        restart();
+        dots.querySelectorAll('.bdot').forEach(function (d, i) {
+          d.addEventListener('click', function () { show(i); restart(); });
+        });
+        parent.addEventListener('mouseenter', function () { clearInterval(timer); });
+        parent.addEventListener('mouseleave', function () { restart(); });
+      }
     }
     slides.forEach(function (s) {
       s.addEventListener('click', function () {

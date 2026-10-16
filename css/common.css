@@ -362,6 +362,30 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 .banner-dots{position:absolute;right:16px;bottom:14px;z-index:4;display:flex;gap:6px}
 .bdot{width:9px;height:9px;border-radius:99px;background:rgba(255,255,255,.4);transition:.25s;padding:0}
 .bdot.on{background:var(--gold);width:22px}
+.banner-dots--pill{
+  align-items:center;gap:7px;min-height:27px;padding:3px 6px 3px 9px;
+  border:1px solid transparent;border-radius:999px;color:#fff;
+  background:linear-gradient(rgba(6,8,12,.86),rgba(6,8,12,.86)) padding-box,
+    conic-gradient(from -90deg,#fff 0%,#fff var(--banner-progress,0%),
+      rgba(255,255,255,.32) var(--banner-progress,0%),rgba(255,255,255,.32) 100%) border-box;
+  -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+}
+.banner-count{min-width:31px;color:#fff;font:700 11px/1 system-ui,sans-serif;text-align:center;white-space:nowrap}
+.banner-toggle{
+  display:grid;place-items:center;width:18px;height:19px;padding:0;border:0;border-radius:50%;
+  color:#fff;background:transparent;cursor:pointer;transition:background .18s ease;
+}
+.banner-toggle:hover{background:rgba(255,255,255,.15)}
+.banner-toggle:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.banner-toggle-icon{position:relative;display:block;width:10px;height:10px}
+.banner-toggle-icon::before{
+  content:"";position:absolute;left:1px;top:1px;width:2px;height:8px;border-radius:1px;
+  background:currentColor;box-shadow:4px 0 0 currentColor;
+}
+.banner-toggle.is-paused .banner-toggle-icon::before{
+  left:2px;top:0;width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;
+  border-left:7px solid currentColor;border-radius:0;background:transparent;box-shadow:none;
+}
 
 /* ---------- 배지 ---------- */
 .badge{
