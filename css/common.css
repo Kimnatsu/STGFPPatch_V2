@@ -330,8 +330,6 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
   background:repeating-linear-gradient(115deg,transparent 0 46px,rgba(255,255,255,.045) 46px 48px)}
 /* 롤링 전환·줌 효과는 홈 배너에만 */
 .banner--home .bimg{transition:opacity 1s ease}
-.banner--home .bimg.on{animation:kenburns 14s ease-in-out infinite alternate}
-@keyframes kenburns{from{transform:scale(1) translateY(0)}to{transform:scale(1.09) translateY(-8px)}}
 .banner--home::after{
   content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
   background:linear-gradient(180deg,transparent 40%,rgba(255,255,255,.65) 96%),
