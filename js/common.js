@@ -1397,10 +1397,11 @@ window.UI = (function () {
       dots.className = 'banner-dots' + (isHomeBanner ? ' banner-dots--pill' : '');
       if (isHomeBanner) {
         var pillOutline = 'M 0.75 13.5 A 12.75 12.75 0 0 1 13.5 0.75 H 62.5 A 12.75 12.75 0 0 1 75.25 13.5 A 12.75 12.75 0 0 1 62.5 26.25 H 13.5 A 12.75 12.75 0 0 1 0.75 13.5 Z';
+        var pillProgressOutline = 'M 2 13.5 A 11.5 11.5 0 0 1 13.5 2 H 62.5 A 11.5 11.5 0 0 1 74 13.5 A 11.5 11.5 0 0 1 62.5 25 H 13.5 A 11.5 11.5 0 0 1 2 13.5 Z';
         dots.innerHTML =
           '<svg class="banner-progress-svg" viewBox="0 0 76 27" aria-hidden="true" focusable="false">' +
           '<path class="banner-progress-track" d="' + pillOutline + '" />' +
-          '<path class="banner-progress-line" d="' + pillOutline + '" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" />' +
+          '<path class="banner-progress-line" d="' + pillProgressOutline + '" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" />' +
           '</svg>' +
           '<span class="banner-count" aria-live="polite">1/' + slides.length + '</span>' +
           '<button class="banner-toggle" type="button" aria-label="배너 자동 재생 일시정지" title="배너 자동 재생 일시정지" aria-pressed="false">' +
