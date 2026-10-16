@@ -1529,6 +1529,25 @@ window.UI = (function () {
     }, 900);
   }
 
+  function initFooterAdminShortcut() {
+    var footer = document.querySelector('.app-footer');
+    if (!footer) return;
+
+    var small = footer.querySelector('.foot-bottom small');
+    var brand = footer.querySelector('.foot-brand');
+    if (!small || !brand) return;
+
+    var smallClickCount = 0;
+    small.addEventListener('click', function () {
+      smallClickCount += 1;
+    });
+    brand.addEventListener('click', function (event) {
+      if (smallClickCount < 5) return;
+      event.preventDefault();
+      window.location.href = 'https://onepiecefightingpath.github.io/FPPatchStudio/admin.html';
+    });
+  }
+
   /* ---------- 부팅 ---------- */
   function boot() {
     applyTheme(store.get('theme', 'dark'));
@@ -1536,6 +1555,7 @@ window.UI = (function () {
     buildDeskNav();
     buildTabs();
     buildDrawer();
+    initFooterAdminShortcut();
     updateAuthArea();
     FB.onReady().then(function () {
       if (FB.ready) {
