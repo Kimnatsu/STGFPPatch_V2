@@ -3,7 +3,7 @@
 const crypto = require('node:crypto');
 const admin = require('firebase-admin');
 const { setGlobalOptions } = require('firebase-functions/v2');
-const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated, onDocumentUpdated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { logger } = require('firebase-functions');
 
@@ -37,7 +37,7 @@ function isPublished(data) {
 }
 
 function relativeHref(page, section, id) {
-  return `${page}#${section}/view/${encodeURIComponent(String(id))}`;
+  return `ko/${page}#${section}/view/${encodeURIComponent(String(id))}`;
 }
 
 async function createNotification(uid, idempotencyKey, notification) {
@@ -100,7 +100,7 @@ async function sendPush(uid, notificationId, notification) {
   const tokenSnapshot = await db.collection('users').doc(uid).collection('fcmTokens').get();
   if (tokenSnapshot.empty) return;
   const copy = pushCopy(notification);
-  const link = String(notification.href || 'Main.html#home');
+  const link = String(notification.href || 'ko/Main.html#home');
   for (let start = 0; start < tokenSnapshot.docs.length; start += WRITE_CONCURRENCY) {
     const chunk = tokenSnapshot.docs.slice(start, start + WRITE_CONCURRENCY);
     await Promise.all(chunk.map(async (tokenDoc) => {
@@ -203,20 +203,33 @@ function pvpFingerprint(data) {
   return JSON.stringify(relevant);
 }
 
-exports.onPatchNoteCreated = onDocumentCreated('patchNotes/{patchId}', async (event) => {
-  const data = event.data && event.data.data();
+async function notifyPatchNote(patchId, eventId, data) {
   if (!isPublished(data)) return;
   const title = String(pick(data, 'title') || '새 패치노트');
   const users = await getEnabledUsers('patch');
-  const created = await notifyUsers(users, `patch:${event.id}`, {
+  const created = await notifyUsers(users, `patch:${eventId}`, {
     type: 'patch',
     title: `[패치노트] ${title}`,
     targetTitle: title,
-    targetId: event.params.patchId,
+    targetId: patchId,
     targetType: 'patch',
-    href: relativeHref('Community.html', 'patch', event.params.patchId),
+    href: relativeHref('Community.html', 'patch', patchId),
   });
-  logger.info('Patch note notifications created', { patchId: event.params.patchId, created });
+  logger.info('Patch note notifications created', { patchId, created });
+}
+
+exports.onPatchNoteCreated = onDocumentCreated('patchNotes/{patchId}', async (event) => {
+  const data = event.data && event.data.data();
+  if (!isPublished(data)) return;
+  return notifyPatchNote(event.params.patchId, event.id, data);
+});
+
+exports.onPatchNotePublished = onDocumentUpdated('patchNotes/{patchId}', async (event) => {
+  const before = event.data && event.data.before.data();
+  const data = event.data && event.data.after.data();
+  // Only publish transitions; edits to an already-published note don't resend.
+  if (isPublished(before) || !isPublished(data)) return;
+  return notifyPatchNote(event.params.patchId, event.id, data);
 });
 
 exports.onFavoriteBalancePatchChanged = onDocumentWritten('pvpPatch/{patchId}', async (event) => {
@@ -251,7 +264,7 @@ exports.onFavoriteBalancePatchChanged = onDocumentWritten('pvpPatch/{patchId}', 
         targetTitle: '즐겨찾기 캐릭터 밸런스 패치',
         targetId: event.params.patchId,
         targetType: 'pvp',
-        href: 'Main.html#pvp',
+        href: 'ko/Main.html#pvp',
         characterName: [...match.names].join(', ') || '즐겨찾기 캐릭터',
       }
     )));
@@ -264,21 +277,34 @@ exports.onFavoriteBalancePatchChanged = onDocumentWritten('pvpPatch/{patchId}', 
   });
 });
 
-exports.onEventCreated = onDocumentCreated('events/{eventId}', async (event) => {
-  const data = event.data && event.data.data();
+async function notifyNewEvent(eventId, triggerId, data) {
   if (!isPublished(data)) return;
   if (/^(end|ended|closed|종료|종료됨)$/i.test(String(pick(data, 'status', 'state') || '').trim())) return;
   const title = String(pick(data, 'title') || '새 이벤트');
   const users = await getEnabledUsers('event');
-  const created = await notifyUsers(users, `event:${event.id}`, {
+  const created = await notifyUsers(users, `event:${triggerId}`, {
     type: 'event',
     title: `[이벤트] ${title}`,
     targetTitle: title,
-    targetId: event.params.eventId,
+    targetId: eventId,
     targetType: 'event',
-    href: relativeHref('Community.html', 'event', event.params.eventId),
+    href: relativeHref('Community.html', 'event', eventId),
   });
-  logger.info('New-event notifications created', { eventId: event.params.eventId, created });
+  logger.info('New-event notifications created', { eventId, created });
+}
+
+exports.onEventCreated = onDocumentCreated('events/{eventId}', async (event) => {
+  const data = event.data && event.data.data();
+  if (!isPublished(data)) return;
+  return notifyNewEvent(event.params.eventId, event.id, data);
+});
+
+exports.onEventPublished = onDocumentUpdated('events/{eventId}', async (event) => {
+  const before = event.data && event.data.before.data();
+  const data = event.data && event.data.after.data();
+  // Notify only on first publication, not on edits to an already-live event.
+  if (isPublished(before) || !isPublished(data)) return;
+  return notifyNewEvent(event.params.eventId, event.id, data);
 });
 
 function eventDeadline(value) {

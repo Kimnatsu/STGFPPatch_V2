@@ -17,13 +17,13 @@ messaging.onBackgroundMessage(function (payload) {
     badge: icon,
     tag: data.notificationId || undefined,
     renotify: false,
-    data: { link: data.link || 'Main.html#home' }
+    data: { link: data.link || 'ko/Main.html#home' }
   });
 });
 
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
-  var link = event.notification.data && event.notification.data.link || 'Main.html#home';
+  var link = event.notification.data && event.notification.data.link || 'ko/Main.html#home';
   var target = new URL(link, self.registration.scope);
   if (target.origin !== self.location.origin) return;
 

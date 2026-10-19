@@ -811,7 +811,7 @@
       body: data.body || '',
       icon: new URL('img/logo-dark.png', document.baseURI).href,
       tag: data.notificationId || undefined,
-      data: { link: data.link || 'Main.html#home' }
+      data: { link: data.link || 'ko/Main.html#home' }
     });
     notification.onclick = function () {
       var link = notification.data && notification.data.link;
