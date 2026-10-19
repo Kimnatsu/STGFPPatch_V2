@@ -483,13 +483,13 @@
   }
 
   function notificationInboxIcon(type) {
-    var paths = {
-      patch: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9.5 12h6M9.5 15.5h4"/>',
-      fav: '<path d="M12 20.4l-7.2-7A4.8 4.8 0 0 1 12 6.6a4.8 4.8 0 0 1 7.2 6.8z"/>',
-      event: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
-      comment: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>'
+    var icons = {
+      patch: 'ic-v2-community-view-update-line',
+      fav: 'ic-v2-community-star-fill',
+      event: 'ic-v2-community-calendar-line',
+      comment: 'ic-v2-community-comment-line'
     };
-    return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (paths[type] || paths.comment) + '</svg>';
+    return '<i class="settings-font-icon settings-notification-icon ' + (icons[type] || icons.comment) + '" aria-hidden="true"></i>';
   }
 
   function notificationInboxTime(value) {
