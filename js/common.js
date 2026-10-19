@@ -282,6 +282,10 @@ window.UI = (function () {
     var allBtn = pop.el.querySelector('#notifyAll');
     if (allBtn) allBtn.addEventListener('click', function () {
       closePopups();
+      if (isMobileLayout()) {
+        location.href = pageUrl('Settings.html#setting-notifications');
+        return;
+      }
       openMyInfoPopup('notifications');
     });
     pop.el.querySelectorAll('[data-notify-id]').forEach(function (row) {

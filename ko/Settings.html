@@ -238,6 +238,25 @@
       </div>
     </section>
 
+    <section class="settings-view" id="settings-notifications" data-view="notifications" aria-hidden="true">
+      <div class="settings-content settings-content--sub">
+        <div class="login-required" id="notificationsLogin" hidden>
+          <span class="login-required-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5M15 12H3"/></svg></span>
+          <strong>로그인이 필요합니다.</strong>
+          <p>로그인하면 받은 알림을 확인할 수 있습니다.</p>
+          <a class="settings-action-button" href="ko/Login.html">로그인하기</a>
+        </div>
+        <div id="notificationsContent" hidden>
+          <div class="profile-notify-filters" role="tablist" aria-label="알림 종류">
+            <button class="profile-notify-filter is-on" type="button" data-settings-notify-filter="all" role="tab" aria-selected="true">전체 알림</button>
+            <button class="profile-notify-filter" type="button" data-settings-notify-filter="unread" role="tab" aria-selected="false">읽지 않음</button>
+            <button class="profile-notify-filter" type="button" data-settings-notify-filter="read" role="tab" aria-selected="false">읽은 알림</button>
+          </div>
+          <div class="profile-notification-list settings-notification-list" id="settingsNotificationList" role="tabpanel" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
     <section class="settings-view" id="settings-theme" data-view="theme" aria-hidden="true">
       <div class="settings-content settings-content--sub">
         <div class="theme-options" role="radiogroup" aria-label="테마 선택">

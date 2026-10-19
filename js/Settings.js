@@ -3,7 +3,14 @@
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = { view: 'blank', notices: [], noticeDetail: null, user: null, userDoc: null, favoriteTab: 'char', favoriteCatalog: { chars: [], supports: [] }, favoriteCatalogLoaded: false, toastTimer: null, deferredInstall: null, profileEditorUid: null, profileDraftIcon: 0, profileInitialIcon: 0, profileInitialNickname: '', profileSaving: false, avatarPickerIcon: 0 };
+  var state = {
+    view: 'blank', notices: [], noticeDetail: null, user: null, userDoc: null,
+    favoriteTab: 'char', favoriteCatalog: { chars: [], supports: [] }, favoriteCatalogLoaded: false,
+    notificationItems: [], notificationUid: null, notificationLoadedUid: null, notificationLoadingUid: null,
+    notificationLoadError: false, notificationFilter: 'all',
+    toastTimer: null, deferredInstall: null, profileEditorUid: null, profileDraftIcon: 0,
+    profileInitialIcon: 0, profileInitialNickname: '', profileSaving: false, avatarPickerIcon: 0
+  };
   var NOTIFY_ROWS = [
     ['patch', '패치노트 알림', '새로운 패치노트가 등록되면 알려드립니다.'],
     ['fav', '즐겨찾기 알림', '즐겨찾기한 캐릭터의 밸런스 패치를 알려드립니다.'],
@@ -243,6 +250,7 @@
       profileInfo: '정보 설정',
       notice: '공지사항',
       notify: '알림',
+      notifications: '알림',
       theme: '테마',
       appIcon: '앱 아이콘 변경'
     };
@@ -250,7 +258,7 @@
     title.hidden = !inSettings;
     title.textContent = headerTitles[view] || '설정';
     user.hidden = inSettings;
-    var settingsSelected = view !== 'blank' && view !== 'notify';
+    var settingsSelected = view !== 'blank' && view !== 'notify' && view !== 'notifications';
     var hideTopActions = inSettings;
     settings.hidden = hideTopActions;
     notify.hidden = hideTopActions;
@@ -258,8 +266,8 @@
     notify.setAttribute('aria-hidden', String(hideTopActions));
     settings.toggleAttribute('aria-current', settingsSelected);
     if (settingsSelected) settings.setAttribute('aria-current', 'page');
-    notify.toggleAttribute('aria-current', view === 'notify');
-    if (view === 'notify') notify.setAttribute('aria-current', 'page');
+    notify.toggleAttribute('aria-current', view === 'notifications');
+    if (view === 'notifications') notify.setAttribute('aria-current', 'page');
   }
 
   function showView(view, addHistory) {
@@ -275,6 +283,7 @@
     if (addHistory) history.pushState({ settingsView: view }, '', view === 'main' ? '#Setting' : '#setting-' + view);
     if (view === 'notice') loadNotices();
     if (view === 'notify') renderNotifications();
+    if (view === 'notifications') renderNotificationInbox();
     if (view === 'myInfo') renderMyInfo();
     if (view === 'profileInfo') prepareProfileEditor();
     if (view === 'theme') applyTheme(readTheme());
@@ -413,6 +422,197 @@
     }).join('');
     card.querySelectorAll('[data-notify-key]').forEach(function (button) {
       button.addEventListener('click', function () { toggleNotification(button); });
+    });
+  }
+
+  function notificationInboxUrl(path) {
+    path = String(path || '');
+    if (/^(?:[a-z]+:|\/\/|#|\/)/i.test(path)) return path;
+    return new URL('ko/' + path.replace(/^ko\//i, ''), document.baseURI).href;
+  }
+
+  function notificationInboxHref(item) {
+    if (item.href) return notificationInboxUrl(item.href);
+    if (!item.targetId) return '';
+    var targetId = encodeURIComponent(item.targetId);
+    if (item.type === 'patch') return notificationInboxUrl('Community.html#patch/view/' + targetId);
+    if (item.type === 'event') return notificationInboxUrl('Community.html#event/view/' + targetId);
+    if (item.type === 'comment') {
+      return notificationInboxUrl((String(item.targetType).toLowerCase() === 'event' ?
+        'Community.html#event/view/' : 'Community.html#board/view/') + targetId);
+    }
+    return notificationInboxUrl('Main.html#pvp');
+  }
+
+  function notificationInboxMessage(item) {
+    function value(value) {
+      value = String(value == null ? '' : value).trim();
+      return value === '새 알림이 있습니다.' ? '' : value;
+    }
+    var title = value(item.targetTitle) || value(item.title) || value(item.body);
+    var character = value(item.characterName) || value(item.title) || value(item.body) || '즐겨찾기 캐릭터';
+    if (item.type === 'patch') {
+      if (/^\[패치노트\]/.test(title)) return title;
+      return '[패치노트] 최신 ' + (title || '패치노트') + ' 등록! 지금 확인해보세요.';
+    }
+    if (item.type === 'fav') {
+      if (/^즐겨찾기한 .+의 밸런스 패치/.test(title)) return title;
+      return '즐겨찾기한 ' + character + '의 밸런스 패치! 지금 바로 확인해보세요.';
+    }
+    if (item.type === 'comment') {
+      return item.isReply ?
+        '작성하신 댓글에 대댓글이 달렸어요! 지금 확인해 보세요.' :
+        '작성하신 게시글에 댓글이 달렸어요! 지금 확인해 보세요.';
+    }
+    if (item.type === 'event') {
+      var eventTitle = title.replace(/^\[이벤트\]\s*/, '').replace(/\s*이벤트\s*종료\s*임박.*$/i, '').trim();
+      if (item.isEndingSoon || /종료\s*임박|ending.?soon|deadline/i.test(String(item.subType || '') + ' ' + String(item.title || '') + ' ' + String(item.body || ''))) {
+        var eventName = eventTitle.replace(/\s*이벤트$/i, '').trim();
+        return (eventName ? eventName + ' 이벤트' : '이벤트') + ' 종료 임박! 놓치기 전에 확인해 보세요.';
+      }
+      return '새로운 이벤트가 시작되었어요! 지금 바로 확인해 보세요.';
+    }
+    return title || '새 알림이 있습니다.';
+  }
+
+  function notificationInboxIcon(type) {
+    var paths = {
+      patch: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9.5 12h6M9.5 15.5h4"/>',
+      fav: '<path d="M12 20.4l-7.2-7A4.8 4.8 0 0 1 12 6.6a4.8 4.8 0 0 1 7.2 6.8z"/>',
+      event: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
+      comment: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>'
+    };
+    return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (paths[type] || paths.comment) + '</svg>';
+  }
+
+  function notificationInboxTime(value) {
+    var ms = 0;
+    if (value && value.seconds != null) ms = Number(value.seconds) * 1000;
+    else if (typeof value === 'number') ms = value > 1e12 ? value : value * 1000;
+    else if (value) ms = Date.parse(String(value).replace(/\./g, '-').replace(' ', 'T')) || 0;
+    if (!ms) return '';
+    var diff = Math.max(0, Date.now() - ms);
+    if (diff < 60 * 1000) return '방금 전';
+    if (diff < 60 * 60 * 1000) return Math.floor(diff / (60 * 1000)) + '분 전';
+    if (diff < 24 * 60 * 60 * 1000) return Math.floor(diff / (60 * 60 * 1000)) + '시간 전';
+    if (diff < 7 * 24 * 60 * 60 * 1000) return Math.floor(diff / (24 * 60 * 60 * 1000)) + '일 전';
+    return dateText(new Date(ms).toISOString());
+  }
+
+  function notificationInboxSkeleton(count) {
+    var html = '';
+    for (var i = 0; i < count; i++) {
+      var titleWidth = 46 + (i % 3) * 12;
+      var timeWidth = 32 + (i % 2) * 12;
+      html += '<div class="profile-notification-row notification-skeleton-row" aria-hidden="true">' +
+        '<span class="notify-icon notify-skeleton-icon"><span class="skel notification-skeleton-avatar"></span></span>' +
+        '<span class="profile-notification-copy"><b><span class="skel notification-skeleton-title" style="width:' + titleWidth + '%"></span></b>' +
+        '<time><span class="skel notification-skeleton-time" style="width:' + timeWidth + '%"></span></time></span>' +
+        '<i class="skel notification-skeleton-dot"></i></div>';
+    }
+    return html;
+  }
+
+  function filteredNotificationInbox() {
+    var items = state.notificationItems.slice();
+    if (state.notificationFilter === 'unread') return items.filter(function (item) { return !item.read; });
+    if (state.notificationFilter === 'read') return items.filter(function (item) { return !!item.read; });
+    return items;
+  }
+
+  function renderNotificationInboxRows() {
+    var list = $('settingsNotificationList');
+    if (!list) return;
+    if (state.notificationLoadingUid === state.notificationUid) return;
+    list.removeAttribute('aria-busy');
+    document.querySelectorAll('[data-settings-notify-filter]').forEach(function (button) {
+      var active = button.getAttribute('data-settings-notify-filter') === state.notificationFilter;
+      button.classList.toggle('is-on', active);
+      button.setAttribute('aria-selected', String(active));
+    });
+    var items = filteredNotificationInbox();
+    if (state.notificationLoadError) {
+      list.innerHTML = '<div class="empty profile-notification-empty"><p>알림을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p></div>';
+      return;
+    }
+    if (!items.length) {
+      var emptyMessage = state.notificationFilter === 'unread' ? '읽지 않은 알림이 없습니다.' :
+        state.notificationFilter === 'read' ? '읽은 알림이 없습니다.' : '알림이 없습니다.';
+      list.innerHTML = '<div class="empty profile-notification-empty"><p>' + emptyMessage + '</p></div>';
+      return;
+    }
+    list.innerHTML = items.map(function (item) {
+      return '<button class="profile-notification-row' + (item.read ? '' : ' is-unread') + '" type="button" data-settings-notification-id="' + esc(item.docId) + '">' +
+        '<span class="notify-icon notify-icon--' + esc(item.type) + '">' + notificationInboxIcon(item.type) + '</span>' +
+        '<span class="profile-notification-copy"><b>' + esc(notificationInboxMessage(item)) + '</b>' +
+        '<time>' + esc(notificationInboxTime(item.createdAt || item.date)) + '</time></span>' +
+        (item.read ? '' : '<i class="notify-unread-dot" aria-hidden="true"></i>') + '</button>';
+    }).join('');
+    list.querySelectorAll('[data-settings-notification-id]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var item = state.notificationItems.filter(function (entry) {
+          return String(entry.docId) === String(row.getAttribute('data-settings-notification-id'));
+        })[0];
+        if (!item) return;
+        if (!item.read) {
+          item.read = true;
+          if (typeof FB !== 'undefined' && FB.markNotificationsRead) {
+            FB.markNotificationsRead([item]).catch(function () {});
+          }
+        }
+        var href = notificationInboxHref(item);
+        if (href) location.href = href;
+        else renderNotificationInboxRows();
+      });
+    });
+  }
+
+  function renderNotificationInbox() {
+    var login = $('notificationsLogin');
+    var content = $('notificationsContent');
+    var list = $('settingsNotificationList');
+    if (!login || !content || !list) return;
+    if (!state.user) {
+      login.hidden = false;
+      content.hidden = true;
+      return;
+    }
+    login.hidden = true;
+    content.hidden = false;
+    var uid = state.user.uid;
+    if (state.notificationUid !== uid) {
+      state.notificationUid = uid;
+      state.notificationItems = [];
+      state.notificationLoadedUid = null;
+      state.notificationLoadingUid = null;
+      state.notificationLoadError = false;
+      state.notificationFilter = 'all';
+    }
+    if (state.notificationLoadedUid === uid) {
+      renderNotificationInboxRows();
+      return;
+    }
+    if (state.notificationLoadingUid === uid) return;
+    state.notificationLoadingUid = uid;
+    state.notificationLoadError = false;
+    list.setAttribute('aria-busy', 'true');
+    list.innerHTML = notificationInboxSkeleton(5);
+    var ready = typeof FB !== 'undefined' && FB.onReady ? FB.onReady() : Promise.resolve();
+    ready.then(function () {
+      return typeof FB !== 'undefined' && FB.ready && FB.getNotifications ? FB.getNotifications(uid) : [];
+    }).then(function (items) {
+      if (state.notificationLoadingUid === uid) state.notificationLoadingUid = null;
+      if (!state.user || state.user.uid !== uid) return;
+      state.notificationItems = items || [];
+      state.notificationLoadedUid = uid;
+      renderNotificationInboxRows();
+    }).catch(function () {
+      if (state.notificationLoadingUid === uid) state.notificationLoadingUid = null;
+      if (!state.user || state.user.uid !== uid) return;
+      state.notificationItems = [];
+      state.notificationLoadedUid = uid;
+      state.notificationLoadError = true;
+      renderNotificationInboxRows();
     });
   }
 
@@ -662,12 +862,21 @@
       var auth = FB.auth && FB.auth();
       if (!auth) return;
       auth.onAuthStateChanged(function (user) {
+        var notificationUid = user && user.uid || null;
+        if (state.notificationUid !== notificationUid) {
+          state.notificationUid = notificationUid;
+          state.notificationItems = [];
+          state.notificationLoadedUid = null;
+          state.notificationLoadingUid = null;
+          state.notificationLoadError = false;
+        }
         state.user = user;
         state.userDoc = null;
         state.profileEditorUid = null;
         renderMobileHeader();
         renderDashboard();
         if (state.view === 'notify') renderNotifications();
+        if (state.view === 'notifications') renderNotificationInbox();
         if (state.view === 'myInfo') renderMyInfo();
         if (state.view === 'profileInfo') prepareProfileEditor();
         if (!user) {
@@ -701,7 +910,7 @@
     }
     applyTheme(readTheme());
     $('settingsMobileBack').addEventListener('click', function () {
-      if (state.view === 'profileInfo') goBack();
+      if (state.view === 'profileInfo' || state.view === 'notifications') goBack();
       else goToSettingsMain();
     });
     $('settingsMobileUser').addEventListener('click', function () {
@@ -715,7 +924,7 @@
         location.href = 'ko/Login.html';
         return;
       }
-      showView('notify', true);
+      showView('notifications', true);
     });
     $('settingsMobileClose').addEventListener('click', closeSettings);
     $('settingsProfileImage').addEventListener('click', openSettingsAvatarPicker);
@@ -743,6 +952,13 @@
         showToast('테마가 적용되었습니다.');
       });
     });
+    document.querySelectorAll('[data-settings-notify-filter]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        state.notificationFilter = button.getAttribute('data-settings-notify-filter');
+        renderNotificationInboxRows();
+        window.scrollTo(0, 0);
+      });
+    });
     document.querySelectorAll('[data-icon-choice]').forEach(function (button) {
       button.addEventListener('click', function () { chooseIcon(button); });
     });
@@ -760,7 +976,7 @@
     renderMobileHeader();
     renderDashboard();
     var initial = (location.hash === '#Setting' || location.hash === '#setting') ? 'main' : location.hash.replace(/^#setting-/, '');
-    if (['blank', 'main', 'myInfo', 'profileInfo', 'notice', 'notify', 'theme', 'appIcon'].indexOf(initial) < 0) initial = 'blank';
+    if (['blank', 'main', 'myInfo', 'profileInfo', 'notice', 'notify', 'notifications', 'theme', 'appIcon'].indexOf(initial) < 0) initial = 'blank';
     if (initial === 'main' && location.hash === '#setting-main') history.replaceState({ settingsView: 'main' }, '', '#Setting');
     else history.replaceState({ settingsView: initial }, '', location.href);
     if (initial !== state.view) showView(initial, false);

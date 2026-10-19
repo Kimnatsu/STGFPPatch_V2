@@ -75,6 +75,8 @@
 .settings-content{width:min(100%,620px);margin:0 auto;padding:30px 18px calc(34px + env(safe-area-inset-bottom))}
 .settings-content--sub{padding-top:26px}
 .settings-content--profile{padding-top:22px}
+.settings-notification-list{max-height:none;overflow:visible}
+.settings-notification-list .profile-notification-row:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 .settings-stat-skeleton{display:inline-block;width:38px;height:23px;border-radius:6px;vertical-align:middle}
 .settings-profile-layout{display:flex;width:min(100%,420px);flex-direction:column;gap:21px;margin:0 auto}
 .settings-profile-layout .profile-preview-card{width:100%;margin:0 auto}
