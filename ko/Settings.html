@@ -40,7 +40,10 @@
         <button class="settings-mobile-back" id="settingsMobileBack" type="button" aria-label="이전 페이지로 이동" hidden>
           <span class="top-menu-icon ic-v2-control-arrow-left-line" aria-hidden="true"></span>
         </button>
-        <button class="settings-mobile-user" id="settingsMobileUser" type="button" aria-label="정보 설정 열기"></button>
+        <button class="settings-mobile-user is-loading" id="settingsMobileUser" type="button" aria-label="계정 정보를 불러오는 중" aria-busy="true" aria-disabled="true" tabindex="-1">
+          <span class="skel settings-mobile-user-skeleton-avatar" aria-hidden="true"></span>
+          <span class="skel settings-mobile-user-skeleton-name" aria-hidden="true"></span>
+        </button>
       </div>
       <h1 class="settings-mobile-title" id="settingsMobileTitle" hidden>설정</h1>
       <div class="settings-mobile-actions">
@@ -58,15 +61,16 @@
 
     <section class="settings-view is-active" id="settings-blank" data-view="blank" aria-hidden="false">
       <div class="settings-dashboard">
-        <div class="settings-stats" aria-label="활동 통계">
-          <div class="settings-stat"><strong id="dashboardPosts">0</strong><span>게시글</span></div>
-          <div class="settings-stat"><strong id="dashboardComments">0</strong><span>댓글</span></div>
-          <div class="settings-stat"><strong id="dashboardLikes">0</strong><span>좋아요</span></div>
+        <div class="settings-stats" aria-label="활동 통계" aria-busy="true">
+          <div class="settings-stat"><strong id="dashboardPosts" aria-label="활동 통계를 불러오는 중"><span class="skel settings-stat-skeleton" aria-hidden="true"></span></strong><span>게시글</span></div>
+          <div class="settings-stat"><strong id="dashboardComments" aria-label="활동 통계를 불러오는 중"><span class="skel settings-stat-skeleton" aria-hidden="true"></span></strong><span>댓글</span></div>
+          <div class="settings-stat"><strong id="dashboardLikes" aria-label="활동 통계를 불러오는 중"><span class="skel settings-stat-skeleton" aria-hidden="true"></span></strong><span>좋아요</span></div>
         </div>
 
-        <a class="settings-write-button" href="ko/Community.html#board">
+        <a class="settings-write-button is-loading" href="ko/Community.html#board" aria-busy="true" aria-disabled="true" aria-label="글쓰기 상태를 불러오는 중">
           <i class="settings-font-icon ic-v2-community-write-line" aria-hidden="true"></i>
           <span>글쓰기</span>
+          <span class="skel settings-write-skeleton" aria-hidden="true"></span>
         </a>
 
         <section class="settings-favorites" aria-label="즐겨찾기">

@@ -113,7 +113,7 @@ window.UI = (function () {
   }
 
   /* ---------- 사용자 상태 ---------- */
-  var _fbUser = null, _userDoc = null, _userCbs = [];
+  var _fbUser = null, _userDoc = null, _userCbs = [], _authResolved = false, _headerNotificationsResolved = false;
   function currentUser() {
     if (_fbUser) return _fbUser;
     return null;
@@ -504,7 +504,8 @@ window.UI = (function () {
       '<button class="icon-btn" id="btnFav" aria-label="즐겨찾기" title="즐겨찾기" aria-haspopup="dialog" aria-expanded="false">' +
       '<span class="top-menu-icon top-menu-icon--fill ic-v2-community-favorite-fill" aria-hidden="true"></span></button>' +
       '<button class="icon-btn hd-notify" id="btnNotify" aria-label="알림" title="알림" aria-haspopup="dialog" aria-expanded="false">' +
-      '<span class="top-menu-icon top-menu-icon--fill ic-v2-navigation-alarm-fill" aria-hidden="true"></span><i class="notify-dot" hidden></i></button>' +
+      '<span class="top-menu-icon top-menu-icon--fill ic-v2-navigation-alarm-fill" aria-hidden="true"></span>' +
+      '<span class="skel hd-notify-skeleton" aria-hidden="true"></span><i class="notify-dot" hidden></i></button>' +
       '<div class="hd-auth" id="hdAuth"></div>' +
       '</div></div>';
     $('btnBurger').addEventListener('click', toggleDrawer);
@@ -519,6 +520,7 @@ window.UI = (function () {
     $('btnFav').addEventListener('click', function (e) { e.stopPropagation(); toggleHeaderPopup($('btnFav'), openFavPopup); });
     $('btnNotify').addEventListener('click', function (e) {
       e.stopPropagation();
+      if (!_authResolved) return;
       if (isMobileLayout() && !currentUser()) {
         location.href = pageUrl('Login.html');
         return;
@@ -542,6 +544,8 @@ window.UI = (function () {
     if (!box) return;
     var u = currentUser();
     var mobile = isMobileLayout();
+    var loading = !_authResolved;
+    var notificationLoading = loading || !_headerNotificationsResolved;
     var settingsButton = $('btnSet');
     var favoriteButton = $('btnFav');
     var notify = $('btnNotify');
@@ -554,14 +558,29 @@ window.UI = (function () {
       favoriteButton.setAttribute('aria-hidden', String(mobile));
     }
     if (notify) {
-      notify.hidden = !u && !mobile;
-      notify.setAttribute('aria-hidden', String(!u && !mobile));
-      notify.tabIndex = u || mobile ? 0 : -1;
-      if (!u) {
+      var notifyHidden = !loading && !u && !mobile;
+      notify.hidden = notifyHidden;
+      notify.setAttribute('aria-hidden', String(notifyHidden));
+      notify.tabIndex = notificationLoading ? -1 : (u || mobile ? 0 : -1);
+      notify.classList.toggle('is-loading', notificationLoading);
+      notify.setAttribute('aria-busy', String(notificationLoading));
+      notify.setAttribute('aria-disabled', String(notificationLoading));
+      if (!u && !loading) {
         notify.classList.remove('is-selected');
         notify.setAttribute('aria-expanded', 'false');
       }
     }
+    if (loading) {
+      box.setAttribute('aria-busy', 'true');
+      box.innerHTML =
+        '<div class="hd-auth-desktop hd-auth-skeleton-desktop" aria-hidden="true">' +
+        '<span class="skel hd-auth-skeleton-signup"></span>' +
+        '<span class="skel hd-auth-skeleton-login"></span>' +
+        '</div>' +
+        '<span class="hd-auth-mobile hd-auth-skeleton-mobile skel" aria-hidden="true"></span>';
+      return;
+    }
+    box.removeAttribute('aria-busy');
     if (!u) {
       box.innerHTML =
         '<div class="hd-auth-desktop">' +
@@ -848,7 +867,19 @@ window.UI = (function () {
     pop.el.querySelector('#pfMy').addEventListener('click', function () { closePopups(); openMyInfoPopup('my-info'); });
     pop.el.querySelector('#pfOut').addEventListener('click', function () {
       closePopups();
-      if (FB.ready) FB.auth().signOut().then(function () { toast('로그아웃 되었습니다.'); });
+      var auth = FB.ready && FB.auth();
+      if (!auth || !auth.signOut) return;
+      _authResolved = false;
+      _headerNotificationsResolved = false;
+      updateAuthArea();
+      auth.signOut().then(function () {
+        toast('로그아웃 되었습니다.');
+      }).catch(function (error) {
+        _authResolved = true;
+        _headerNotificationsResolved = true;
+        notifyUser();
+        toast(FB.errMsg(error), 'err');
+      });
     });
     pop.el.querySelector('#pfNotice').addEventListener('click', function () {
       closePopups();
@@ -1667,25 +1698,55 @@ window.UI = (function () {
     initFooterAdminShortcut();
     updateAuthArea();
     FB.onReady().then(function () {
-      if (FB.ready) {
-        if (FB.watchCommunityVisibility) FB.watchCommunityVisibility(applyCommunityVisibility);
-        FB.auth().onAuthStateChanged(function (u) {
-          _fbUser = u;
-          if (u) {
-            FB.ensureUserDoc(u).then(function () { return loadUserDoc(); }).then(function () {
-              loadFavs();
-              loadCharCache();
-              loadNotifications(true);
-              notifyUser();
-            }).catch(function () { notifyUser(); });
-          } else {
-            _userDoc = null;
-            favCache = { chars: [], supports: [] };
-            notificationState = { uid: null, items: [], loaded: true, loading: null };
-            notifyUser();
-          }
-        });
+      var auth = FB.ready && FB.auth && FB.auth();
+      if (!auth) {
+        _fbUser = null;
+        _userDoc = null;
+        _authResolved = true;
+        _headerNotificationsResolved = true;
+        notifyUser();
+        return;
       }
+      if (FB.watchCommunityVisibility) FB.watchCommunityVisibility(applyCommunityVisibility);
+      auth.onAuthStateChanged(function (u) {
+        _authResolved = false;
+        _headerNotificationsResolved = !u;
+        if (u && notificationState.uid !== u.uid) {
+          notificationState = { uid: u.uid, items: [], loaded: false, loading: null };
+        }
+        _fbUser = u;
+        _userDoc = null;
+        updateAuthArea();
+        if (u) {
+          FB.ensureUserDoc(u).then(function () { return loadUserDoc(); }).then(function () {
+            loadFavs();
+            loadCharCache();
+            _authResolved = true;
+            notifyUser();
+            return loadNotifications(true);
+          }).then(function () {
+            _headerNotificationsResolved = true;
+            updateAuthArea();
+          }).catch(function () {
+            _authResolved = true;
+            _headerNotificationsResolved = true;
+            notifyUser();
+          });
+        } else {
+          _userDoc = null;
+          favCache = { chars: [], supports: [] };
+          notificationState = { uid: null, items: [], loaded: true, loading: null };
+          _authResolved = true;
+          _headerNotificationsResolved = true;
+          notifyUser();
+        }
+      });
+    }).catch(function () {
+      _fbUser = null;
+      _userDoc = null;
+      _authResolved = true;
+      _headerNotificationsResolved = true;
+      notifyUser();
     });
     watchReveals();
     window.addEventListener('load', function () { watchReveals(); });

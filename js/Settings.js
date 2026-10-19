@@ -4,7 +4,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var state = {
-    view: 'blank', notices: [], noticeDetail: null, user: null, userDoc: null,
+    view: 'blank', notices: [], noticeDetail: null, user: null, userDoc: null, authResolved: false,
     favoriteTab: 'char', favoriteCatalog: { chars: [], supports: [] }, favoriteCatalogLoaded: false,
     notificationItems: [], notificationUid: null, notificationLoadedUid: null, notificationLoadingUid: null,
     notificationLoadError: false, notificationFilter: 'all',
@@ -88,6 +88,22 @@
   function renderMobileHeader() {
     var userBox = $('settingsMobileUser');
     if (!userBox) return;
+    if (!state.authResolved) {
+      userBox.classList.add('is-loading');
+      userBox.setAttribute('aria-busy', 'true');
+      userBox.setAttribute('aria-disabled', 'true');
+      userBox.setAttribute('aria-label', '계정 정보를 불러오는 중');
+      userBox.tabIndex = -1;
+      userBox.innerHTML =
+        '<span class="skel settings-mobile-user-skeleton-avatar" aria-hidden="true"></span>' +
+        '<span class="skel settings-mobile-user-skeleton-name" aria-hidden="true"></span>';
+      return;
+    }
+    userBox.classList.remove('is-loading');
+    userBox.removeAttribute('aria-busy');
+    userBox.removeAttribute('aria-disabled');
+    userBox.removeAttribute('aria-label');
+    userBox.removeAttribute('tabindex');
     if (!state.user) {
       userBox.innerHTML =
         '<span class="settings-mobile-profile settings-mobile-profile-icon ic-v2-navigation-profile-fill" aria-hidden="true"></span>' +
@@ -205,9 +221,23 @@
 
   function renderDashboard() {
     var counts = dashboardCounts();
-    var loading = !!state.user && !state.userDoc;
+    var loading = !state.authResolved || (!!state.user && !state.userDoc);
     var stats = document.querySelector('.settings-stats');
+    var writeButton = document.querySelector('.settings-write-button');
     if (stats) stats.setAttribute('aria-busy', String(loading));
+    if (writeButton) {
+      writeButton.classList.toggle('is-loading', loading);
+      writeButton.setAttribute('aria-busy', String(loading));
+      if (loading) {
+        writeButton.setAttribute('aria-disabled', 'true');
+        writeButton.setAttribute('aria-label', '글쓰기 상태를 불러오는 중');
+        writeButton.tabIndex = -1;
+      } else {
+        writeButton.removeAttribute('aria-disabled');
+        writeButton.removeAttribute('aria-label');
+        writeButton.removeAttribute('tabindex');
+      }
+    }
     [['dashboardPosts', counts.posts], ['dashboardComments', counts.comments], ['dashboardLikes', counts.likes]].forEach(function (item) {
       var target = $(item[0]);
       if (!target) return;
@@ -961,10 +991,27 @@
   }
 
   function initAuth() {
-    if (typeof FB === 'undefined') return;
+    function settleAsGuest() {
+      state.user = null;
+      state.userDoc = null;
+      state.authResolved = true;
+      renderMobileHeader();
+      renderDashboard();
+      if (state.view === 'notify') renderNotifications();
+      if (state.view === 'notifications') renderNotificationInbox();
+      if (state.view === 'myInfo') renderMyInfo();
+      if (state.view === 'profileInfo') prepareProfileEditor();
+    }
+    if (typeof FB === 'undefined') {
+      settleAsGuest();
+      return;
+    }
     FB.onReady().then(function () {
-      var auth = FB.auth && FB.auth();
-      if (!auth) return;
+      var auth = FB.ready && FB.auth && FB.auth();
+      if (!auth) {
+        settleAsGuest();
+        return;
+      }
       auth.onAuthStateChanged(function (user) {
         var notificationUid = user && user.uid || null;
         if (state.notificationUid !== notificationUid) {
@@ -977,17 +1024,22 @@
         state.user = user;
         state.userDoc = null;
         state.profileEditorUid = null;
-        renderMobileHeader();
-        renderDashboard();
         if (state.view === 'notify') renderNotifications();
         if (state.view === 'notifications') renderNotificationInbox();
         if (state.view === 'myInfo') renderMyInfo();
         if (state.view === 'profileInfo') prepareProfileEditor();
         if (!user) {
+          state.authResolved = true;
+          renderMobileHeader();
+          renderDashboard();
           return;
         }
+        state.authResolved = false;
+        renderMobileHeader();
+        renderDashboard();
         FB.getUserDoc(user.uid).then(function (profile) {
           state.userDoc = profile || {};
+          state.authResolved = true;
           renderMobileHeader();
           renderDashboard();
           loadFavoriteCatalog();
@@ -997,13 +1049,15 @@
           if (state.view === 'appIcon') renderAppIcons();
         }).catch(function () {
           state.userDoc = {};
+          state.authResolved = true;
+          renderMobileHeader();
           renderDashboard();
            if (state.view === 'profileInfo') prepareProfileEditor();
            if (state.view === 'notify') renderNotifications();
            if (state.view === 'myInfo') renderMyInfo();
         });
       });
-    });
+    }).catch(settleAsGuest);
   }
 
   document.addEventListener('DOMContentLoaded', function () {

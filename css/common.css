@@ -115,6 +115,13 @@ html[data-theme="dark"] .logo-img-dark{display:block}
 .hd-auth-desktop{display:flex;align-items:center;gap:6px}
 .hd-auth .btn{border-radius:999px}
 .hd-auth-mobile{display:none}
+.hd-auth-skeleton-desktop{gap:6px}
+.hd-auth-skeleton-signup,.hd-auth-skeleton-login{display:block;height:32px;border-radius:999px}
+.hd-auth-skeleton-signup{width:64px}
+.hd-auth-skeleton-login{width:54px}
+.hd-auth-skeleton-mobile{width:30px;height:30px;flex:none;border-radius:50%}
+.hd-auth-skeleton-signup.skel,.hd-auth-skeleton-login.skel{border-radius:999px}
+.hd-auth-skeleton-mobile.skel{border-radius:50%}
 .icon-btn{
   display: flex;
   align-items: center;
@@ -186,6 +193,8 @@ html[data-theme="dark"] .logo-img-dark{display:block}
     width:23.75px;height:24px;font-size:24px;line-height:24px;
   }
   .hd-right > .icon-btn > svg{width:23.75px;height:24px}
+  .hd-notify.is-loading .hd-notify-skeleton{display:block}
+  .hd-notify.is-loading .top-menu-icon{visibility:hidden}
 }
 
 /* 아이콘 폰트 글리프 (즐겨찾기 \e98f · 설정 \e994) — SVG 폴백 포함 */
@@ -216,6 +225,9 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
   content: "\e98f";
 }
 .hd-notify{position:relative}
+.hd-notify.is-loading{pointer-events:none}
+.hd-notify-skeleton{display:none;position:absolute;top:50%;left:50%;width:20px;height:20px;border-radius:50%;transform:translate(-50%,-50%)}
+.hd-notify-skeleton.skel{border-radius:50%}
 .notify-dot{
   position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;
   background:var(--red);border:2px solid var(--bg);box-sizing:content-box;
@@ -234,6 +246,7 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
   .hd-right > .icon-btn > svg{width:30px;height:30px}
   .hd-auth-mobile.icon-btn{width:30px;height:30px}
   .hd-avatar{width:30px;height:30px}
+  .hd-notify-skeleton{display:none!important}
 }
 
 /* ---------- 데스크톱 내비 ---------- */
