@@ -159,7 +159,6 @@
 .notice-detail-content p{margin:0 0 12px}.notice-detail-content img{max-width:100%;height:auto;border-radius:10px}.notice-detail-content a{color:var(--gold);text-decoration:underline}
 .settings-choice-card{gap:0;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:16px}
 .settings-info-content{min-width:0}
-.settings-info-heading{margin:0 0 12px;font-family:var(--font-d);font-size:18px;letter-spacing:.2px}
 .settings-info-card{overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:16px}
 .settings-info-row{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:58px;padding:14px 16px;border-bottom:1px solid var(--line)}
 .settings-info-row:last-child{border-bottom:0}
