@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FPP v2</title>
   <script>
-    location.replace('ko/Main.html' + location.search + location.hash);
+    var settingsRoute = /^#setting(?:-|$)/i.test(location.hash);
+    location.replace((settingsRoute ? 'ko/Settings.html' : 'ko/Main.html') + location.search + location.hash);
   </script>
 </head>
 <body>

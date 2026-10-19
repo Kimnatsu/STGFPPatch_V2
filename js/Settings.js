@@ -520,6 +520,88 @@
     return items;
   }
 
+  function writeClipboardText(text) {
+    text = String(text || '');
+    function legacyCopy() {
+      return new Promise(function (resolve, reject) {
+        var input = document.createElement('textarea');
+        input.value = text;
+        input.setAttribute('readonly', '');
+        input.style.position = 'fixed';
+        input.style.left = '-9999px';
+        document.body.appendChild(input);
+        input.select();
+        var copied = false;
+        try { copied = document.execCommand('copy'); } catch (error) {}
+        document.body.removeChild(input);
+        if (copied) resolve();
+        else reject(new Error('클립보드 복사에 실패했습니다.'));
+      });
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(legacyCopy);
+    }
+    return legacyCopy();
+  }
+
+  function isGoogleAccount(user) {
+    return !!(user && (user.providerData || []).some(function (provider) {
+      return provider.providerId === 'google.com';
+    }));
+  }
+
+  function infoLoginMethod(user) {
+    return isGoogleAccount(user) ? '구글' : '이메일';
+  }
+
+  function requestInfoPasswordChange() {
+    if (!state.user) return;
+    if (isGoogleAccount(state.user)) {
+      showToast('구글 계정의 비밀번호는 Google 계정에서 변경해 주세요.');
+      return;
+    }
+    if (!state.user.email) {
+      showToast('비밀번호를 변경할 이메일 정보가 없습니다.');
+      return;
+    }
+    var auth = typeof FB !== 'undefined' && FB.auth && FB.auth();
+    if (typeof FB === 'undefined' || !FB.ready || !auth || !auth.sendPasswordResetEmail) {
+      showToast('Firebase가 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    auth.sendPasswordResetEmail(state.user.email).then(function () {
+      showToast('비밀번호 변경 메일을 보냈습니다. 메일함을 확인해 주세요.');
+    }).catch(function (error) {
+      showToast((typeof FB.errMsg === 'function' ? FB.errMsg(error) : '비밀번호 변경 메일을 보내지 못했습니다.') +
+        ' 최근 로그인 후 다시 시도해 주세요.');
+    });
+  }
+
+  function confirmSettingsAccountDelete() {
+    if (!state.user) {
+      showToast('로그인이 필요합니다.');
+      return;
+    }
+    if (!window.confirm('정말 회원 탈퇴하시겠습니까? 계정 삭제 후에는 복구할 수 없습니다.')) return;
+    var auth = typeof FB !== 'undefined' && FB.auth && FB.auth();
+    var user = auth && auth.currentUser;
+    if (!user) {
+      showToast('로그인 정보를 확인할 수 없습니다. 다시 로그인해 주세요.');
+      return;
+    }
+    var button = $('settingsInfoDelete');
+    if (button) button.disabled = true;
+    user.delete().then(function () {
+      showToast('탈퇴가 완료되었습니다.');
+      window.setTimeout(function () { location.href = 'ko/Main.html#home'; }, 700);
+    }).catch(function (error) {
+      var message = typeof FB.errMsg === 'function' ? FB.errMsg(error) : '회원 탈퇴를 완료하지 못했습니다.';
+      showToast(message + ' 보안 정책상 최근 로그인 후 다시 시도해 주세요.');
+    }).then(function () {
+      if (button) button.disabled = false;
+    });
+  }
+
   function renderNotificationInboxRows() {
     var list = $('settingsNotificationList');
     if (!list) return;
@@ -618,32 +700,47 @@
 
   function renderMyInfo() {
     var login = $('infoLogin');
+    var content = $('infoContent');
     var card = $('infoCard');
-    if (!login || !card) return;
+    if (!login || !content || !card) return;
     if (!state.user) {
       login.hidden = false;
-      card.hidden = true;
+      content.hidden = true;
       return;
     }
     login.hidden = true;
-    card.hidden = false;
+    content.hidden = false;
     if (!state.userDoc) {
       card.setAttribute('aria-busy', 'true');
       card.innerHTML =
         '<div class="settings-info-row"><span>닉네임</span><span class="skel settings-info-skeleton"></span></div>' +
-        '<div class="settings-info-row"><span>이메일</span><span class="skel settings-info-skeleton"></span></div>' +
-        '<div class="settings-info-row"><span>회원번호</span><span class="skel settings-info-skeleton"></span></div>';
+        '<div class="settings-info-row"><span>로그인 방식</span><span class="skel settings-info-skeleton"></span></div>' +
+        '<div class="settings-info-row"><span>아이디</span><span class="skel settings-info-skeleton"></span></div>' +
+        '<div class="settings-info-row"><span>비밀번호</span><span class="skel settings-info-skeleton"></span></div>' +
+        '<div class="settings-info-row"><span>회원번호</span><span class="settings-info-value-group"><span class="skel settings-info-skeleton"></span></span></div>';
       return;
     }
     card.removeAttribute('aria-busy');
     var profile = state.userDoc || {};
     var nickname = profile.nickname || state.user.displayName || '선원';
     var email = state.user.email || '이메일 없음';
-    var memberId = profile.memberNumber || profile.memberId || state.user.uid || '확인 불가';
+    var memberId = profile.memberNumber || profile.memberId || profile.uid || state.user.uid || '확인 불가';
     card.innerHTML =
       '<div class="settings-info-row"><span>닉네임</span><strong>' + esc(nickname) + '</strong></div>' +
-      '<div class="settings-info-row"><span>이메일</span><strong>' + esc(email) + '</strong></div>' +
-      '<div class="settings-info-row"><span>회원번호</span><strong>' + esc(memberId) + '</strong></div>';
+      '<div class="settings-info-row"><span>로그인 방식</span><strong>' + esc(infoLoginMethod(state.user)) + '</strong></div>' +
+      '<div class="settings-info-row"><span>아이디</span><strong>' + esc(email) + '</strong></div>' +
+      '<div class="settings-info-row"><span>비밀번호</span><button class="my-info-action" id="settingsInfoPassword" type="button">변경</button></div>' +
+      '<div class="settings-info-row"><span>회원번호</span><span class="settings-info-value-group">' +
+      '<strong class="settings-info-member-id" title="' + esc(memberId) + '">' + esc(memberId) + '</strong>' +
+      '<button class="my-info-copy" id="settingsInfoCopyMemberId" type="button" aria-label="회원번호 복사" title="회원번호 복사">복사</button></span></div>';
+    $('settingsInfoPassword').addEventListener('click', requestInfoPasswordChange);
+    $('settingsInfoCopyMemberId').addEventListener('click', function () {
+      writeClipboardText(memberId).then(function () {
+        showToast('회원번호를 복사했습니다.');
+      }).catch(function () {
+        showToast('회원번호 복사에 실패했습니다.');
+      });
+    });
   }
 
   function updateProfilePreview() {
@@ -916,6 +1013,7 @@
     $('settingsMobileUser').addEventListener('click', function () {
       showView('profileInfo', true);
     });
+    $('settingsInfoDelete').addEventListener('click', confirmSettingsAccountDelete);
     $('settingsMobileSettings').addEventListener('click', function () {
       showView('main', true);
     });

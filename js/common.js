@@ -22,6 +22,29 @@ window.UI = (function () {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
+  function writeClipboardText(text) {
+    text = String(text || '');
+    function legacyCopy() {
+      return new Promise(function (resolve, reject) {
+        var input = document.createElement('textarea');
+        input.value = text;
+        input.setAttribute('readonly', '');
+        input.style.position = 'fixed';
+        input.style.left = '-9999px';
+        document.body.appendChild(input);
+        input.select();
+        var copied = false;
+        try { copied = document.execCommand('copy'); } catch (error) {}
+        document.body.removeChild(input);
+        if (copied) resolve();
+        else reject(new Error('클립보드 복사에 실패했습니다.'));
+      });
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(legacyCopy);
+    }
+    return legacyCopy();
+  }
   function escBr(s) {
     return esc(s).replace(/&lt;br\s*\/?&gt;/gi, '<br>').replace(/\n/g, '<br>');
   }
@@ -1069,12 +1092,15 @@ window.UI = (function () {
         '</div>' +
         '</div></div></div>' +
         '<div class="profile-panel my-info-panel" id="myInfoPanel" hidden>' +
+        '<h3 class="my-info-heading">기본정보</h3>' +
         '<div class="my-info-card">' +
-        '<h4>기본정보</h4>' +
+        '<div class="my-info-row"><span>닉네임</span><b class="my-info-value">' + esc(initialNick) + '</b></div>' +
         '<div class="my-info-row"><span>로그인 방식</span><b>' + authMethod + '</b></div>' +
         '<div class="my-info-row"><span>아이디</span><b class="my-info-value">' + esc(u.email || '이메일 없음') + '</b></div>' +
         '<div class="my-info-row"><span>비밀번호</span><button class="my-info-action" id="myInfoPassword" type="button">변경</button></div>' +
-        '<div class="my-info-row"><span>회원번호</span><b class="my-info-value my-info-member-id" title="' + esc(memberId) + '">' + esc(memberId) + '</b></div>' +
+        '<div class="my-info-row"><span>회원번호</span><span class="my-info-member-tools">' +
+        '<b class="my-info-value my-info-member-id" title="' + esc(memberId) + '">' + esc(memberId) + '</b>' +
+        '<button class="my-info-copy" id="myInfoCopyMemberId" type="button" aria-label="회원번호 복사" title="회원번호 복사">복사</button></span></div>' +
         '</div>' +
         '<div class="my-info-delete-wrap"><button class="my-info-delete" id="myInfoDelete" type="button">회원탈퇴 <span aria-hidden="true">›</span></button></div>' +
         '</div>' +
@@ -1287,6 +1313,13 @@ window.UI = (function () {
       openProfileImagePicker(draftIcon, function (index) { updateDraftIcon(index); });
     });
     m.body.querySelector('#myInfoDelete').addEventListener('click', confirmAccountDelete);
+    m.body.querySelector('#myInfoCopyMemberId').addEventListener('click', function () {
+      writeClipboardText(memberId).then(function () {
+        toast('회원번호를 복사했습니다.', 'ok');
+      }).catch(function () {
+        toast('회원번호 복사에 실패했습니다.', 'err');
+      });
+    });
     m.body.querySelector('#myInfoPassword').addEventListener('click', function () {
       if (isGoogle) {
         toast('구글 계정의 비밀번호는 Google 계정에서 변경해 주세요.');

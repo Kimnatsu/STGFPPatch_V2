@@ -982,12 +982,12 @@ body.body-lock{
 
 /* 내 정보 탭 */
 .my-info-panel{max-width:650px}
+.my-info-heading{
+  margin:0 0 12px;font-family:var(--font-d);font-size:18px;letter-spacing:.2px;
+}
 .my-info-card{
   padding:22px 24px;border:1px solid var(--line);border-radius:var(--r-lg);
   background:var(--surface-2);box-shadow:var(--shadow);
-}
-.my-info-card h4{
-  margin:0 0 8px;font-family:var(--font-d);font-size:18px;letter-spacing:.2px;
 }
 .my-info-row{
   display:flex;align-items:center;justify-content:space-between;gap:18px;
@@ -999,6 +999,14 @@ body.body-lock{
 }
 .my-info-value{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .my-info-member-id{max-width:65%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px!important}
+.my-info-member-tools{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0;max-width:72%}
+.my-info-member-tools .my-info-member-id{flex:1;max-width:none;min-width:0}
+.my-info-copy{
+  display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:28px;
+  padding:4px 8px;border:1px solid var(--line-2);border-radius:8px;color:var(--gold);
+  font-size:11px;font-weight:900;white-space:nowrap;transition:.18s;
+}
+.my-info-copy:hover{border-color:var(--gold);background:var(--surface-3)}
 .profile-notifications-panel{min-width:0}
 .profile-notify-filters{display:flex;align-items:center;gap:6px;margin-bottom:12px;border-bottom:1px solid var(--line)}
 .profile-notify-filter{
