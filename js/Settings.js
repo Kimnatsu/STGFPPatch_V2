@@ -8,6 +8,7 @@
     favoriteTab: 'char', favoriteCatalog: { chars: [], supports: [] }, favoriteCatalogLoaded: false,
     notificationItems: [], notificationUid: null, notificationLoadedUid: null, notificationLoadingUid: null,
     notificationLoadError: false, notificationFilter: 'all',
+    pushEnabled: false, pushBusy: false, pushStatusSequence: 0,
     toastTimer: null, deferredInstall: null, profileEditorUid: null, profileDraftIcon: 0,
     profileInitialIcon: 0, profileInitialNickname: '', profileSaving: false, avatarPickerIcon: 0
   };
@@ -456,9 +457,77 @@
       var on = settings[row[0]] === true;
       return '<div class="notify-row"><span class="notify-copy"><strong>' + row[1] + '</strong><small>' + row[2] + '</small></span>' +
         '<button class="notify-switch' + (on ? ' is-on' : '') + '" data-notify-key="' + row[0] + '" type="button" role="switch" aria-checked="' + on + '" aria-label="' + row[1] + '"><i></i></button></div>';
-    }).join('');
+    }).join('') +
+      '<div class="settings-push-card"><div><strong>이 기기의 OS 푸시</strong>' +
+      '<small id="pushSettingsStatus">브라우저 알림 상태를 확인하고 있습니다.</small></div>' +
+      '<button class="settings-push-button" id="pushSettingsButton" type="button" disabled>확인 중…</button></div>';
     card.querySelectorAll('[data-notify-key]').forEach(function (button) {
       button.addEventListener('click', function () { toggleNotification(button); });
+    });
+    var pushButton = $('pushSettingsButton');
+    if (pushButton) pushButton.addEventListener('click', togglePushNotifications);
+    renderPushSettings();
+  }
+
+  function renderPushSettings() {
+    var button = $('pushSettingsButton');
+    var status = $('pushSettingsStatus');
+    if (!button || !status || !state.user || typeof FB === 'undefined' || !FB.getPushStatus) return;
+    var uid = state.user.uid;
+    var sequence = ++state.pushStatusSequence;
+    button.disabled = true;
+    status.textContent = '브라우저 알림 상태를 확인하고 있습니다.';
+    FB.getPushStatus(uid).then(function (push) {
+      if (sequence !== state.pushStatusSequence || !state.user || state.user.uid !== uid) return;
+      state.pushEnabled = !!push.enabled;
+      if (!push.supported) {
+        status.textContent = '이 브라우저에서는 OS 푸시를 지원하지 않습니다. HTTPS와 최신 브라우저가 필요합니다.';
+        button.textContent = '지원하지 않는 브라우저';
+        button.disabled = true;
+      } else if (push.enabled) {
+        status.textContent = '이 기기에서 OS 푸시를 받고 있습니다.';
+        button.textContent = '이 기기 푸시 끄기';
+        button.disabled = !!state.pushBusy;
+      } else if (!push.configured) {
+        status.textContent = 'Firebase Web Push 공개키 설정이 완료되어야 사용할 수 있습니다.';
+        button.textContent = '푸시 설정 필요';
+        button.disabled = true;
+      } else if (push.permission === 'denied') {
+        status.textContent = '브라우저 사이트 설정에서 알림 권한을 허용해 주세요.';
+        button.textContent = '브라우저 권한 필요';
+        button.disabled = true;
+      } else {
+        status.textContent = push.enabled
+          ? '이 기기에서 OS 푸시를 받고 있습니다.'
+          : '브라우저가 닫혀 있어도 이 기기로 알림을 보냅니다.';
+        button.textContent = push.enabled ? '이 기기 푸시 끄기' : '이 기기 푸시 켜기';
+        button.disabled = !!state.pushBusy;
+      }
+    }).catch(function () {
+      if (sequence !== state.pushStatusSequence) return;
+      state.pushEnabled = false;
+      status.textContent = '푸시 상태를 확인하지 못했습니다.';
+      button.textContent = '다시 확인';
+      button.disabled = false;
+    });
+  }
+
+  function togglePushNotifications() {
+    if (!state.user || state.pushBusy || typeof FB === 'undefined') return;
+    state.pushBusy = true;
+    var button = $('pushSettingsButton');
+    if (button) { button.disabled = true; button.textContent = '처리 중…'; }
+    var task = state.pushEnabled
+      ? FB.disablePushNotifications(state.user.uid)
+      : FB.enablePushNotifications(state.user.uid);
+    Promise.resolve(task).then(function () {
+      state.pushEnabled = !state.pushEnabled;
+      showToast(state.pushEnabled ? '이 기기의 OS 푸시를 켰습니다.' : '이 기기의 OS 푸시를 껐습니다.');
+    }).catch(function (error) {
+      showToast(error && error.message ? error.message : 'OS 푸시 설정을 변경하지 못했습니다.');
+    }).then(function () {
+      state.pushBusy = false;
+      renderPushSettings();
     });
   }
 
@@ -1122,6 +1191,15 @@
       button.addEventListener('click', function () { chooseIcon(button); });
     });
     $('installShortcut').addEventListener('click', installShortcut);
+    window.addEventListener('fpp:push-message', function () {
+      if (!state.user) return;
+      state.notificationLoadedUid = null;
+      state.notificationLoadError = false;
+      if (state.view === 'notifications') {
+        state.notificationLoadingUid = null;
+        renderNotificationInbox();
+      }
+    });
     window.addEventListener('beforeinstallprompt', function (event) {
       event.preventDefault();
       state.deferredInstall = event;

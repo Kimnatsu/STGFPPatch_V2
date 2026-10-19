@@ -6,13 +6,15 @@
   var mods = [
     { key: 'app', file: 'firebase-app-compat' },
     { key: 'auth', file: 'firebase-auth-compat' },
-    { key: 'firestore', file: 'firebase-firestore-compat' }
+    { key: 'firestore', file: 'firebase-firestore-compat' },
+    { key: 'messaging', file: 'firebase-messaging-compat' }
   ];
   function loaded(key) {
     return !!(window.firebase && (
       (key === 'app' && window.firebase.apps) ||
       (key === 'auth' && window.firebase.auth) ||
-      (key === 'firestore' && window.firebase.firestore)
+      (key === 'firestore' && window.firebase.firestore) ||
+      (key === 'messaging' && window.firebase.messaging)
     ));
   }
   function cdn(host, file) {

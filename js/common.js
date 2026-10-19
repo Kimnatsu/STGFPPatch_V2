@@ -1698,6 +1698,9 @@ window.UI = (function () {
     buildDrawer();
     initFooterAdminShortcut();
     updateAuthArea();
+    window.addEventListener('fpp:push-message', function () {
+      if (currentUser()) loadNotifications(true);
+    });
     FB.onReady().then(function () {
       var auth = FB.ready && FB.auth && FB.auth();
       if (!auth) {

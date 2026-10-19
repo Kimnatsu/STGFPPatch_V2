@@ -3,7 +3,7 @@
    기존 Firebase 프로젝트(fighting-path-patch)의 실제 데이터에 연결.
    읽기 위주 + Firestore 규칙이 허용하는 쓰기만 수행.
    ============================================================ */
-window.FB = (function () {
+(function () {
   'use strict';
 
   var CFG = {
@@ -15,8 +15,21 @@ window.FB = (function () {
     appId: '1:1071337898551:web:d6f2c10f0f29e430a675b2',
     measurementId: 'G-VMY3PHGN4C'
   };
+  /* Firebase Console > Project settings > Cloud Messaging > Web Push certificates. */
+  var WEB_PUSH_VAPID_KEY = '';
+
+  /* The service worker imports this file to reuse the existing public Firebase
+     app configuration without duplicating it in another source file. */
+  if (typeof window === 'undefined') {
+    self.FPP_FIREBASE_CONFIG = CFG;
+    return;
+  }
+
+  window.FB = (function () {
+    'use strict';
 
   var ready = false, db = null, _auth = null;
+  var messagingListenerReady = false;
   var readyCbs = [];
 
   function onReady(cb) {
@@ -36,6 +49,7 @@ window.FB = (function () {
       _auth = firebase.auth();
       db = firebase.firestore();
       ready = true;
+      connectForegroundMessaging();
     } catch (e) {
       ready = false;
     }
@@ -52,6 +66,12 @@ window.FB = (function () {
       else if (tries > 60) { clearInterval(iv); markReady(); }
     }, 250);
   }
+  var pushSdkAttempts = 0;
+  var pushSdkTimer = setInterval(function () {
+    pushSdkAttempts++;
+    connectForegroundMessaging();
+    if (messagingListenerReady || pushSdkAttempts >= 40) clearInterval(pushSdkTimer);
+  }, 250);
 
   /* ---------- 유틸 ---------- */
   function auth() { return _auth; }
@@ -689,29 +709,11 @@ window.FB = (function () {
   function getNotifications(uid) {
     if (!uid) return Promise.resolve([]);
     if (!ready) return Promise.resolve([]);
-    var top = col('notifications');
-    return top.where('uid', '==', uid).get().then(function (s) {
-      if (s.size) return notificationSnapshot(s);
-      return top.where('userId', '==', uid).get().then(function (s2) {
-        if (s2.size) return notificationSnapshot(s2);
-        return top.where('recipientId', '==', uid).get().then(function (s3) {
-          if (s3.size) return notificationSnapshot(s3);
-          return col('users').doc(uid).collection('notifications').get().then(function (s4) {
-            return notificationSnapshot(s4, 'users/' + uid + '/notifications');
-          });
-        });
-      });
-    }).catch(function () {
-      return top.where('userId', '==', uid).get().then(function (s) {
-        if (s.size) return notificationSnapshot(s);
-        return top.where('recipientId', '==', uid).get().then(function (s2) {
-          if (s2.size) return notificationSnapshot(s2);
-          return col('users').doc(uid).collection('notifications').get().then(function (s3) {
-            return notificationSnapshot(s3, 'users/' + uid + '/notifications');
-          });
-        });
-      }).catch(function () { return []; });
-    });
+    // Cloud Functions write to the owner-scoped path; do not probe legacy
+    // top-level collections that have no client read rule.
+    return col('users').doc(uid).collection('notifications').get().then(function (s) {
+      return notificationSnapshot(s, 'users/' + uid + '/notifications');
+    }).catch(function () { return []; });
   }
   function markNotificationsRead(items) {
     if (!ready || !items || !items.length) return Promise.resolve();
@@ -720,6 +722,112 @@ window.FB = (function () {
       if (n && n.path) batch.update(db.doc(n.path), { read: true, isRead: true });
     });
     return batch.commit();
+  }
+
+  /* ---------- Web Push (Firebase Cloud Messaging) ---------- */
+  function pushSupported() {
+    if (window.isSecureContext === false || !window.Notification || !navigator.serviceWorker ||
+        typeof firebase === 'undefined' || !firebase.messaging ||
+        typeof firebase.messaging.isSupported !== 'function') {
+      return Promise.resolve(false);
+    }
+    return firebase.messaging.isSupported().then(Boolean).catch(function () { return false; });
+  }
+  function currentPushDeviceId() {
+    var key = 'fpp_push_device_id';
+    try {
+      var existing = localStorage.getItem(key);
+      if (existing) return existing;
+      var id = window.crypto && window.crypto.randomUUID
+        ? window.crypto.randomUUID()
+        : 'device_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
+      localStorage.setItem(key, id);
+      return id;
+    } catch (e) {
+      return 'device_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
+    }
+  }
+  function pushTokenRef(uid, deviceId) {
+    return col('users').doc(uid).collection('fcmTokens').doc(deviceId);
+  }
+  function pushState(uid) {
+    return pushSupported().then(function (supported) {
+      var state = {
+        supported: supported,
+        configured: !!WEB_PUSH_VAPID_KEY,
+        permission: window.Notification ? window.Notification.permission : 'unsupported',
+        enabled: false
+      };
+      if (!supported || !uid || !ready) return state;
+      return pushTokenRef(uid, currentPushDeviceId()).get().then(function (snap) {
+        state.enabled = snap.exists;
+        return state;
+      }).catch(function () { return state; });
+    });
+  }
+  function enablePush(uid) {
+    if (!uid) return Promise.reject(new Error('OS 알림을 켜려면 로그인해 주세요.'));
+    if (!WEB_PUSH_VAPID_KEY) {
+      return Promise.reject(new Error('Firebase Cloud Messaging의 Web Push 공개키 설정이 필요합니다.'));
+    }
+    return pushSupported().then(function (supported) {
+      if (!supported) throw new Error('이 브라우저에서는 웹 푸시를 지원하지 않습니다. HTTPS 환경의 최신 브라우저를 사용해 주세요.');
+      if (window.Notification.permission === 'denied') {
+        throw new Error('브라우저 설정에서 이 사이트의 알림 권한을 허용해 주세요.');
+      }
+      return window.Notification.requestPermission();
+    }).then(function (permission) {
+      if (permission !== 'granted') throw new Error('브라우저 알림 권한이 허용되지 않았습니다.');
+      var workerUrl = new URL('../firebase-messaging-sw.js', window.location.href);
+      return navigator.serviceWorker.register(workerUrl.href);
+    }).then(function (registration) {
+      return firebase.messaging().getToken({
+        vapidKey: WEB_PUSH_VAPID_KEY,
+        serviceWorkerRegistration: registration
+      });
+    }).then(function (token) {
+      if (!token) throw new Error('푸시 토큰을 발급받지 못했습니다. Firebase Cloud Messaging 설정을 확인해 주세요.');
+      return pushTokenRef(uid, currentPushDeviceId()).set({
+        token: token,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }).then(function () { return true; });
+  }
+  function disablePush(uid) {
+    if (!uid) return Promise.resolve(false);
+    var ref = pushTokenRef(uid, currentPushDeviceId());
+    return ref.get().then(function (snap) {
+      var token = snap.exists ? snap.data().token : '';
+      return ref.delete().catch(function () {}).then(function () {
+        if (!token || typeof firebase === 'undefined' || !firebase.messaging) return true;
+        return firebase.messaging().deleteToken(token).catch(function () { return false; }).then(function () { return true; });
+      });
+    }).then(function () { return true; });
+  }
+  function displayForegroundPush(payload) {
+    var data = payload && payload.data || {};
+    if (!data.title || !window.Notification || window.Notification.permission !== 'granted') return;
+    var notification = new window.Notification(data.title, {
+      body: data.body || '',
+      icon: new URL('img/logo-dark.png', document.baseURI).href,
+      tag: data.notificationId || undefined,
+      data: { link: data.link || 'Main.html#home' }
+    });
+    notification.onclick = function () {
+      var link = notification.data && notification.data.link;
+      window.focus();
+      if (link) window.location.href = new URL(link, document.baseURI).href;
+      notification.close();
+    };
+    window.dispatchEvent(new CustomEvent('fpp:push-message', { detail: data }));
+  }
+  function connectForegroundMessaging() {
+    if (messagingListenerReady || typeof firebase === 'undefined' || !firebase.messaging ||
+        typeof firebase.messaging.isSupported !== 'function') return;
+    messagingListenerReady = true;
+    firebase.messaging.isSupported().then(function (supported) {
+      if (supported) firebase.messaging().onMessage(displayForegroundPush);
+    }).catch(function () { messagingListenerReady = false; });
   }
 
   /* ---------- 고객센터 문의 ---------- */
@@ -769,6 +877,8 @@ window.FB = (function () {
     getUserDoc: getUserDoc, ensureUserDoc: ensureUserDoc, updateUserDoc: updateUserDoc,
     getFavs: getFavs, bumpUserLikeCount: bumpUserLikeCount, bumpUserCommentCount: bumpUserCommentCount,
     getNotifications: getNotifications, markNotificationsRead: markNotificationsRead,
+    getPushStatus: pushState, enablePushNotifications: enablePush, disablePushNotifications: disablePush,
     addInquiry: addInquiry, getMyInquiries: getMyInquiries
   };
+  })();
 })();
