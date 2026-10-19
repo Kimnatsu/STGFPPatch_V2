@@ -270,6 +270,12 @@
     if (view === 'notifications') notify.setAttribute('aria-current', 'page');
   }
 
+  function settingsRouteUrl(view) {
+    var fileUrl = new URL('ko/Settings.html', document.baseURI);
+    var hash = view === 'main' ? '#Setting' : view === 'blank' ? '' : '#setting-' + view;
+    return fileUrl.pathname + location.search + hash;
+  }
+
   function showView(view, addHistory) {
     if (!document.getElementById('settings-' + view)) view = 'main';
     if (view === state.view) return;
@@ -280,7 +286,8 @@
     });
     state.view = view;
     setHeaderSelection(view);
-    if (addHistory) history.pushState({ settingsView: view }, '', view === 'main' ? '#Setting' : '#setting-' + view);
+    if (addHistory) history.pushState({ settingsView: view }, '', settingsRouteUrl(view));
+    else history.replaceState({ settingsView: view }, '', settingsRouteUrl(view));
     if (view === 'notice') loadNotices();
     if (view === 'notify') renderNotifications();
     if (view === 'notifications') renderNotificationInbox();
@@ -300,7 +307,7 @@
       location.href = 'ko/Settings.html';
       return;
     }
-    history.replaceState({ settingsView: 'main' }, '', '#Setting');
+    history.replaceState({ settingsView: 'main' }, '', settingsRouteUrl('main'));
     showView('main', false);
   }
 
@@ -1075,8 +1082,8 @@
     renderDashboard();
     var initial = (location.hash === '#Setting' || location.hash === '#setting') ? 'main' : location.hash.replace(/^#setting-/, '');
     if (['blank', 'main', 'myInfo', 'profileInfo', 'notice', 'notify', 'notifications', 'theme', 'appIcon'].indexOf(initial) < 0) initial = 'blank';
-    if (initial === 'main' && location.hash === '#setting-main') history.replaceState({ settingsView: 'main' }, '', '#Setting');
-    else history.replaceState({ settingsView: initial }, '', location.href);
+    if (initial === 'main' && location.hash === '#setting-main') history.replaceState({ settingsView: 'main' }, '', settingsRouteUrl('main'));
+    else history.replaceState({ settingsView: initial }, '', settingsRouteUrl(initial));
     if (initial !== state.view) showView(initial, false);
     else setHeaderSelection(initial);
   });
