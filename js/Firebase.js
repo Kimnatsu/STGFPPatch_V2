@@ -16,7 +16,7 @@
     measurementId: 'G-VMY3PHGN4C'
   };
   /* Firebase Console > Project settings > Cloud Messaging > Web Push certificates. */
-  var WEB_PUSH_VAPID_KEY = '';
+  var WEB_PUSH_VAPID_KEY = 'BB6wBHBGcFq2pRLc5oXyrWkyoAwbRBV-KrrU54chZnUcTj1bLXcQTfLNeaAzsizqCw6KSg2XvJI03wfrDdC0QuA';
 
   /* The service worker imports this file to reuse the existing public Firebase
      app configuration without duplicating it in another source file. */
