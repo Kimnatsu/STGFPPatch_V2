@@ -686,6 +686,7 @@ window.UI = (function () {
     $('btnDrawerClose').addEventListener('click', toggleDrawer);
     var bd = $('drawerBackdrop');
     if (bd) bd.addEventListener('click', toggleDrawer);
+    dw.classList.add('drawer-ready');
   }
   function toggleDrawer() {
     var dw = $('navDrawer'), bd = $('drawerBackdrop');
