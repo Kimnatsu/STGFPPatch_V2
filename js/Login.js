@@ -100,7 +100,14 @@
     if (loginRedirectStarted) return;
     loginRedirectStarted = true;
     UI.toast((user.displayName || user.email || '선원') + '님, 환영합니다!', 'ok');
-    setTimeout(function () { location.href = UI.pageUrl('Main.html#home'); }, 650);
+    var destination = UI.pageUrl('Main.html#home');
+    try {
+      if (sessionStorage.getItem('fpp_login_return') === 'customer-service') {
+        sessionStorage.removeItem('fpp_login_return');
+        destination = UI.pageUrl('CustomerService.html');
+      }
+    } catch (e) {}
+    setTimeout(function () { location.href = destination; }, 650);
   }
 
   function googleLogin(btn) {

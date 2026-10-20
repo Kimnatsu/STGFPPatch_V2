@@ -41,29 +41,52 @@
   }
 
   /* ================= 1:1 문의 ================= */
+  function showInquiryLoginPrompt() {
+    var m = UI.openModal({
+      title: '로그인이 필요합니다',
+      body:
+        '<p style="font-size:13px;color:var(--text-2);margin-bottom:14px;line-height:1.7">1:1 문의는 로그인 후 접수할 수 있습니다.</p>' +
+        '<button class="btn btn--gold btn--block" id="inqLoginGo" type="button">로그인하고 문의하기</button>'
+    });
+    m.body.querySelector('#inqLoginGo').addEventListener('click', function () {
+      try { sessionStorage.setItem('fpp_login_return', 'customer-service'); } catch (e) {}
+      location.href = UI.pageUrl('Login.html');
+    });
+  }
+
   function openInquiryModal() {
     var u = UI.currentUser();
+    if (!u) { showInquiryLoginPrompt(); return; }
+
     var m = UI.openModal({
       title: '1:1 문의',
       body:
         '<p style="font-size:13px;color:var(--text-2);margin-bottom:14px;line-height:1.7">' +
-        (u ? '남겨주신 문의는 관리자가 확인 후 회신드립니다.' : '로그인하지 않아도 접수할 수 있습니다. 회신을 위해 연락처를 남겨주세요.') +
+        '남겨주신 문의는 관리자 고객센터에서 확인합니다.' +
         '</p>' +
         '<div class="fld"><span class="fld-lb">제목</span><input id="inqTitle" type="text" maxlength="60" placeholder="문의 제목"></div>' +
         '<div class="fld"><span class="fld-lb">내용</span><textarea id="inqBody" maxlength="1000" style="min-height:110px" placeholder="문의 내용을 자세히 남겨주세요."></textarea></div>' +
         '<div class="fld"><span class="fld-lb">회신 받을 연락처 <small style="color:var(--text-3);font-weight:700">(선택)</small></span>' +
-        '<input id="inqContact" type="text" maxlength="60" placeholder="이메일 또는 닉네임"></div>' +
+        '<input id="inqContact" type="text" maxlength="60" placeholder="이메일 또는 닉네임" value="' + UI.esc(u.email || '') + '"></div>' +
         '<button class="btn btn--gold btn--block" id="inqSend" type="button">문의 접수하기</button>'
     });
     m.body.querySelector('#inqSend').addEventListener('click', function () {
       var title = m.body.querySelector('#inqTitle').value.trim();
       var content = m.body.querySelector('#inqBody').value.trim();
       var contact = m.body.querySelector('#inqContact').value.trim();
+      var activeUser = UI.currentUser();
+      if (!activeUser) { m.close(); showInquiryLoginPrompt(); return; }
       if (!title) { UI.toast('제목을 입력해 주세요.', 'err'); return; }
       if (!content) { UI.toast('문의 내용을 입력해 주세요.', 'err'); return; }
+      if (!FB.ready) { UI.toast('문의 서버에 연결되지 않았습니다. 잠시 후 다시 시도해 주세요.', 'err'); return; }
       var btn = m.body.querySelector('#inqSend');
       btn.disabled = true; btn.textContent = '접수 중…';
-      FB.addInquiry({ title: title, content: content, contact: contact }, u).then(function () {
+      FB.addInquiry({ title: title, content: content, contact: contact }, activeUser).then(function (result) {
+        if (!result || result.remote !== true) {
+          btn.disabled = false; btn.textContent = '문의 접수하기';
+          UI.toast('문의가 서버에 저장되지 않았습니다. 연결을 확인하고 다시 시도해 주세요.', 'err');
+          return;
+        }
         m.close();
         UI.toast('문의가 접수되었습니다. 감사합니다!', 'ok');
       }).catch(function (e) {

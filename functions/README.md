@@ -43,11 +43,13 @@ The public event page currently loads visual banners from the `banners`
 collection; the separate `eventBanners` collection is retained because the
 FPPatchStudio administrator uses it to manage event-banner data.
 
-The current public customer-service form writes to `inquiries`, while the
-FPPatchStudio admin notification listener reads `supportInquiries`. They are
-separate flows in the inspected source, so these rules keep user inquiries
-private to their owner and keep `supportInquiries` admin-read-only; they do not
-silently merge the two collections.
+The public customer-service form writes to `inquiries`. The FPPatchStudio
+customer-support management list reads this collection for administrators;
+the `inquiries` rules allow users to read their own records and administrators
+to read the collection, while creates remain owner-only and updates/deletes
+remain disabled. The admin notification
+popover still reads the separate `supportInquiries` collection, so notifications
+and the management list remain separate flows.
 
 ## Deploy
 

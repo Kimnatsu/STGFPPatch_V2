@@ -228,10 +228,10 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // 사용자 고객센터 문의 — 로그인 사용자는 본인 문의만 생성/열람
+    // 사용자 고객센터 문의 — 생성은 본인만, 열람은 본인과 관리자
     match /inquiries/{docId} {
-      allow read: if request.auth != null &&
-        resource.data.uid == request.auth.uid;
+      allow read: if isAdmin() ||
+        (request.auth != null && resource.data.uid == request.auth.uid);
       allow create: if request.auth != null &&
         request.resource.data.uid == request.auth.uid;
       allow update, delete: if false;
