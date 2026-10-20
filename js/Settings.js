@@ -683,6 +683,27 @@
     });
   }
 
+  function signOutSettingsAccount() {
+    if (!state.user) {
+      showToast('로그인이 필요합니다.');
+      return;
+    }
+    var auth = typeof FB !== 'undefined' && FB.auth && FB.auth();
+    var button = $('settingsInfoLogout');
+    if (!auth || !auth.signOut) {
+      showToast('Firebase가 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    if (button) button.disabled = true;
+    auth.signOut().then(function () {
+      showToast('로그아웃 되었습니다.');
+      window.setTimeout(function () { location.href = 'ko/Main.html#home'; }, 700);
+    }).catch(function (error) {
+      if (button) button.disabled = false;
+      showToast(typeof FB.errMsg === 'function' ? FB.errMsg(error) : '로그아웃하지 못했습니다.');
+    });
+  }
+
   function confirmSettingsAccountDelete() {
     if (!state.user) {
       showToast('로그인이 필요합니다.');
@@ -1143,6 +1164,7 @@
     $('settingsMobileUser').addEventListener('click', function () {
       showView('profileInfo', true);
     });
+    $('settingsInfoLogout').addEventListener('click', signOutSettingsAccount);
     $('settingsInfoDelete').addEventListener('click', confirmSettingsAccountDelete);
     $('settingsMobileSettings').addEventListener('click', function () {
       showView('main', true);
