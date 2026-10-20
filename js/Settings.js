@@ -54,7 +54,11 @@
   function renderContent(value) {
     if (!value) return '<p class="content-empty">내용이 없습니다.</p>';
     var text = String(value);
-    if (/<[a-z][\s\S]*>/i.test(text)) return text;
+    if (/<[a-z][\s\S]*>/i.test(text)) {
+      return window.FPPContentSanitizer
+        ? window.FPPContentSanitizer.sanitize(text)
+        : '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>';
+    }
     return '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>';
   }
 

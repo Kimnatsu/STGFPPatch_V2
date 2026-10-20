@@ -1638,7 +1638,11 @@ window.UI = (function () {
   function renderContent(raw) {
     if (raw == null || raw === '') return '<p style="color:var(--text-3)">내용이 없습니다.</p>';
     var s = String(raw);
-    if (/<[a-z][\s\S]*>/i.test(s)) return s;
+    if (/<[a-z][\s\S]*>/i.test(s)) {
+      return window.FPPContentSanitizer
+        ? window.FPPContentSanitizer.sanitize(s)
+        : '<div class="rich">' + esc(s).replace(/\n/g, '<br>') + '</div>';
+    }
     return '<div class="rich">' + esc(s)
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/(https?:\/\/[^\s<]+\.(?:png|jpe?g|gif|webp))/gi, '<img src="$1" alt="" loading="lazy">')
