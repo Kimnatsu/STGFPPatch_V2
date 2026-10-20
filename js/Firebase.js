@@ -729,6 +729,16 @@
       return notificationSnapshot(s, 'users/' + uid + '/notifications');
     }).catch(function () { return []; });
   }
+  function watchNotifications(uid, onChange, onError) {
+    if (!uid || !ready) return function () {};
+    return col('users').doc(uid).collection('notifications').onSnapshot(function (s) {
+      if (typeof onChange === 'function') {
+        onChange(notificationSnapshot(s, 'users/' + uid + '/notifications'));
+      }
+    }, function (error) {
+      if (typeof onError === 'function') onError(error);
+    });
+  }
   function markNotificationsRead(items) {
     if (!ready || !items || !items.length) return Promise.resolve();
     var batch = db.batch();
@@ -910,7 +920,7 @@
     getComments: getComments, addComment: addComment, deleteComment: deleteComment,
     getUserDoc: getUserDoc, ensureUserDoc: ensureUserDoc, updateUserDoc: updateUserDoc,
     getFavs: getFavs, bumpUserLikeCount: bumpUserLikeCount, bumpUserCommentCount: bumpUserCommentCount,
-    getNotifications: getNotifications, markNotificationsRead: markNotificationsRead,
+    getNotifications: getNotifications, watchNotifications: watchNotifications, markNotificationsRead: markNotificationsRead,
     getPushStatus: pushState, enablePushNotifications: enablePush, disablePushNotifications: disablePush,
     addInquiry: addInquiry, getMyInquiries: getMyInquiries
   };

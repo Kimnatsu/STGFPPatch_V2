@@ -8,6 +8,7 @@
     pendingProtectedView: null,
     favoriteTab: 'char', favoriteCatalog: { chars: [], supports: [] }, favoriteCatalogLoaded: false,
     notificationItems: [], notificationUid: null, notificationLoadedUid: null, notificationLoadingUid: null,
+    notificationUnsubscribe: null, notificationListenerUid: null,
     notificationLoadError: false, notificationFilter: 'all',
     pushEnabled: false, pushBusy: false, pushStatusSequence: 0,
     toastTimer: null, deferredInstall: null, profileEditorUid: null, profileDraftIcon: 0,
@@ -376,7 +377,13 @@
     }
     state.pendingProtectedView = null;
     hideLoginRequiredPopup();
-    if (view === state.view) return;
+    if (view === state.view) {
+      if (view === 'notifications' && !state.notificationListenerUid && !state.notificationLoadingUid) {
+        renderNotificationInbox();
+      }
+      return;
+    }
+    if (state.view === 'notifications') stopNotificationInboxListener();
     document.querySelectorAll('.settings-view').forEach(function (section) {
       var active = section.getAttribute('data-view') === view;
       section.classList.toggle('is-active', active);
@@ -846,6 +853,14 @@
     });
   }
 
+  function stopNotificationInboxListener() {
+    if (state.notificationUnsubscribe) {
+      state.notificationUnsubscribe();
+      state.notificationUnsubscribe = null;
+    }
+    state.notificationListenerUid = null;
+  }
+
   function renderNotificationInbox() {
     var content = $('notificationsContent');
     var list = $('settingsNotificationList');
@@ -857,6 +872,7 @@
     content.hidden = false;
     var uid = state.user.uid;
     if (state.notificationUid !== uid) {
+      stopNotificationInboxListener();
       state.notificationUid = uid;
       state.notificationItems = [];
       state.notificationLoadedUid = null;
@@ -864,7 +880,7 @@
       state.notificationLoadError = false;
       state.notificationFilter = 'all';
     }
-    if (state.notificationLoadedUid === uid) {
+    if (state.notificationListenerUid === uid) {
       renderNotificationInboxRows();
       return;
     }
@@ -875,18 +891,42 @@
     list.innerHTML = notificationInboxSkeleton(5);
     var ready = typeof FB !== 'undefined' && FB.onReady ? FB.onReady() : Promise.resolve();
     ready.then(function () {
+      if (!state.user || state.user.uid !== uid || state.view !== 'notifications') {
+        if (state.notificationLoadingUid === uid) state.notificationLoadingUid = null;
+        return;
+      }
+      if (typeof FB !== 'undefined' && FB.ready && FB.watchNotifications) {
+        state.notificationListenerUid = uid;
+        state.notificationUnsubscribe = FB.watchNotifications(uid, function (items) {
+          if (!state.user || state.user.uid !== uid || state.notificationListenerUid !== uid) return;
+          state.notificationItems = items || [];
+          state.notificationLoadedUid = uid;
+          state.notificationLoadError = false;
+          state.notificationLoadingUid = null;
+          renderNotificationInboxRows();
+        }, function () {
+          if (!state.user || state.user.uid !== uid || state.notificationListenerUid !== uid) return;
+          stopNotificationInboxListener();
+          state.notificationLoadingUid = null;
+          state.notificationLoadError = true;
+          renderNotificationInboxRows();
+        });
+        state.notificationLoadingUid = null;
+        return;
+      }
       return typeof FB !== 'undefined' && FB.ready && FB.getNotifications ? FB.getNotifications(uid) : [];
     }).then(function (items) {
+      if (!items) return;
       if (state.notificationLoadingUid === uid) state.notificationLoadingUid = null;
       if (!state.user || state.user.uid !== uid) return;
       state.notificationItems = items || [];
       state.notificationLoadedUid = uid;
+      state.notificationLoadError = false;
       renderNotificationInboxRows();
     }).catch(function () {
       if (state.notificationLoadingUid === uid) state.notificationLoadingUid = null;
-      if (!state.user || state.user.uid !== uid) return;
-      state.notificationItems = [];
-      state.notificationLoadedUid = uid;
+      if (!state.user || state.user.uid !== uid || state.view !== 'notifications') return;
+      stopNotificationInboxListener();
       state.notificationLoadError = true;
       renderNotificationInboxRows();
     });
@@ -1143,6 +1183,7 @@
 
   function initAuth() {
     function settleAsGuest() {
+      stopNotificationInboxListener();
       state.user = null;
       state.userDoc = null;
       state.authResolved = true;
@@ -1167,6 +1208,7 @@
       auth.onAuthStateChanged(function (user) {
         var notificationUid = user && user.uid || null;
         if (state.notificationUid !== notificationUid) {
+          stopNotificationInboxListener();
           state.notificationUid = notificationUid;
           state.notificationItems = [];
           state.notificationLoadedUid = null;
