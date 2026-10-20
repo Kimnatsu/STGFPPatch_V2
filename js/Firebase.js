@@ -28,32 +28,42 @@
   window.FB = (function () {
     'use strict';
 
-  var ready = false, db = null, _auth = null;
+  var ready = false, readyFailed = false, db = null, _auth = null;
   var messagingListenerReady = false;
   var readyCbs = [];
 
   function onReady(cb) {
-    if (ready) { cb && cb(); return Promise.resolve(true); }
+    if (ready || readyFailed) { cb && cb(); return Promise.resolve(ready); }
     return new Promise(function (res) { readyCbs.push(function () { cb && cb(); res(ready); }); });
   }
-  function markReady() {
-    ready = true;
+  function settleReady() {
     readyCbs.forEach(function (cb) { try { cb(); } catch (e) { } });
     readyCbs = [];
   }
+  function markReady() {
+    ready = true;
+    readyFailed = false;
+    settleReady();
+  }
+  function markUnavailable() {
+    ready = false;
+    readyFailed = true;
+    settleReady();
+  }
 
   function init() {
-    if (typeof firebase === 'undefined' || !firebase.apps) { markReady(); return; }
+    if (typeof firebase === 'undefined' || !firebase.apps) return false;
     try {
       if (!firebase.apps.length) firebase.initializeApp(CFG);
       _auth = firebase.auth();
       db = firebase.firestore();
-      ready = true;
       connectForegroundMessaging();
+      markReady();
+      return true;
     } catch (e) {
       ready = false;
+      return false;
     }
-    markReady();
   }
 
   /* SDK가 늦게 도착해도 초기화되도록 폴링 + 즉시 시도 */
@@ -62,8 +72,11 @@
     var tries = 0;
     var iv = setInterval(function () {
       tries++;
-      if (typeof firebase !== 'undefined' && firebase.apps) { clearInterval(iv); init(); }
-      else if (tries > 60) { clearInterval(iv); markReady(); }
+      if (!ready) init();
+      if (ready || tries >= 60) {
+        clearInterval(iv);
+        if (!ready) markUnavailable();
+      }
     }, 250);
   }
   var pushSdkAttempts = 0;
