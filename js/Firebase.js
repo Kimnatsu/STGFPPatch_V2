@@ -847,22 +847,33 @@
   /* ---------- 고객센터 문의 ---------- */
   function addInquiry(item, user) {
     var local = JSON.parse(localStorage.getItem('fpp_inquiries') || '[]');
-    var rec = {
-      title: item.title, content: item.content, contact: item.contact,
-      nickname: item.nickname || (user && user.displayName) || '선원',
-      email: item.email || (user && user.email) || item.contact || '',
-      uid: user ? user.uid : 'guest',
-      date: new Date().toISOString().slice(0, 10),
-      status: '접수완료'
+    var fallbackProfile = null;
+    function createRecord(profile) {
+      var nickname = [profile && profile.nickname, item.nickname, user && user.displayName]
+        .map(function (value) { return String(value || '').trim(); })
+        .find(function (value) { return value && value.indexOf('@') === -1; }) || '선원';
+      return {
+        title: item.title,
+        content: item.content,
+        nickname: nickname,
+        uid: user ? user.uid : 'guest',
+        date: new Date().toISOString().slice(0, 10),
+        status: '접수완료'
+      };
     };
     if (!ready || !user) {
-      local.unshift(rec);
+      var localRecord = createRecord(null);
+      local.unshift(localRecord);
       localStorage.setItem('fpp_inquiries', JSON.stringify(local));
       return Promise.resolve({ remote: false });
     }
-    return col('inquiries').add(Object.assign(rec, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }))
-      .then(function () { return { remote: true }; })
+    return getUserDoc(user.uid).then(function (profile) {
+      fallbackProfile = profile;
+      var rec = createRecord(profile);
+      return col('inquiries').add(Object.assign(rec, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
+    }).then(function () { return { remote: true }; })
       .catch(function () {
+        var rec = createRecord(fallbackProfile);
         local.unshift(rec);
         localStorage.setItem('fpp_inquiries', JSON.stringify(local));
         return { remote: false };
@@ -877,6 +888,7 @@
           title: pick(d, 'title') || '',
           content: pick(d, 'content') || '',
           reply: pick(d, 'reply', 'answer', 'adminReply', 'replyContent') || '',
+          replyAdminNickname: pick(d, 'replyAdminNickname', 'replyAdminName', 'repliedByNickname', 'replyByNickname', 'adminReplyNickname', 'responderNickname', 'adminNickname', 'adminName') || '',
           date: dateKey(pick(d, 'date', 'createdAt')),
           status: pick(d, 'status') || '접수완료'
         };

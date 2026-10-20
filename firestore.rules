@@ -236,7 +236,7 @@ service cloud.firestore {
         request.resource.data.uid == request.auth.uid;
       allow update: if canWriteSection('support') &&
         request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['status', 'reply', 'repliedAt', 'updatedAt']) &&
+          .hasOnly(['status', 'reply', 'replyAdminNickname', 'repliedAt', 'updatedAt']) &&
         request.resource.data.status in ['접수완료', '문의대기', '진행중', '완료됨'] &&
         (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reply']) ||
@@ -247,7 +247,11 @@ service cloud.firestore {
           ('reply' in request.resource.data &&
            request.resource.data.reply is string &&
            request.resource.data.reply.size() > 0 &&
-           request.resource.data.reply.size() <= 10000)
+           request.resource.data.reply.size() <= 10000 &&
+           'replyAdminNickname' in request.resource.data &&
+           request.resource.data.replyAdminNickname is string &&
+           request.resource.data.replyAdminNickname.size() > 0 &&
+           request.resource.data.replyAdminNickname.size() <= 60)
         );
       allow delete: if false;
     }

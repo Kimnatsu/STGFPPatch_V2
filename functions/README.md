@@ -45,13 +45,13 @@ FPPatchStudio administrator uses it to manage event-banner data.
 
 The public customer-service form writes to `inquiries`, including the account
 UID and nickname. Users can read their own inquiries; administrators with the
-`support` section permission can update only the status and reply fields needed
-by the support workflow. When an inquiry is marked `완료됨` with a non-empty
-reply, `onInquiryAnswered` creates a `support` notification under
+`support` section permission can update only the status, reply, and reply-admin
+nickname fields needed by the support workflow. New inquiries store the
+requester's account nickname. When an inquiry is marked `완료됨` with a
+non-empty reply, `onInquiryAnswered` creates a `support` notification under
 `users/{uid}/notifications`. Selecting it opens
 `CustomerService.html#my-inquiries`, which opens the user's inquiry dialog and
-shows the saved reply. FCM is sent only to devices that have an active token;
-this flow does not send email.
+shows the saved reply. FCM is sent only to devices that have an active token.
 
 The FPPatchStudio admin notification popover still reads the separate
 `supportInquiries` collection. That administrator-side new-inquiry alert is
