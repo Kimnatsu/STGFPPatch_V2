@@ -143,12 +143,6 @@
 
     <section class="settings-view" id="settings-myInfo" data-view="myInfo" aria-hidden="true">
       <div class="settings-content settings-content--sub">
-        <div class="login-required" id="infoLogin" hidden>
-          <span class="login-required-icon"><i class="settings-font-icon ic-v2-navigation-login-line" aria-hidden="true"></i></span>
-          <strong>로그인이 필요합니다.</strong>
-          <p>내 정보를 확인하려면 로그인해 주세요.</p>
-          <a class="settings-action-button" href="ko/Login.html">로그인하기</a>
-        </div>
         <div class="settings-info-content" id="infoContent" hidden>
           <div class="settings-info-card" id="infoCard"></div>
           <button class="settings-info-logout" id="settingsInfoLogout" type="button">로그아웃</button>
@@ -212,12 +206,6 @@
             <button class="settings-profile-save" id="settingsProfileSave" type="button" disabled>변경사항 저장</button>
           </div>
         </div>
-        <div class="login-required" id="profileSettingsLogin" hidden>
-          <span class="login-required-icon"><i class="settings-font-icon ic-v2-navigation-login-line" aria-hidden="true"></i></span>
-          <strong>로그인이 필요합니다.</strong>
-          <p>프로필을 설정하려면 로그인해 주세요.</p>
-          <a class="settings-action-button" href="ko/Login.html">로그인하기</a>
-        </div>
       </div>
     </section>
 
@@ -244,24 +232,12 @@
 
     <section class="settings-view" id="settings-notify" data-view="notify" aria-hidden="true">
       <div class="settings-content settings-content--sub">
-        <div class="login-required" id="notifyLogin" hidden>
-          <span class="login-required-icon"><i class="settings-font-icon ic-v2-navigation-login-line" aria-hidden="true"></i></span>
-          <strong>로그인이 필요합니다.</strong>
-          <p>알림 설정을 계정에 저장하려면 로그인해 주세요.</p>
-          <a class="settings-action-button" href="ko/Login.html">로그인하기</a>
-        </div>
         <div class="settings-choice-card" id="notifyCard" hidden></div>
       </div>
     </section>
 
     <section class="settings-view" id="settings-notifications" data-view="notifications" aria-hidden="true">
       <div class="settings-content settings-content--sub">
-        <div class="login-required" id="notificationsLogin" hidden>
-          <span class="login-required-icon"><i class="settings-font-icon ic-v2-navigation-login-line" aria-hidden="true"></i></span>
-          <strong>로그인이 필요합니다.</strong>
-          <p>로그인하면 받은 알림을 확인할 수 있습니다.</p>
-          <a class="settings-action-button" href="ko/Login.html">로그인하기</a>
-        </div>
         <div id="notificationsContent" hidden>
           <div class="profile-notify-filters" role="tablist" aria-label="알림 종류">
             <button class="profile-notify-filter is-on" type="button" data-settings-notify-filter="all" role="tab" aria-selected="true">전체 알림</button>
@@ -307,6 +283,14 @@
     </section>
 
     <div class="settings-toast" id="settingsToast" role="status" aria-live="polite"></div>
+    <div class="settings-auth-gate" id="settingsAuthGate" hidden aria-hidden="true">
+      <section class="settings-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsAuthTitle" aria-describedby="settingsAuthMessage">
+        <span class="settings-auth-icon"><i class="settings-font-icon ic-v2-navigation-login-line" aria-hidden="true"></i></span>
+        <strong id="settingsAuthTitle">로그인이 필요합니다.</strong>
+        <p id="settingsAuthMessage">로그인 후 이용해 주세요.</p>
+        <a class="settings-action-button" id="settingsAuthLogin" href="ko/Login.html">로그인하기</a>
+      </section>
+    </div>
     <div class="settings-avatar-overlay" id="settingsAvatarOverlay" hidden>
       <section class="settings-avatar-picker" role="dialog" aria-modal="true" aria-labelledby="settingsAvatarTitle">
         <header class="settings-avatar-header">

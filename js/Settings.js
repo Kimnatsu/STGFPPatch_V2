@@ -5,6 +5,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var state = {
     view: 'blank', notices: [], noticeDetail: null, user: null, userDoc: null, authResolved: false,
+    pendingProtectedView: null,
     favoriteTab: 'char', favoriteCatalog: { chars: [], supports: [] }, favoriteCatalogLoaded: false,
     notificationItems: [], notificationUid: null, notificationLoadedUid: null, notificationLoadingUid: null,
     notificationLoadError: false, notificationFilter: 'all',
@@ -307,8 +308,70 @@
     return fileUrl.pathname + location.search + hash;
   }
 
+  function requiresLogin(view) {
+    return view === 'myInfo' || view === 'profileInfo' || view === 'notify' || view === 'notifications';
+  }
+
+  function showLoginRequiredPopup(view) {
+    var gate = $('settingsAuthGate');
+    var message = $('settingsAuthMessage');
+    if (!gate) {
+      location.href = 'ko/Login.html';
+      return;
+    }
+    var messages = {
+      myInfo: '내 정보를 확인하려면 로그인해 주세요.',
+      profileInfo: '프로필을 설정하려면 로그인해 주세요.',
+      notify: '알림 설정을 이용하려면 로그인해 주세요.',
+      notifications: '알림을 확인하려면 로그인해 주세요.'
+    };
+    if (message) message.textContent = messages[view] || '로그인 후 이용해 주세요.';
+    gate.hidden = false;
+    gate.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('settings-auth-blocked');
+  }
+
+  function hideLoginRequiredPopup() {
+    var gate = $('settingsAuthGate');
+    if (gate) {
+      gate.hidden = true;
+      gate.setAttribute('aria-hidden', 'true');
+    }
+    document.body.classList.remove('settings-auth-blocked');
+  }
+
+  function resolvePendingProtectedView(isLoggedIn) {
+    if (isLoggedIn) hideLoginRequiredPopup();
+    var pending = state.pendingProtectedView;
+    if (!pending) {
+      if (!isLoggedIn && requiresLogin(state.view)) {
+        var blockedView = state.view;
+        showView('main', false);
+        showLoginRequiredPopup(blockedView);
+      }
+      return;
+    }
+    state.pendingProtectedView = null;
+    if (isLoggedIn) {
+      showView(pending.view, pending.addHistory);
+      return;
+    }
+    showView('main', false);
+    showLoginRequiredPopup(pending.view);
+  }
+
   function showView(view, addHistory) {
     if (!document.getElementById('settings-' + view)) view = 'main';
+    if (requiresLogin(view) && !state.user) {
+      if (!state.authResolved) {
+        state.pendingProtectedView = { view: view, addHistory: !!addHistory };
+        return;
+      }
+      showLoginRequiredPopup(view);
+      return;
+    }
+    state.pendingProtectedView = null;
+    hideLoginRequiredPopup();
     if (view === state.view) return;
     document.querySelectorAll('.settings-view').forEach(function (section) {
       var active = section.getAttribute('data-view') === view;
@@ -430,14 +493,12 @@
   }
 
   function renderNotifications() {
-    var login = $('notifyLogin');
     var card = $('notifyCard');
+    if (!card) return;
     if (!state.user) {
-      login.hidden = false;
       card.hidden = true;
       return;
     }
-    login.hidden = true;
     card.hidden = false;
     if (!state.userDoc) {
       card.setAttribute('aria-busy', 'true');
@@ -777,16 +838,13 @@
   }
 
   function renderNotificationInbox() {
-    var login = $('notificationsLogin');
     var content = $('notificationsContent');
     var list = $('settingsNotificationList');
-    if (!login || !content || !list) return;
+    if (!content || !list) return;
     if (!state.user) {
-      login.hidden = false;
       content.hidden = true;
       return;
     }
-    login.hidden = true;
     content.hidden = false;
     var uid = state.user.uid;
     if (state.notificationUid !== uid) {
@@ -826,16 +884,13 @@
   }
 
   function renderMyInfo() {
-    var login = $('infoLogin');
     var content = $('infoContent');
     var card = $('infoCard');
-    if (!login || !content || !card) return;
+    if (!content || !card) return;
     if (!state.user) {
-      login.hidden = false;
       content.hidden = true;
       return;
     }
-    login.hidden = true;
     content.hidden = false;
     if (!state.userDoc) {
       card.setAttribute('aria-busy', 'true');
@@ -895,15 +950,12 @@
   function prepareProfileEditor() {
     var form = $('profileSettingsForm');
     var loading = $('profileSettingsLoading');
-    var login = $('profileSettingsLogin');
     if (!state.user) {
       if (form) form.hidden = true;
       if (loading) loading.hidden = true;
-      if (login) login.hidden = false;
       state.profileEditorUid = null;
       return;
     }
-    if (login) login.hidden = true;
     if (!state.userDoc) {
       if (form) form.hidden = true;
       if (loading) loading.hidden = false;
@@ -1091,6 +1143,7 @@
       if (state.view === 'notifications') renderNotificationInbox();
       if (state.view === 'myInfo') renderMyInfo();
       if (state.view === 'profileInfo') prepareProfileEditor();
+      resolvePendingProtectedView(false);
     }
     if (typeof FB === 'undefined') {
       settleAsGuest();
@@ -1122,11 +1175,13 @@
           state.authResolved = true;
           renderMobileHeader();
           renderDashboard();
+          resolvePendingProtectedView(false);
           return;
         }
         state.authResolved = false;
         renderMobileHeader();
         renderDashboard();
+        resolvePendingProtectedView(true);
         FB.getUserDoc(user.uid).then(function (profile) {
           state.userDoc = profile || {};
           state.authResolved = true;
@@ -1170,10 +1225,6 @@
       showView('main', true);
     });
     $('settingsMobileNotify').addEventListener('click', function () {
-      if (!state.user) {
-        location.href = 'ko/Login.html';
-        return;
-      }
       showView('notifications', true);
     });
     $('settingsMobileClose').addEventListener('click', closeSettings);
@@ -1186,8 +1237,14 @@
     $('settingsAvatarOverlay').addEventListener('click', function (event) {
       if (event.target === $('settingsAvatarOverlay')) closeSettingsAvatarPicker();
     });
+    $('settingsAuthGate').addEventListener('click', function (event) {
+      if (event.target === $('settingsAuthGate')) hideLoginRequiredPopup();
+    });
     document.addEventListener('keydown', function (event) {
-      if (event.key === 'Escape') closeSettingsAvatarPicker();
+      if (event.key === 'Escape') {
+        if (!$('settingsAuthGate').hidden) hideLoginRequiredPopup();
+        else closeSettingsAvatarPicker();
+      }
     });
     $('noticeDetailBack').addEventListener('click', goBack);
     document.querySelectorAll('[data-open]').forEach(function (button) {
