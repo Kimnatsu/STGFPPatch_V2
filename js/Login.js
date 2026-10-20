@@ -8,6 +8,7 @@
   var MODE = 'login';
   var pendingCode = null;
   var pendingUser = null;
+  var loginRedirectStarted = false;
 
   function el(id) { return document.getElementById(id); }
   function setLoading(btn, on) {
@@ -96,6 +97,8 @@
   }
 
   function afterLogin(user) {
+    if (loginRedirectStarted) return;
+    loginRedirectStarted = true;
     UI.toast((user.displayName || user.email || '선원') + '님, 환영합니다!', 'ok');
     setTimeout(function () { location.href = UI.pageUrl('Main.html#home'); }, 650);
   }
@@ -105,7 +108,7 @@
     setLoading(btn, true);
     var provider = new firebase.auth.GoogleAuthProvider();
     FB.auth().signInWithPopup(provider).then(function (res) {
-      return FB.ensureUserDoc(res.user).then(function () { afterLogin(res.user); });
+      afterLogin(res.user);
     }).catch(function (e) {
       setLoading(btn, false);
       UI.toast(FB.errMsg(e), 'err');
@@ -235,10 +238,13 @@
   function start() {
     FB.onReady().then(function () {
       if (FB.ready) {
+        var initialAuthState = true;
         FB.auth().onAuthStateChanged(function (u) {
-          if (!u || pendingUser) return;
+          if (!initialAuthState) return;
+          initialAuthState = false;
+          if (!u) return;
           var isGoogle = u.providerData && u.providerData.some(function (p) { return p.providerId === 'google.com'; });
-          if (u.emailVerified || isGoogle) afterLogin(u);
+          if (u.emailVerified || isGoogle) location.replace(UI.pageUrl('Main.html#home'));
         });
       }
     });

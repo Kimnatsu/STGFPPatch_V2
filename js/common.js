@@ -122,11 +122,6 @@ window.UI = (function () {
     if (_userDoc) return _userDoc;
     return null;
   }
-  function loadUserDoc() {
-    var u = currentUser();
-    if (!u) { _userDoc = null; return Promise.resolve(null); }
-    return FB.getUserDoc(u.uid).then(function (d) { _userDoc = d || { nickname: u.displayName || '선원' }; return _userDoc; });
-  }
   function saveUserPatch(patch) {
     var u = currentUser();
     if (!u) return Promise.reject(new Error('로그인이 필요합니다.'));
@@ -1719,19 +1714,36 @@ window.UI = (function () {
           notificationState = { uid: u.uid, items: [], loaded: false, loading: null };
         }
         _fbUser = u;
-        _userDoc = null;
-        updateAuthArea();
+        _userDoc = u ? {
+          nickname: u.displayName || (u.email ? u.email.split('@')[0] : '선원'),
+          email: u.email || '',
+          profileIcon: 0,
+          favChars: [],
+          favSupports: []
+        } : null;
         if (u) {
-          FB.ensureUserDoc(u).then(function () { return loadUserDoc(); }).then(function () {
-            loadFavs();
+          var authUid = u.uid;
+          favCache = { chars: [], supports: [] };
+          _authResolved = true;
+          notifyUser();
+          FB.ensureUserDoc(u).then(function (profile) {
+            if (!_fbUser || _fbUser.uid !== authUid) return null;
+            _userDoc = profile || _userDoc;
+            var userProfile = _userDoc || {};
+            favCache = {
+              chars: Array.isArray(userProfile.favChars) ? userProfile.favChars : [],
+              supports: Array.isArray(userProfile.favSupports) ? userProfile.favSupports : []
+            };
+            emitFavChanged();
             loadCharCache();
-            _authResolved = true;
             notifyUser();
             return loadNotifications(true);
           }).then(function () {
+            if (!_fbUser || _fbUser.uid !== authUid) return;
             _headerNotificationsResolved = true;
             updateAuthArea();
           }).catch(function () {
+            if (!_fbUser || _fbUser.uid !== authUid) return;
             _authResolved = true;
             _headerNotificationsResolved = true;
             notifyUser();
