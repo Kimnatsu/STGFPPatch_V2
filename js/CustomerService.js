@@ -9,12 +9,19 @@
 
   var S = { banners: [], loaded: false };
   var query = '';
+  var myInquiriesRoutePending = false;
 
   /* ================= 데이터 ================= */
   function loadAll() {
     if (S.loaded) return Promise.resolve();
-    if (!FB.ready) return Promise.reject(new Error('Firebase SDK 없음'));
-    return FB.getBanners().then(function (r) { S.banners = r; S.loaded = true; });
+    if (typeof FB === 'undefined' || !FB.onReady) return Promise.reject(new Error('Firebase SDK 없음'));
+    return FB.onReady().then(function (isReady) {
+      if (!isReady || !FB.ready) throw new Error('Firebase SDK 없음');
+      return FB.getBanners();
+    }).then(function (r) {
+      S.banners = r;
+      S.loaded = true;
+    });
   }
 
   /* ================= 목록 ================= */
@@ -33,11 +40,28 @@
     UI.setActiveNav('cs');
     if (!S.loaded) return;
     showList();
+    if (location.hash === '#my-inquiries') openMyInquiriesFromRoute();
   }
   function showList() {
     $('csDetail').hidden = true;
     $('csListSection').hidden = false;
     renderList();
+  }
+
+  function openMyInquiriesFromRoute() {
+    if (UI.currentUser()) {
+      myInquiriesRoutePending = false;
+      openMyModal();
+      return;
+    }
+    if (myInquiriesRoutePending) return;
+    myInquiriesRoutePending = true;
+    UI.onUser(function () {
+      if (!myInquiriesRoutePending) return;
+      myInquiriesRoutePending = false;
+      if (location.hash !== '#my-inquiries') return;
+      openMyModal();
+    });
   }
 
   /* ================= 1:1 문의 ================= */
@@ -81,7 +105,16 @@
       if (!FB.ready) { UI.toast('문의 서버에 연결되지 않았습니다. 잠시 후 다시 시도해 주세요.', 'err'); return; }
       var btn = m.body.querySelector('#inqSend');
       btn.disabled = true; btn.textContent = '접수 중…';
-      FB.addInquiry({ title: title, content: content, contact: contact }, activeUser).then(function (result) {
+      var profile = UI.userDoc() || {};
+      var nickname = profile.nickname || activeUser.displayName ||
+        (activeUser.email ? activeUser.email.split('@')[0] : '') || '선원';
+      FB.addInquiry({
+        title: title,
+        content: content,
+        contact: contact,
+        nickname: nickname,
+        email: activeUser.email || contact
+      }, activeUser).then(function (result) {
         if (!result || result.remote !== true) {
           btn.disabled = false; btn.textContent = '문의 접수하기';
           UI.toast('문의가 서버에 저장되지 않았습니다. 연결을 확인하고 다시 시도해 주세요.', 'err');
@@ -113,10 +146,13 @@
         return;
       }
       box.innerHTML = list.map(function (q) {
+        var replyHtml = q.reply
+          ? '<div class="my-q-reply"><b>관리자 답변</b><p>' + UI.esc(q.reply) + '</p></div>'
+          : '';
         return '<div class="my-q"><div class="my-q-top"><b>' + UI.esc(q.title || '제목 없음') + '</b>' +
           '<span class="badge badge--ing">' + UI.esc(q.status || '접수완료') + '</span></div>' +
           '<p>' + UI.esc(q.content || '') + '</p>' +
-          '<time>' + UI.esc(UI.fmtDate(q.date)) + '</time></div>';
+          '<time>' + UI.esc(UI.fmtDate(q.date)) + '</time>' + replyHtml + '</div>';
       }).join('');
     }).catch(function (e) {
       box.innerHTML = '';

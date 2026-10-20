@@ -234,7 +234,22 @@ service cloud.firestore {
         (request.auth != null && resource.data.uid == request.auth.uid);
       allow create: if request.auth != null &&
         request.resource.data.uid == request.auth.uid;
-      allow update, delete: if false;
+      allow update: if canWriteSection('support') &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'reply', 'repliedAt', 'updatedAt']) &&
+        request.resource.data.status in ['접수완료', '문의대기', '진행중', '완료됨'] &&
+        (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reply']) ||
+          request.resource.data.status == '완료됨'
+        ) &&
+        (
+          request.resource.data.status != '완료됨' ||
+          ('reply' in request.resource.data &&
+           request.resource.data.reply is string &&
+           request.resource.data.reply.size() > 0 &&
+           request.resource.data.reply.size() <= 10000)
+        );
+      allow delete: if false;
     }
 
     // 별도 고객센터 앱의 문의 — 관리자 대시보드 읽기 전용

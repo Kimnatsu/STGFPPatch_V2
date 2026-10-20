@@ -635,6 +635,10 @@
         '작성하신 댓글에 대댓글이 달렸어요! 지금 확인해 보세요.' :
         '작성하신 게시글에 댓글이 달렸어요! 지금 확인해 보세요.';
     }
+    if (item.type === 'support') {
+      return value(item.title) || (value(item.targetTitle) ?
+        value(item.targetTitle) + ' 문의에 답변이 등록되었습니다.' : '고객센터 문의에 답변이 등록되었습니다.');
+    }
     if (item.type === 'event') {
       var eventTitle = title.replace(/^\[이벤트\]\s*/, '').replace(/\s*이벤트\s*종료\s*임박.*$/i, '').trim();
       if (item.isEndingSoon || /종료\s*임박|ending.?soon|deadline/i.test(String(item.subType || '') + ' ' + String(item.title || '') + ' ' + String(item.body || ''))) {
@@ -651,7 +655,8 @@
       patch: 'ic-v2-community-view-update-line',
       fav: 'ic-v2-community-star-fill',
       event: 'ic-v2-community-calendar-line',
-      comment: 'ic-v2-community-comment-line'
+      comment: 'ic-v2-community-comment-line',
+      support: 'ic-v2-community-comment-line'
     };
     return '<i class="settings-font-icon settings-notification-icon ' + (icons[type] || icons.comment) + '" aria-hidden="true"></i>';
   }

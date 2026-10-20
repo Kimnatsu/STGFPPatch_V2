@@ -45,3 +45,6 @@
 .my-q-top b{font-size:14px}
 .my-q p{font-size:12.5px;color:var(--text-2);margin-top:6px;line-height:1.6;overflow-wrap:break-word}
 .my-q time{display:block;font-size:11px;color:var(--text-3);margin-top:7px}
+.my-q-reply{margin-top:12px;padding:10px 12px;border-left:3px solid var(--gold);border-radius:0 var(--r-sm) var(--r-sm) 0;background:color-mix(in srgb,var(--gold) 8%,var(--surface))}
+.my-q-reply>b{font-size:12px;color:var(--gold-2)}
+.my-q-reply p{margin-top:5px;white-space:pre-wrap}

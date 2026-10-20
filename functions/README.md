@@ -43,13 +43,19 @@ The public event page currently loads visual banners from the `banners`
 collection; the separate `eventBanners` collection is retained because the
 FPPatchStudio administrator uses it to manage event-banner data.
 
-The public customer-service form writes to `inquiries`. The FPPatchStudio
-customer-support management list reads this collection for administrators;
-the `inquiries` rules allow users to read their own records and administrators
-to read the collection, while creates remain owner-only and updates/deletes
-remain disabled. The admin notification
-popover still reads the separate `supportInquiries` collection, so notifications
-and the management list remain separate flows.
+The public customer-service form writes to `inquiries`, including the account
+UID and nickname. Users can read their own inquiries; administrators with the
+`support` section permission can update only the status and reply fields needed
+by the support workflow. When an inquiry is marked `완료됨` with a non-empty
+reply, `onInquiryAnswered` creates a `support` notification under
+`users/{uid}/notifications`. Selecting it opens
+`CustomerService.html#my-inquiries`, which opens the user's inquiry dialog and
+shows the saved reply. FCM is sent only to devices that have an active token;
+this flow does not send email.
+
+The FPPatchStudio admin notification popover still reads the separate
+`supportInquiries` collection. That administrator-side new-inquiry alert is
+separate from the user-facing reply notification described above.
 
 ## Deploy
 

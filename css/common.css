@@ -633,6 +633,7 @@ select{appearance:none;-webkit-appearance:none;cursor:pointer;
 .notify-icon--fav{color:#ff7a91;background:rgba(232,72,79,.15)}
 .notify-icon--event{color:#7ab8ff;background:rgba(77,159,255,.16)}
 .notify-icon--comment{color:#9f8aff;background:rgba(159,138,255,.16)}
+.notify-icon--support{color:#f0a56b;background:rgba(240,165,107,.14)}
 .notify-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
 .notify-copy b{font-size:13px;line-height:1.45;color:var(--text);font-weight:800;display:block;overflow:hidden;text-overflow:ellipsis}
 .notify-copy small{font-size:11.5px;line-height:1.4;color:var(--text-2);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

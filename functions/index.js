@@ -88,6 +88,12 @@ function pushCopy(notification) {
     const body = notification.isReply ? '작성하신 댓글에 답글이 달렸습니다.' : '작성하신 게시글에 댓글이 달렸습니다.';
     return { title: '댓글 알림', body };
   }
+  if (notification.type === 'support') {
+    return {
+      title: '고객센터 답변이 등록되었습니다.',
+      body: String(notification.body || '나의 문의에서 답변을 확인해 주세요.'),
+    };
+  }
   if (notification.type === 'event') {
     return notification.isEndingSoon
       ? { title: '이벤트 종료 임박', body: `${title} 이벤트가 곧 종료됩니다.` }
@@ -367,6 +373,42 @@ exports.notifyEventEndingSoon = onSchedule(
 function notificationOwner(target, isEvent) {
   return pick(target, 'authorId', 'uid', 'userId', 'ownerId', 'createdBy', ...(isEvent ? ['creatorId'] : []));
 }
+
+function inquiryReply(data) {
+  return String(pick(data, 'reply', 'answer', 'adminReply', 'replyContent') || '').trim();
+}
+
+exports.onInquiryAnswered = onDocumentUpdated('inquiries/{inquiryId}', async (event) => {
+  const before = event.data.before.data() || {};
+  const after = event.data.after.data() || {};
+  const answer = inquiryReply(after);
+  if (after.status !== '완료됨' || !answer) return;
+  if (before.status === '완료됨' && inquiryReply(before) === answer) return;
+
+  const uid = pick(after, 'uid', 'userId');
+  if (!uid) {
+    logger.warn('Support inquiry reply has no owner UID', { inquiryId: event.params.inquiryId });
+    return;
+  }
+
+  const inquiryId = String(event.params.inquiryId);
+  const title = String(pick(after, 'title', 'subject', 'inquiryTitle') || '고객센터 문의');
+  const created = await createNotification(String(uid), `support-reply:${inquiryId}:${hashId(answer)}`, {
+    type: 'support',
+    subType: 'inquiry-reply',
+    title: '고객센터 답변이 등록되었습니다.',
+    body: `${title} 문의의 답변을 확인해 주세요.`,
+    targetTitle: title,
+    targetId: inquiryId,
+    targetType: 'inquiry',
+    href: 'ko/CustomerService.html#my-inquiries',
+  });
+  logger.info('Support inquiry reply notification created', {
+    inquiryId,
+    recipientFound: true,
+    created,
+  });
+});
 
 exports.onBoardCommentCreated = onDocumentCreated('boardComments/{commentId}', async (event) => {
   await handleCommentCreated(event, false);

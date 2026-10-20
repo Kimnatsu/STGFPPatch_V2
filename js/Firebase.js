@@ -686,7 +686,8 @@
   function normNotification(d, id, path) {
     var rawType = String(pick(d, 'type', 'notificationType', 'category', 'kind') || '').toLowerCase();
     var subType = String(pick(d, 'subType', 'notificationSubtype', 'commentType', 'eventStatus', 'action', 'kind') || '').toLowerCase();
-    var type = /^(favorite|favourite|fav)/.test(rawType) ? 'fav' :
+    var type = /^(support|inquiry)/.test(rawType) ? 'support' :
+      /^(favorite|favourite|fav)/.test(rawType) ? 'fav' :
       /^patch/.test(rawType) ? 'patch' :
       /^event/.test(rawType) ? 'event' : 'comment';
     var createdAt = pick(d, 'createdAt', 'timestamp', 'date', 'updatedAt') || null;
@@ -848,6 +849,8 @@
     var local = JSON.parse(localStorage.getItem('fpp_inquiries') || '[]');
     var rec = {
       title: item.title, content: item.content, contact: item.contact,
+      nickname: item.nickname || (user && user.displayName) || '선원',
+      email: item.email || (user && user.email) || item.contact || '',
       uid: user ? user.uid : 'guest',
       date: new Date().toISOString().slice(0, 10),
       status: '접수완료'
@@ -870,7 +873,13 @@
     if (!ready || !user) return Promise.resolve(local);
     return col('inquiries').where('uid', '==', user.uid).get().then(function (s) {
       var remote = mapDocs(s, function (d) {
-        return { title: pick(d, 'title') || '', content: pick(d, 'content') || '', date: dateKey(pick(d, 'date', 'createdAt')), status: pick(d, 'status') || '접수완료' };
+        return {
+          title: pick(d, 'title') || '',
+          content: pick(d, 'content') || '',
+          reply: pick(d, 'reply', 'answer', 'adminReply', 'replyContent') || '',
+          date: dateKey(pick(d, 'date', 'createdAt')),
+          status: pick(d, 'status') || '접수완료'
+        };
       });
       return remote.concat(local);
     }).catch(function () { return local; });
