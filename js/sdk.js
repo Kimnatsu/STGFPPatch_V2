@@ -18,9 +18,9 @@
     ));
   }
   function cdn(host, file) {
-    return host === 'gstatic'
-      ? 'https://www.gstatic.com/firebasejs/' + V + '/' + file + '.js'
-      : 'https://cdn.jsdelivr.net/npm/firebase@' + V + '/' + file + '.js';
+    if (host === 'gstatic') return 'https://www.gstatic.com/firebasejs/' + V + '/' + file + '.js';
+    if (host === 'jsdelivr') return 'https://cdn.jsdelivr.net/npm/firebase@' + V + '/' + file + '.js';
+    return 'https://www.unpkg.com/firebase@' + V + '/' + file + '.js';
   }
   function inject(src) {
     return new Promise(function (resolve, reject) {
@@ -37,6 +37,7 @@
     if (loaded(m.key)) return loadOne(i + 1);
     return inject(cdn('gstatic', m.file))
       .catch(function () { return inject(cdn('jsdelivr', m.file)); })
+      .catch(function () { return inject(cdn('unpkg', m.file)); })
       .then(function () { return loadOne(i + 1); })
       .catch(function () { return loadOne(i + 1); });
   }

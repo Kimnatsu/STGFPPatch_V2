@@ -1272,7 +1272,10 @@
       if (S.loaded && (currentRoute.name === 'home' || currentRoute.name === 'patch')) route(currentRoute.name, currentRoute.params);
     });
 
-    loadAll().then(function () {
+    FB.onReady().then(function (isReady) {
+      if (!isReady || !FB.ready) throw new Error('Firebase SDK 없음');
+      return loadAll();
+    }).then(function () {
       try {
         pageBanners();
         var r2 = parseHash();
