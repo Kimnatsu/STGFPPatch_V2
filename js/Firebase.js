@@ -274,6 +274,7 @@
     var s = String(v == null ? '' : v).trim().toLowerCase();
     if (s === 'buff' || s === '버프' || s === '상향' || s === '상향조정') return 'buff';
     if (s === 'nerf' || s === '너프' || s === '하향' || s === '하향조정') return 'nerf';
+    if (s === 'upcoming' || s === 'release_soon' || s === 'release-soon' || s === 'soon' || s === '출시예정' || s === '출시 예정') return 'upcoming';
     return 'fix';
   }
   function getPvpPatches() {

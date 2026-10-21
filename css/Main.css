@@ -50,6 +50,12 @@
 .orb-img img{width:100%;height:100%;object-fit:cover;border-radius:50%;border:2px solid var(--line-2);background:linear-gradient(150deg,var(--surface-2),var(--surface-3));transition:border-color .2s}
 .orb:hover .orb-img img{border-color:var(--gold)}
 .orb-badge{position:absolute;right:-8px;bottom:-6px;font-size:12px;padding:4px 8px;box-shadow:0 3px 10px rgba(0,0,0,.35);z-index:2}
+.orb-countdown{
+  position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:rgba(3,10,18,.62);color:#fff;
+  font-family:var(--font-d);font-size:clamp(14px,2vw,19px);font-weight:900;letter-spacing:.2px;
+  text-shadow:0 2px 6px rgba(0,0,0,.65);pointer-events:none;
+}
 /* 여러 타입 공존 시 — 좌측 하단 · 중앙 하단 · 우측 하단에 반쯤 걸쳐 노출 */
 .orb-b--l{left:0;right:auto;transform:translateX(-42%)}
 .orb-b--c{left:50%;right:auto;transform:translateX(-50%)}
@@ -141,6 +147,15 @@
 .char-card.attr-ki:hover{border-color:#38a169;box-shadow:0 0 14px rgba(56,161,105,.32)}
 .char-card.attr-sim:hover{border-color:#d69e2e;box-shadow:0 0 14px rgba(214,158,46,.34)}
 .char-card-img-wrap{position:relative;aspect-ratio:1/1;overflow:hidden;background:linear-gradient(150deg,var(--surface-2),var(--surface-3))}
+.char-upcoming-overlay{
+  position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
+  background:rgba(3,10,18,.58);pointer-events:none;
+}
+.char-upcoming-overlay span{
+  padding:5px 9px;border:1px solid rgba(255,255,255,.52);border-radius:999px;
+  color:#fff;background:rgba(0,0,0,.32);font-family:var(--font-d);font-size:clamp(14px,2vw,19px);
+  font-weight:900;letter-spacing:.2px;text-shadow:0 2px 6px rgba(0,0,0,.65);
+}
 /* 본문 캐릭터 이미지만 프레임에 맞춤 — 속성/타입 아이콘(img)은 제외 */
 .char-card-img-wrap img:not(.char-attr-icon):not(.char-type-icon){
   width:100%;height:100%;object-fit:contain;object-position:left bottom;
@@ -180,7 +195,7 @@
 .char-grade-badge.grade-C,.cp-rel-grade.grade-C{background:#a5d6a7;color:#1b5e20}
 /* 즐겨찾기 별 — 우측 상단 모서리, 패딩 없음 */
 .char-fav-btn{
-  position:absolute;top:0;right:0;z-index:3;width:28px;height:28px;border-radius:0 0 0 50%;border:none;cursor:pointer;
+  position:absolute;top:0;right:0;z-index:5;width:28px;height:28px;border-radius:0 0 0 50%;border:none;cursor:pointer;
   font-size:23px;line-height:1;display:flex;align-items:flex-start;justify-content:flex-end;padding:0;
   color:#dfe8f2;background:rgba(6,16,28,.55);text-shadow:0 1px 3px rgba(0,0,0,.6);transition:.2s;
 }
@@ -381,9 +396,11 @@
 .pvp-sec--buff h4{color:var(--green)}
 .pvp-sec--nerf h4{color:var(--red)}
 .pvp-sec--fix h4{color:#d2a679}
+.pvp-sec--upcoming h4{color:var(--gold)}
 .pvp-sec--buff h4::before{background:var(--green)}
 .pvp-sec--nerf h4::before{background:var(--red)}
 .pvp-sec--fix h4::before{background:#d2a679}
+.pvp-sec--upcoming h4::before{background:var(--gold)}
 .pvp-sec .badge{position:static;font-size:11px;padding:3px 9px}
 .pvp-list{list-style:none;display:flex;flex-direction:column;gap:8px}
 .pvp-list li{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px}

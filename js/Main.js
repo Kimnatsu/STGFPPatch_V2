@@ -72,8 +72,8 @@
     return k ? 'img/type/' + k + '.webp' : '';
   }
 
-  var BNAME = { buff: '버프', nerf: '너프', fix: '기능수정' };
-  var BSYM = { buff: '▲', nerf: '▼', fix: '✦' };
+  var BNAME = { buff: '버프', nerf: '너프', fix: '기능수정', upcoming: '출시 예정' };
+  var BSYM = { buff: '▲', nerf: '▼', fix: '✦', upcoming: '◷' };
 
   function pvpCharacter(g) {
     if (!g) return null;
@@ -98,6 +98,35 @@
     return '';
   }
 
+  function pvpDaysUntil(date) {
+    var match = String(date || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return null;
+    var parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(new Date());
+    var todayValues = {};
+    parts.forEach(function (part) { todayValues[part.type] = part.value; });
+    var target = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    var today = Date.UTC(Number(todayValues.year), Number(todayValues.month) - 1, Number(todayValues.day));
+    return Math.floor((target - today) / 86400000);
+  }
+  function pvpUpcomingDays(groups) {
+    var days = (groups || []).filter(function (g) { return g.type === 'upcoming'; })
+      .map(function (g) { return pvpDaysUntil(g.date); })
+      .filter(function (value) { return value !== null && value > 0; });
+    return days.length ? Math.min.apply(Math, days) : null;
+  }
+  function pvpUpcomingForCharacter(character, kind) {
+    if (!character || character.id == null) return null;
+    var key = (kind === 'support' ? 'support:' : 'char:') + String(character.id);
+    return pvpUpcomingDays(S.pvps.filter(function (g) {
+      return pvpCharacterKey(g) === key;
+    }));
+  }
+
   /* 같은 캐릭터의 버프/너프/기능수정 그룹을 하나의 아이콘으로 합침 (등장 순서 유지) */
   function mergePvpByChar(groups) {
     var map = {}, order = [];
@@ -119,7 +148,7 @@
   /* 타입 뱃지 — 1개면 우측 하단, 2개면 중앙·우측 하단, 3개면 좌측·중앙·우측 하단에 반쯤 걸쳐 노출 */
   function orbBadgesHTML(types) {
     var canon = ['buff', 'nerf', 'fix'].filter(function (t) { return (types || []).indexOf(t) > -1; });
-    if (!canon.length) canon = ['fix'];
+    if (!canon.length) return '';
     var pos = canon.length === 1 ? ['r'] : canon.length === 2 ? ['c', 'r'] : ['l', 'c', 'r'];
     return canon.map(function (t, i) {
       return '<span class="orb-badge badge badge--' + t + ' orb-b--' + pos[i] + '" aria-hidden="true">' + BSYM[t] + '</span>';
@@ -202,11 +231,14 @@
        같은 캐릭터의 버프/너프/기능수정은 아이콘 하나로 합치고,
        타입 뱃지를 좌측 하단·중앙 하단·우측 하단에 반쯤 걸쳐 노출 */
     var pg = $('homePvpGrid');
-    var dayGroups = S.pvps;
-    if (S.pvps.length) {
-      var d0 = String(S.pvps[0].date || '');
-      dayGroups = S.pvps.filter(function (g) { return String(g.date) === d0; });
-    }
+    var scheduledGroups = S.pvps.filter(function (g) {
+      return g.type === 'upcoming' && pvpDaysUntil(g.date) > 0;
+    });
+    var publishedGroups = S.pvps.filter(function (g) { return g.type !== 'upcoming'; });
+    var latestPublishedDate = publishedGroups.length ? String(publishedGroups[0].date || '') : '';
+    var dayGroups = scheduledGroups.concat(latestPublishedDate
+      ? publishedGroups.filter(function (g) { return String(g.date) === latestPublishedDate; })
+      : []);
     var orbs = mergePvpByChar(dayGroups).slice(0, 12);
     if (!orbs.length) UI.empty(pg, { title: 'PvP 패치 내역이 없습니다.' });
     else {
@@ -215,9 +247,13 @@
         var nm = pvpCharacterName(o);
         var img = (c && c.image) || o.image || UI.PLACEHOLDER_IMG;
         var label = o.types.map(function (t) { return BNAME[t] || '수정'; }).join('·');
-        return '<button class="orb" type="button" data-i="' + i + '" aria-label="' + UI.esc(nm) + ' — ' + UI.esc(label) + '">' +
+        var upcomingDays = pvpUpcomingDays(o.groups);
+        var countdown = upcomingDays !== null
+          ? '<span class="orb-countdown" aria-hidden="true">D-' + upcomingDays + '</span>'
+          : '';
+        return '<button class="orb" type="button" data-i="' + i + '" aria-label="' + UI.esc(nm) + ' — ' + UI.esc(label) + (upcomingDays !== null ? ', 출시 예정 D-' + upcomingDays : '') + '">' +
           '<span class="orb-img"><img src="' + UI.esc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
-          orbBadgesHTML(o.types) + '</span>' +
+          orbBadgesHTML(o.types) + countdown + '</span>' +
           '<span class="orb-name">' + UI.esc(nm) + '</span></button>';
       }).join('');
       pg.querySelectorAll('.orb').forEach(function (b) {
@@ -604,7 +640,8 @@
       var attrCls = charAttrClass(c);
       var bt = c.battleType;
       var favOn = UI.isFav(kind, c.id);
-      return '<article class="char-card rv' + (c.grade ? ' grade-' + UI.esc(c.grade) : '') + (attrCls ? ' ' + attrCls : '') + '" data-id="' + UI.esc(c.id) + '" tabindex="0" role="button" aria-label="' + UI.esc(c.name) + '">' +
+      var upcomingDays = pvpUpcomingForCharacter(c, kind);
+      return '<article class="char-card rv' + (upcomingDays !== null ? ' char-card--upcoming' : '') + (c.grade ? ' grade-' + UI.esc(c.grade) : '') + (attrCls ? ' ' + attrCls : '') + '" data-id="' + UI.esc(c.id) + '" tabindex="0" role="button" aria-label="' + UI.esc(c.name) + (upcomingDays !== null ? ' — 출시 예정 D-' + upcomingDays : '') + '">' +
         '<div class="char-card-img-wrap">' +
         (c.image ? '<img src="' + UI.esc(c.image) + '" alt="' + UI.esc(c.name) + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '') +
         '<div class="char-card-placeholder"' + (c.image ? ' style="display:none"' : '') + '>' + UI.esc((c.name || '?').charAt(0)) + '</div>' +
@@ -613,6 +650,7 @@
           (attrCls ? '<img class="char-attr-icon" src="' + attrIconSrc(attrCls) + '" alt="' + UI.esc(charAttrLabel(c)) + '" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
           (bt && typeIconSrc(bt) ? '<img class="char-type-icon" src="' + typeIconSrc(bt) + '" alt="' + UI.esc(bt) + '" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
           '</div>' : '') +
+        (upcomingDays !== null ? '<div class="char-upcoming-overlay" aria-hidden="true"><span>D-' + upcomingDays + '</span></div>' : '') +
         (c.grade ? '<span class="char-grade-badge grade-' + UI.esc(c.grade) + '">' + UI.esc(c.grade) + '</span>' : '') +
         '<button class="char-fav-btn' + (favOn ? ' active' : '') + '" data-fav="' + UI.esc(String(c.id)) + '" aria-pressed="' + favOn + '" aria-label="즐겨찾기" type="button"><i class="' + (favOn ? 'ic-v2-community-star-fill' : 'ic-v2-community-star-line') + '" aria-hidden="true"></i></button>' +
         '</div><div class="char-card-name">' + UI.esc(c.name) + '</div></article>';
@@ -1064,7 +1102,7 @@
   /* ================= PvP 패치 ================= */
   function pvpDates() {
     var seen = {};
-    return S.pvps.map(function (g) { return String(g.date || ''); })
+    return S.pvps.filter(function (g) { return g.type !== 'upcoming'; }).map(function (g) { return String(g.date || ''); })
       .filter(function (d) { if (!d || seen[d]) return false; seen[d] = 1; return true; })
       .sort()
       .reverse();
@@ -1145,7 +1183,7 @@
       return pvpCharacterKey(x) === pvpCharacterKey(g) && String(x.date) === String(g.date);
     });
     /* 내역이 없는 타입(버프/너프/기능수정)은 섹션 자체를 미노출 */
-    var sections = ['buff', 'nerf', 'fix'].map(function (k) {
+    var sections = ['upcoming', 'buff', 'nerf', 'fix'].map(function (k) {
       var groups = same.filter(function (x) { return x.type === k; });
       if (!groups.length) return '';
       var body = '<ul class="pvp-list">' + groups.map(function (gr) {
