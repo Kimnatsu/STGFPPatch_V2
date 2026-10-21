@@ -132,7 +132,8 @@ window.UI = (function () {
   }
 
   /* ---------- 알림 ---------- */
-  var notificationState = { uid: null, items: [], loaded: false, loading: null };
+  var notificationState = { uid: null, items: [], loaded: false, loading: null, unsubscribe: null };
+  var activeNotificationPopup = null, activeProfileMenuPopup = null, activeProfileNotificationsRenderer = null;
   var NOTIFY_DESCRIPTIONS = {
     patch: '새로운 패치노트 등록 시 알림 받기',
     fav: '즐겨찾기 캐릭터 밸런스 패치 알림 받기',
@@ -171,27 +172,79 @@ window.UI = (function () {
     }
     btn.classList.toggle('has-notifications', unread > 0);
   }
+  function updateNotificationViews() {
+    updateNotificationBadge();
+    if (activeNotificationPopup) {
+      if (activeNotificationPopup.el && activeNotificationPopup.el.isConnected) {
+        renderNotificationPopup(activeNotificationPopup);
+      } else {
+        activeNotificationPopup = null;
+      }
+    }
+    if (activeProfileMenuPopup) {
+      if (activeProfileMenuPopup.el && activeProfileMenuPopup.el.isConnected) {
+        var badge = activeProfileMenuPopup.el.querySelector('#pfNotice em');
+        if (badge) badge.textContent = String(visibleNotifications().filter(function (n) { return !n.read; }).length);
+      } else {
+        activeProfileMenuPopup = null;
+      }
+    }
+    if (activeProfileNotificationsRenderer && !activeProfileNotificationsRenderer()) {
+      activeProfileNotificationsRenderer = null;
+    }
+  }
+  function stopNotificationWatch() {
+    if (notificationState.unsubscribe) {
+      notificationState.unsubscribe();
+      notificationState.unsubscribe = null;
+    }
+  }
+  function startNotificationWatch(uid) {
+    if (!uid || !FB.ready || !FB.watchNotifications) return;
+    if (notificationState.uid === uid && notificationState.unsubscribe) return;
+    stopNotificationWatch();
+    if (notificationState.uid !== uid) {
+      notificationState = { uid: uid, items: [], loaded: false, loading: null, unsubscribe: null };
+    }
+    notificationState.unsubscribe = FB.watchNotifications(uid, function (items) {
+      var user = currentUser();
+      if (!user || user.uid !== uid || notificationState.uid !== uid) return;
+      notificationState.items = items || [];
+      notificationState.loaded = true;
+      notificationState.loading = null;
+      updateNotificationViews();
+    }, function (error) {
+      if (notificationState.uid !== uid) return;
+      console.warn('알림 실시간 구독에 실패했습니다:', error);
+      stopNotificationWatch();
+      updateNotificationViews();
+    });
+  }
   function loadNotifications(force) {
     var u = currentUser();
     if (!u) {
+      stopNotificationWatch();
       notificationState = { uid: null, items: [], loaded: true, loading: null };
-      updateNotificationBadge();
+      updateNotificationViews();
       return Promise.resolve([]);
     }
     if (!force && notificationState.loaded && notificationState.uid === u.uid) return Promise.resolve(notificationState.items);
     if (notificationState.loading && notificationState.uid === u.uid) return notificationState.loading;
     notificationState.uid = u.uid;
     notificationState.loading = FB.getNotifications(u.uid).then(function (items) {
+      if (!currentUser() || currentUser().uid !== u.uid || notificationState.uid !== u.uid) return [];
       notificationState.items = items || [];
       notificationState.loaded = true;
       notificationState.loading = null;
-      updateNotificationBadge();
+      updateNotificationViews();
       return notificationState.items;
-    }).catch(function () {
+    }).catch(function (error) {
+      if (!currentUser() || currentUser().uid !== u.uid || notificationState.uid !== u.uid) return [];
+      console.warn('알림 목록을 불러오지 못했습니다:', error);
       notificationState.items = [];
       notificationState.loaded = true;
       notificationState.loading = null;
-      updateNotificationBadge();
+      updateNotificationViews();
       return [];
     });
     return notificationState.loading;
@@ -326,6 +379,7 @@ window.UI = (function () {
   function openNotifyPopup(anchor) {
     var u = currentUser();
     var pop = openPopup(anchor, notificationPopupSkeleton(), '390px', 'pop--notifications');
+    activeNotificationPopup = pop;
     if (!u) {
       pop.el.innerHTML = '<div class="notify-popup"><div class="empty notify-empty"><p>로그인 후 알림을 확인할 수 있습니다.</p><a class="btn btn--gold btn--sm" href="' + pageUrl('Login.html') + '">로그인</a></div></div>';
       return;
@@ -719,6 +773,8 @@ window.UI = (function () {
       activePopupAnchor.setAttribute('aria-expanded', 'false');
       activePopupAnchor = null;
     }
+    activeNotificationPopup = null;
+    activeProfileMenuPopup = null;
     document.removeEventListener('click', onDocClickPop);
   }
   function onDocClickPop(e) {
@@ -857,6 +913,7 @@ window.UI = (function () {
       '<span class="menu-icon ic-v2-navigation-message-line" aria-hidden="true"></span><span>쪽지</span></button>' +
       '</div>', '340px');
     pop.el.classList.add('pop--profile');
+    activeProfileMenuPopup = pop;
     pop.el.querySelector('#pfCopy').addEventListener('click', function () {
       var nickname = ud.nickname || u.displayName || '선원';
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -891,6 +948,7 @@ window.UI = (function () {
       closePopups();
       toast('쪽지 기능은 준비 중입니다.');
     });
+    loadNotifications(true);
   }
 
   /* ---------- 바디 스크롤 잠금 (패널·모달 오픈 시 뒷배경 고정) ---------- */
@@ -1180,6 +1238,7 @@ window.UI = (function () {
       syncDraft();
     }
     function selectPanel(panel) {
+      activeProfileNotificationsRenderer = null;
       profilePanel.hidden = panel !== 'profile';
       myInfoPanel.hidden = panel !== 'my-info';
       notificationsPanel.hidden = panel !== 'notifications';
@@ -1190,6 +1249,11 @@ window.UI = (function () {
       });
       saveBtn.hidden = panel !== 'profile';
       if (panel === 'notifications') {
+        activeProfileNotificationsRenderer = function () {
+          if (!m.el.isConnected || notificationsPanel.hidden) return false;
+          renderProfileNotifications(false);
+          return true;
+        };
         notificationListEl.setAttribute('aria-busy', 'true');
         notificationListEl.innerHTML = notificationSkeletonRows(5, true);
         loadNotifications(true).then(function () {
@@ -1721,7 +1785,8 @@ window.UI = (function () {
         _authResolved = false;
         _headerNotificationsResolved = !u;
         if (u && notificationState.uid !== u.uid) {
-          notificationState = { uid: u.uid, items: [], loaded: false, loading: null };
+          stopNotificationWatch();
+          notificationState = { uid: u.uid, items: [], loaded: false, loading: null, unsubscribe: null };
         }
         _fbUser = u;
         _userDoc = u ? {
@@ -1736,6 +1801,7 @@ window.UI = (function () {
           favCache = { chars: [], supports: [] };
           _authResolved = true;
           notifyUser();
+          startNotificationWatch(authUid);
           FB.ensureUserDoc(u).then(function (profile) {
             if (!_fbUser || _fbUser.uid !== authUid) return null;
             _userDoc = profile || _userDoc;
@@ -1747,6 +1813,7 @@ window.UI = (function () {
             emitFavChanged();
             loadCharCache();
             notifyUser();
+            updateNotificationViews();
             return loadNotifications(true);
           }).then(function () {
             if (!_fbUser || _fbUser.uid !== authUid) return;
@@ -1759,9 +1826,10 @@ window.UI = (function () {
             notifyUser();
           });
         } else {
+          stopNotificationWatch();
           _userDoc = null;
           favCache = { chars: [], supports: [] };
-          notificationState = { uid: null, items: [], loaded: true, loading: null };
+          notificationState = { uid: null, items: [], loaded: true, loading: null, unsubscribe: null };
           _authResolved = true;
           _headerNotificationsResolved = true;
           notifyUser();

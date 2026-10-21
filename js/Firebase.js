@@ -727,7 +727,7 @@
     // top-level collections that have no client read rule.
     return col('users').doc(uid).collection('notifications').get().then(function (s) {
       return notificationSnapshot(s, 'users/' + uid + '/notifications');
-    }).catch(function () { return []; });
+    });
   }
   function watchNotifications(uid, onChange, onError) {
     if (!uid || !ready) return function () {};
