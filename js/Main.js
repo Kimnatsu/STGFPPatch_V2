@@ -1102,7 +1102,9 @@
   /* ================= PvP 패치 ================= */
   function pvpDates() {
     var seen = {};
-    return S.pvps.filter(function (g) { return g.type !== 'upcoming'; }).map(function (g) { return String(g.date || ''); })
+    return S.pvps.filter(function (g) {
+      return g.type !== 'upcoming' || pvpDaysUntil(g.date) > 0;
+    }).map(function (g) { return String(g.date || ''); })
       .filter(function (d) { if (!d || seen[d]) return false; seen[d] = 1; return true; })
       .sort()
       .reverse();
@@ -1148,7 +1150,10 @@
       var colEl = cols[kind];
       if (!colEl) return;
       var groups = S.pvps.filter(function (g) {
-        return g.type === kind && (!pvpSelDate || String(g.date) === pvpSelDate);
+        var upcoming = g.type === 'upcoming';
+        var inColumn = g.type === kind || (kind === 'fix' && upcoming);
+        return inColumn && (!upcoming || pvpDaysUntil(g.date) > 0) &&
+          (!pvpSelDate || String(g.date) === pvpSelDate);
       });
       /* 선택 날짜 기준 컬럼별 인원 카운트 */
       var cntEl = $(kind + 'Cnt');
@@ -1161,9 +1166,16 @@
         var c = pvpCharacter(g);
         var name = pvpCharacterName(g);
         var img = (c && c.image) || g.image || UI.PLACEHOLDER_IMG;
-        return '<button class="orb" type="button" data-gid="' + UI.esc(g.uid) + '" aria-label="' + UI.esc(name) + ' (' + BNAME[kind] + ')">' +
-          '<span class="orb-img"><img src="' + UI.esc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
-          '<span class="orb-badge badge badge--' + kind + '" aria-hidden="true">' + BSYM[kind] + '</span></span>' +
+        var upcoming = g.type === 'upcoming';
+        var upcomingDays = upcoming ? pvpDaysUntil(g.date) : null;
+        var badgeType = upcoming ? 'upcoming' : kind;
+        var badgeName = BNAME[badgeType] || BNAME[kind];
+        var countdown = upcomingDays !== null
+          ? '<span class="orb-countdown" aria-hidden="true">D-' + upcomingDays + '</span>'
+          : '';
+        return '<button class="orb' + (upcoming ? ' orb--upcoming' : '') + '" type="button" data-gid="' + UI.esc(g.uid) + '" aria-label="' + UI.esc(name) + ' (' + badgeName + (upcomingDays !== null ? ' D-' + upcomingDays : '') + ')">' +
+          '<span class="orb-img"><img src="' + UI.esc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' + countdown +
+          '<span class="orb-badge badge badge--' + badgeType + '" aria-hidden="true">' + BSYM[badgeType] + '</span></span>' +
           '<span class="orb-name">' + UI.esc(name) + '</span></button>';
       }).join('') + '</div>';
       colEl.querySelectorAll('.orb').forEach(function (el) {

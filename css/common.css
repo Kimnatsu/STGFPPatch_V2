@@ -427,9 +427,11 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 .badge--buff{background:rgba(62,207,142,.26);color:#57eab0;border-color:rgba(62,207,142,.5)}
 .badge--nerf{background:rgba(232,72,79,.26);color:#ff9298;border-color:rgba(232,72,79,.5)}
 .badge--fix{background:rgba(210,166,121,.3);color:#eed0ab;border-color:rgba(210,166,121,.55)}
+.badge--upcoming{background:rgba(214,188,73,.22);color:#f2d66a;border-color:rgba(214,188,73,.5)}
 [data-theme="light"] .badge--buff{background:rgba(31,168,113,.16);color:#0e7a51;border-color:rgba(31,168,113,.4)}
 [data-theme="light"] .badge--nerf{background:rgba(214,60,68,.15);color:#b3242c;border-color:rgba(214,60,68,.4)}
 [data-theme="light"] .badge--fix{background:rgba(176,131,80,.18);color:#8a5f31;border-color:rgba(176,131,80,.45)}
+[data-theme="light"] .badge--upcoming{background:rgba(185,151,22,.16);color:#876d04;border-color:rgba(185,151,22,.42)}
 
 /* ---------- 버튼 ---------- */
 .btn{
