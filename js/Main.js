@@ -433,20 +433,36 @@
       button.addEventListener('click', function () { location.hash = '#patch'; });
     });
     bindRows(el);
-    var key = 'fpp_view_patch_' + patch.docId;
+    var key = 'patch_read_' + patch.docId;
+    var legacyKey = 'fpp_view_patch_' + patch.docId;
     var seen = false;
-    try { seen = localStorage.getItem(key) === '1'; } catch (_) {}
+    try {
+      seen = localStorage.getItem(key) === '1' || localStorage.getItem(legacyKey) === '1';
+      if (seen) localStorage.setItem(key, '1');
+    } catch (_) {}
+    function paintPatchViewCount(count) {
+      if (count == null) return;
+      patch.viewCount = count;
+      var countEl = el.querySelector('.detail-head .detail-meta .view-count');
+      if (countEl) {
+        countEl.setAttribute('aria-label', '조회수 ' + count);
+        if (countEl.lastElementChild) countEl.lastElementChild.textContent = count;
+      }
+    }
+    if (seen && FB.getViewCount) {
+      FB.getViewCount('patch', patch.docId).then(paintPatchViewCount).catch(function () {});
+    }
     if (!seen && String(patch.docId).indexOf('local_') !== 0 && FB.bumpViewCount) {
       FB.bumpViewCount('patch', patch.docId).then(function (count) {
         if (count == null) return;
-        patch.viewCount = count;
-        try { localStorage.setItem(key, '1'); } catch (_) {}
-        var countEl = el.querySelector('.view-count');
-        if (countEl) {
-          countEl.setAttribute('aria-label', '조회수 ' + count);
-          if (countEl.lastElementChild) countEl.lastElementChild.textContent = count;
-        }
-      }).catch(function () {});
+        paintPatchViewCount(count);
+        try {
+          localStorage.setItem(key, '1');
+          localStorage.setItem(legacyKey, '1');
+        } catch (_) {}
+      }).catch(function () {
+        if (FB.getViewCount) FB.getViewCount('patch', patch.docId).then(paintPatchViewCount).catch(function () {});
+      });
     }
     var likeButton = el.querySelector('.act-like');
     var likeCount = el.querySelector('.like-n');

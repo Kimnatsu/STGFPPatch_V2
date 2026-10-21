@@ -152,9 +152,28 @@
       }
     );
   }
-  var VIEW_COLLECTIONS = { patch: 'patchViewers', board: 'boardViews', event: 'eventViewers' };
+  var VIEW_COLLECTIONS = { patch: 'patchViews', board: 'boardViews', event: 'eventViews' };
+  var VIEWER_COLLECTIONS = { patch: 'patchViewers', board: 'boardViewers', event: 'eventViewers' };
   function viewCol(type) {
     return VIEW_COLLECTIONS[type] ? col(VIEW_COLLECTIONS[type]) : null;
+  }
+  function simpleViewHash(str) {
+    var h = 5381;
+    for (var i = 0; i < str.length; i++) h = (Math.imul(h, 33) ^ str.charCodeAt(i)) >>> 0;
+    return h.toString(36);
+  }
+  function getViewIpHash() {
+    return Promise.resolve().then(function () {
+      return fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+    }).then(function (response) {
+      return response.json();
+    }).then(function (data) {
+      if (!data || !data.ip) throw new Error('IP를 확인할 수 없습니다.');
+      return simpleViewHash(data.ip);
+    }).catch(function () {
+      var userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+      return simpleViewHash('anon_' + userAgent);
+    });
   }
   function loadViewCounts(type, items) {
     var vc = viewCol(type);
@@ -166,17 +185,38 @@
       }).catch(function () { });
     })).then(function () { return items; });
   }
+  function getViewCount(type, id) {
+    var vc = viewCol(type);
+    if (!ready) return Promise.reject(new Error('Firebase 미준비'));
+    if (!vc || !id || String(id).indexOf('local_') === 0) return Promise.resolve(null);
+    return vc.doc(String(id)).get().then(function (snap) {
+      return snap.exists ? (Number(snap.data().count) || 0) : 0;
+    });
+  }
   function bumpViewCount(type, id) {
     var vc = viewCol(type);
     if (!ready) return Promise.reject(new Error('Firebase 미준비'));
     if (!vc || !id || String(id).indexOf('local_') === 0) return Promise.resolve(null);
     var ref = vc.doc(String(id));
-    return db.runTransaction(function (tx) {
-      return tx.get(ref).then(function (snap) {
-        var current = snap.exists ? (Number(snap.data().count) || 0) : 0;
-        var next = current + 1;
-        tx.set(ref, { count: next }, { merge: true });
-        return next;
+    var viewerCollection = VIEWER_COLLECTIONS[type];
+    if (!viewerCollection) return Promise.resolve(null);
+    return getViewIpHash().then(function (ipHash) {
+      var viewerRef = col(viewerCollection).doc(String(id) + '_' + ipHash);
+      return db.runTransaction(function (tx) {
+        return Promise.all([tx.get(viewerRef), tx.get(ref)]).then(function (snaps) {
+          var viewerSnap = snaps[0];
+          var viewSnap = snaps[1];
+          var current = viewSnap.exists ? (Number(viewSnap.data().count) || 0) : 0;
+          if (viewerSnap.exists) return current;
+          var next = current + 1;
+          tx.set(viewerRef, { readAt: firebase.firestore.FieldValue.serverTimestamp() });
+          if (viewSnap.exists) {
+            tx.update(ref, { count: firebase.firestore.FieldValue.increment(1) });
+          } else {
+            tx.set(ref, { count: 1 });
+          }
+          return next;
+        });
       });
     });
   }
@@ -916,7 +956,7 @@
     getCommunityVisibility: getCommunityVisibility, watchCommunityVisibility: watchCommunityVisibility,
     getTips: getTips, addTip: addTip, updateTip: updateTip, deleteTip: deleteTip, voteTip: voteTip,
     getLikeDoc: getLikeDoc, toggleGenericLike: toggleGenericLike, toggleBoardLike: toggleBoardLike,
-    bumpViewCount: bumpViewCount,
+     getViewCount: getViewCount, bumpViewCount: bumpViewCount,
     getComments: getComments, addComment: addComment, deleteComment: deleteComment,
     getUserDoc: getUserDoc, ensureUserDoc: ensureUserDoc, updateUserDoc: updateUserDoc,
     getFavs: getFavs, bumpUserLikeCount: bumpUserLikeCount, bumpUserCommentCount: bumpUserCommentCount,

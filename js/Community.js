@@ -19,21 +19,46 @@
       '<i class="ic-v2-community-number-of-view-line" aria-hidden="true"></i>' +
       '<span>' + UI.esc(value) + '</span></span>';
   }
+  function paintDetailViewCount(item, root, count) {
+    if (count == null) return;
+    item.viewCount = count;
+    var el = root.querySelector('.detail-head .detail-meta .view-count');
+    if (!el) return;
+    el.setAttribute('aria-label', '조회수 ' + count);
+    if (el.lastElementChild) el.lastElementChild.textContent = count;
+  }
   function trackView(type, item, root) {
     if (!item || !item.docId || String(item.docId).indexOf('local_') === 0 || !FB.bumpViewCount) return;
-    var key = 'fpp_view_' + type + '_' + item.docId;
+    var keyPrefix = { patch: 'patch_read_', board: 'board_read_', event: 'event_read_' }[type] || ('fpp_view_' + type + '_');
+    var key = keyPrefix + item.docId;
+    var legacyKey = 'fpp_view_' + type + '_' + item.docId;
     var seen = false;
-    try { seen = localStorage.getItem(key) === '1'; } catch (e) { }
-    if (seen) return;
+    try {
+      seen = localStorage.getItem(key) === '1' || localStorage.getItem(legacyKey) === '1';
+      if (seen) localStorage.setItem(key, '1');
+    } catch (e) { }
+    if (seen) {
+      if (FB.getViewCount) {
+        FB.getViewCount(type, item.docId).then(function (count) {
+          paintDetailViewCount(item, root, count);
+        }).catch(function () { });
+      }
+      return;
+    }
     FB.bumpViewCount(type, item.docId).then(function (count) {
       if (count == null) return;
-      try { localStorage.setItem(key, '1'); } catch (e) { }
-      item.viewCount = count;
-      root.querySelectorAll('.view-count').forEach(function (el) {
-        el.setAttribute('aria-label', '조회수 ' + count);
-        if (el.lastElementChild) el.lastElementChild.textContent = count;
-      });
-    }).catch(function () { });
+      try {
+        localStorage.setItem(key, '1');
+        localStorage.setItem(legacyKey, '1');
+      } catch (e) { }
+      paintDetailViewCount(item, root, count);
+    }).catch(function () {
+      if (FB.getViewCount) {
+        FB.getViewCount(type, item.docId).then(function (count) {
+          paintDetailViewCount(item, root, count);
+        }).catch(function () { });
+      }
+    });
   }
 
   function loadAll() {

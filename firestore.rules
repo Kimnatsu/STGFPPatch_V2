@@ -153,15 +153,29 @@ service cloud.firestore {
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount']));
     }
 
-    // 조회수 카운터 — 익명 방문자도 조회수를 기록할 수 있음
+    // 조회수 집계 — 익명 방문자도 총계와 방문자 해시를 기록할 수 있음
+    match /patchViews/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
     match /patchViewers/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if true;
+    }
+    match /eventViews/{docId} {
+      allow read: if true;
+      allow write: if true;
     }
     match /eventViewers/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if true;
     }
     match /boardViews/{docId} {
       allow read, write: if true;
+    }
+    match /boardViewers/{docId} {
+      allow read: if true;
+      allow create: if true;
     }
 
     // 게시판 댓글
