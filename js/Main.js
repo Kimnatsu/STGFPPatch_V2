@@ -72,8 +72,8 @@
     return k ? 'img/type/' + k + '.webp' : '';
   }
 
-  var BNAME = { buff: '버프', nerf: '너프', fix: '기능수정', upcoming: '출시 예정' };
-  var BSYM = { buff: '▲', nerf: '▼', fix: '✦', upcoming: '◷' };
+  var BNAME = { buff: '버프', nerf: '너프', fix: '기능수정', upcoming: '출시예정' };
+  var BSYM = { buff: '▲', nerf: '▼', fix: '✦' };
 
   function pvpCharacter(g) {
     if (!g) return null;
@@ -251,9 +251,12 @@
         var countdown = upcomingDays !== null
           ? '<span class="orb-countdown" aria-hidden="true">D-' + upcomingDays + '</span>'
           : '';
+        var releaseLabel = upcomingDays !== null
+          ? '<span class="orb-release-label" aria-hidden="true">출시예정</span>'
+          : '';
         return '<button class="orb" type="button" data-i="' + i + '" aria-label="' + UI.esc(nm) + ' — ' + UI.esc(label) + (upcomingDays !== null ? ', 출시 예정 D-' + upcomingDays : '') + '">' +
           '<span class="orb-img"><img src="' + UI.esc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
-          orbBadgesHTML(o.types) + countdown + '</span>' +
+          orbBadgesHTML(o.types) + releaseLabel + countdown + '</span>' +
           '<span class="orb-name">' + UI.esc(nm) + '</span></button>';
       }).join('');
       pg.querySelectorAll('.orb').forEach(function (b) {
@@ -978,7 +981,9 @@
         '<svg class="pg-chev" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg></button>' +
         '<div class="pg-body"><div class="pg-body-inner">' +
         '<ul class="cp-list">' + list.map(function (it) {
-          return '<li class="cp-patch-row cp-patch-row--' + it.type + '"><b>' + (BSYM[it.type] || '✦') + ' ' + UI.esc(BNAME[it.type] || '패치') + '</b>' +
+          var patchLabel = BNAME[it.type] || '패치';
+          var patchTypeText = it.type === 'upcoming' ? patchLabel : (BSYM[it.type] || '✦') + ' ' + patchLabel;
+          return '<li class="cp-patch-row cp-patch-row--' + it.type + '"><b>' + UI.esc(patchTypeText) + '</b>' +
             '<small>' + UI.escBr(it.text) + '</small></li>';
         }).join('') + '</ul></div></div></div>';
     }).join('') + '</div>';
@@ -1170,12 +1175,13 @@
         var upcomingDays = upcoming ? pvpDaysUntil(g.date) : null;
         var badgeType = upcoming ? 'upcoming' : kind;
         var badgeName = BNAME[badgeType] || BNAME[kind];
+        var badgeText = upcoming ? badgeName : BSYM[badgeType];
         var countdown = upcomingDays !== null
           ? '<span class="orb-countdown" aria-hidden="true">D-' + upcomingDays + '</span>'
           : '';
         return '<button class="orb' + (upcoming ? ' orb--upcoming' : '') + '" type="button" data-gid="' + UI.esc(g.uid) + '" aria-label="' + UI.esc(name) + ' (' + badgeName + (upcomingDays !== null ? ' D-' + upcomingDays : '') + ')">' +
           '<span class="orb-img"><img src="' + UI.esc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' + countdown +
-          '<span class="orb-badge badge badge--' + badgeType + '" aria-hidden="true">' + BSYM[badgeType] + '</span></span>' +
+          '<span class="orb-badge badge badge--' + badgeType + '" aria-hidden="true">' + badgeText + '</span></span>' +
           '<span class="orb-name">' + UI.esc(name) + '</span></button>';
       }).join('') + '</div>';
       colEl.querySelectorAll('.orb').forEach(function (el) {
@@ -1201,7 +1207,10 @@
       var body = '<ul class="pvp-list">' + groups.map(function (gr) {
           return gr.items.map(function (it) { return '<li><small>' + UI.escBr(it.text || '') + '</small></li>'; }).join('');
         }).join('') + '</ul>';
-      return '<div class="pvp-sec pvp-sec--' + k + '"><h4><span class="badge badge--' + k + '">' + BSYM[k] + '</span> ' + BNAME[k] + '</h4>' + body + '</div>';
+      var heading = k === 'upcoming'
+        ? '<span class="badge badge--upcoming">' + BNAME[k] + '</span>'
+        : '<span class="badge badge--' + k + '">' + BSYM[k] + '</span> ' + BNAME[k];
+      return '<div class="pvp-sec pvp-sec--' + k + '"><h4>' + heading + '</h4>' + body + '</div>';
     }).join('');
     UI.openModal({
       cls: 'pvp-modal',
