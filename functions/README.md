@@ -61,9 +61,10 @@ separate from the user-facing reply notification described above.
 
 `firestore.rules` is based on the supplied latest rules. It retains rules used
 by the separate FPPatchStudio admin app, adds the paths needed by notifications,
-FCM tokens, inquiries, character tips, and admin dashboard reads, and removes
-unused `withdrawalBlocks`, `patchViewers`, `eventViewers`, and legacy `userTips`
-rules. The live rules are not changed by this ZIP.
+FCM tokens, inquiries, character tips, and admin dashboard reads, and uses
+`patchViewers`, `eventViewers`, and `boardViews` for public view counters. It
+removes unused `withdrawalBlocks` and legacy `userTips` rules. The live rules
+are not changed by this ZIP.
 
 From the repository root:
 

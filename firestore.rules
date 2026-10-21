@@ -154,10 +154,10 @@ service cloud.firestore {
     }
 
     // 조회수 카운터 — 익명 방문자도 조회수를 기록할 수 있음
-    match /patchViews/{docId} {
+    match /patchViewers/{docId} {
       allow read, write: if true;
     }
-    match /eventViews/{docId} {
+    match /eventViewers/{docId} {
       allow read, write: if true;
     }
     match /boardViews/{docId} {

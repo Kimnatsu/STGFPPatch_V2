@@ -152,7 +152,7 @@
       }
     );
   }
-  var VIEW_COLLECTIONS = { patch: 'patchViews', board: 'boardViews', event: 'eventViews' };
+  var VIEW_COLLECTIONS = { patch: 'patchViewers', board: 'boardViews', event: 'eventViewers' };
   function viewCol(type) {
     return VIEW_COLLECTIONS[type] ? col(VIEW_COLLECTIONS[type]) : null;
   }
