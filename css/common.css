@@ -455,13 +455,14 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
   position:absolute;right:calc(50% - var(--store-hero-card-half,42vw) + 16px);bottom:16px;z-index:5;
   display:flex;align-items:center;gap:6px;min-width:76px;height:26px;padding:0 10px;
   overflow:hidden;border:0;border-radius:999px;background:rgba(6,8,12,.68);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
   color:#fff;cursor:pointer;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
 }
 .store-hero__pager:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .store-hero__pager-border{position:absolute;inset:0;z-index:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.store-hero__pager-track{fill:none;stroke:rgba(255,255,255,.28);stroke-width:1.5;vector-effect:non-scaling-stroke}
 .store-hero__pager-path{
-  fill:none;stroke:rgba(255,255,255,.98);stroke-width:3;stroke-linecap:round;
-  stroke-dasharray:100;stroke-dashoffset:100;vector-effect:non-scaling-stroke;
+  fill:none;stroke:rgba(255,255,255,.98);stroke-width:2;stroke-linecap:round;vector-effect:non-scaling-stroke;
 }
 .store-hero__count,.store-hero__pager i{position:relative;z-index:1}
 .store-hero__count{min-width:32px;color:#fff;font:700 12px/1 system-ui,sans-serif;text-align:center;white-space:nowrap}

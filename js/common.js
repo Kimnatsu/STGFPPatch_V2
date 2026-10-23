@@ -1535,7 +1535,7 @@ window.UI = (function () {
       parent.appendChild(next);
     }
 
-    var pager = null, countEl = null, playIcon = null, progressPaths = [];
+    var pager = null, countEl = null, playIcon = null, progressPath = null, progressLength = 0;
     if (count > 1) {
       pager = document.createElement('button');
       pager.className = 'store-hero__pager';
@@ -1544,14 +1544,14 @@ window.UI = (function () {
       pager.setAttribute('aria-pressed', 'false');
       pager.innerHTML =
         '<svg class="store-hero__pager-border" viewBox="0 0 76 26" preserveAspectRatio="none" aria-hidden="true">' +
-        '<path class="store-hero__pager-path store-hero__pager-path--top" pathLength="100" />' +
-        '<path class="store-hero__pager-path store-hero__pager-path--bottom" pathLength="100" />' +
+        '<rect class="store-hero__pager-track" x="1.5" y="1.5" width="73" height="23" rx="11.5" />' +
+        '<rect class="store-hero__pager-path" x="1.5" y="1.5" width="73" height="23" rx="11.5" />' +
         '</svg><span class="store-hero__count" aria-live="polite"></span>' +
         '<i class="ic-v2-media-av-pause-fill" aria-hidden="true"></i>';
       parent.appendChild(pager);
       countEl = pager.querySelector('.store-hero__count');
       playIcon = pager.querySelector('i');
-      progressPaths = Array.prototype.slice.call(pager.querySelectorAll('.store-hero__pager-path'));
+      progressPath = pager.querySelector('.store-hero__pager-path');
     }
 
     var delay = 4000, transitionMs = 400;
@@ -1562,16 +1562,17 @@ window.UI = (function () {
     function measurePager() {
       if (!pager) return;
       var width = Math.max(76, Math.round(pager.getBoundingClientRect().width * 10) / 10);
-      var right = width - 0.5;
-      var topPath = 'M0.5,13 A12.5,12.5 0 0 1 13,0.5 H' + (width - 13) + ' A12.5,12.5 0 0 1 ' + right + ',13';
-      var bottomPath = 'M0.5,13 A12.5,12.5 0 0 0 13,25.5 H' + (width - 13) + ' A12.5,12.5 0 0 0 ' + right + ',13';
       pager.querySelector('.store-hero__pager-border').setAttribute('viewBox', '0 0 ' + width + ' 26');
-      progressPaths[0].setAttribute('d', topPath);
-      progressPaths[1].setAttribute('d', bottomPath);
+      var track = pager.querySelector('.store-hero__pager-track');
+      [track, progressPath].forEach(function (rect) { rect.setAttribute('width', width - 3); });
+      progressLength = progressPath.getTotalLength ? progressPath.getTotalLength() : (width * 2 + 24);
+      progressPath.style.strokeDasharray = progressLength + ' ' + progressLength;
+      updateProgress();
     }
     function updateProgress() {
-      var offset = String((100 - Math.min(100, elapsed / delay * 100)).toFixed(2));
-      progressPaths.forEach(function (path) { path.setAttribute('stroke-dashoffset', offset); });
+      if (!progressPath || !progressLength) return;
+      var remaining = 1 - Math.min(1, elapsed / delay);
+      progressPath.style.strokeDashoffset = String((progressLength * remaining).toFixed(2));
     }
     function updateTransform() {
       var cardWidth = cards[0] ? cards[0].getBoundingClientRect().width : 0;
