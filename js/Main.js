@@ -251,18 +251,17 @@
         var countdown = upcomingDays !== null
           ? '<span class="orb-countdown" aria-hidden="true">D-' + upcomingDays + '</span>'
           : '';
-        var releaseLabel = upcomingDays !== null
-          ? '<span class="orb-release-label" aria-hidden="true">출시예정</span>'
-          : '';
         return '<button class="orb" type="button" data-i="' + i + '" aria-label="' + UI.esc(nm) + ' — ' + UI.esc(label) + (upcomingDays !== null ? ', 출시 예정 D-' + upcomingDays : '') + '">' +
           '<span class="orb-img"><img src="' + UI.esc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
-          orbBadgesHTML(o.types) + releaseLabel + countdown + '</span>' +
+          orbBadgesHTML(o.types) + countdown + '</span>' +
           '<span class="orb-name">' + UI.esc(nm) + '</span></button>';
       }).join('');
       pg.querySelectorAll('.orb').forEach(function (b) {
         b.addEventListener('click', function () {
           var o = orbs[Number(b.getAttribute('data-i'))];
-          route('pvp');
+          /* 홈에서 화면만 전환하면 #home 해시가 남아 홈 탭을 다시 눌러도 hashchange가 발생하지 않음 */
+          if (location.hash === '#pvp') route('pvp');
+          else location.hash = '#pvp';
           openPvpPatchDetail(o.groups[0]);
         });
       });
@@ -772,21 +771,28 @@
     if (tipScore(t) > 0) return '<span class="tip-best best-rest">BEST</span>';
     return '';
   }
-  function tipAvaHTML(t) {
-    if (t.avatar) {
-      return '<span class="tip-ava"><span class="tip-ava-imgwrap"><img src="' + UI.esc(UI.avatarOf(t.avatar)) + '" alt="" loading="lazy"></span></span>';
+  function tipAvaHTML(t, author, currentProfileIcon, mine) {
+    var icon = mine && currentProfileIcon != null && currentProfileIcon !== '' ? currentProfileIcon : t.avatar;
+    var value = icon == null ? '' : String(icon).trim();
+    var src = '';
+    if (/^\d+$/.test(value)) src = UI.avatarOf(parseInt(value, 10));
+    else if (/^https?:\/\//i.test(value)) src = value;
+    else if (/^(?:\.\/)?img\/avatars\/[a-z0-9._-]+$/i.test(value)) src = value.replace(/^\.\//, '');
+    if (src) {
+      return '<span class="tip-ava"><span class="tip-ava-imgwrap"><img src="' + UI.esc(src) + '" alt="" loading="lazy"></span></span>';
     }
-    var ch = (t.author || '선').charAt(0).toUpperCase();
+    var ch = (author || t.author || '선').charAt(0).toUpperCase();
     return '<span class="tip-ava"><span class="tip-ava-initial">' + UI.esc(ch) + '</span></span>';
   }
-  function tipRowHTML(t, rank, uid) {
+  function tipRowHTML(t, rank, uid, currentNickname, currentProfileIcon) {
     var mine = !!(uid && t.uid && t.uid === uid);
+    var author = (mine && currentNickname) || t.author || '선원';
     var upOn = !!(uid && (t.upBy || []).indexOf(uid) > -1);
     var downOn = !!(uid && (t.downBy || []).indexOf(uid) > -1);
-    var h = '<li class="tip-row' + (mine ? ' tip-row--own' : '') + '" data-tip="' + UI.esc(t.id) + '">';
-    h += tipAvaHTML(t);
+    var h = '<li class="tip-row' + (mine ? ' tip-row--own' : '') + '" data-tip="' + UI.esc(t.id) + '" data-tip-source="' + UI.esc(t.sourceCollection || '') + '">';
+    h += tipAvaHTML(t, author, currentProfileIcon, mine);
     h += '<div class="tip-main">' +
-      '<div class="tip-top"><b>' + UI.esc(t.author || '선원') + (mine ? ' (나)' : '') + '</b>' +
+      '<div class="tip-top"><b>' + UI.esc(author) + (mine ? ' (나)' : '') + '</b>' +
       '<time>' + UI.esc(UI.fmtDate(t.date)) + '</time>' + tipBestHTML(t, rank) + '</div>' +
       '<p class="tip-txt">' + UI.escBr(t.text || '') + '</p>' +
       '<div class="tip-foot">' +
@@ -815,6 +821,9 @@
   function tipsHTML(c, list) {
     var u = UI.currentUser();
     var uid = u && u.uid;
+    var profile = UI.userDoc() || {};
+    var currentNickname = profile.nickname || profile.displayName || (u && u.displayName) || '';
+    var currentProfileIcon = profile.profileIcon;
     /* 점수(추천-비추천) 내림차순 → 같은 점수면 최신순 */
     var sorted = list.slice().sort(function (a, b) {
       var s = tipScore(b) - tipScore(a);
@@ -824,23 +833,48 @@
     var rank = 0;
     var rows = sorted.map(function (t) {
       if (tipScore(t) > 0) rank += 1;
-      return tipRowHTML(t, rank || 99, uid);
+      return tipRowHTML(t, rank || 99, uid, currentNickname, currentProfileIcon);
     }).join('');
     var empty = '<p class="cp-empty">아직 등록된 꿀팁이 없습니다.<br>첫 꿀팁의 주인공이 되어보세요!</p>';
     return (sorted.length ? '<ul class="tip-list">' + rows + '</ul>' : empty) + tipWriteHTML(u);
   }
+  function paintTips(c, list) {
+    if (!Array.isArray(list)) return;
+    tipCache[c.id] = list;
+    var body = $('cpBody');
+    if (!body || !CP || String(CP.c.id) !== String(c.id) || CP.tab !== 'tips') return;
+    body.innerHTML = tipsHTML(c, list);
+    bindTipEvents(c);
+  }
+  function voteCachedTip(c, tipId, dir, uid) {
+    return (tipCache[c.id] || []).map(function (t) {
+      if (String(t.id) !== String(tipId)) return t;
+      var up = (t.upBy || []).slice(), down = (t.downBy || []).slice();
+      var hadUp = up.indexOf(uid) > -1, hadDown = down.indexOf(uid) > -1;
+      if (dir === 'up') {
+        if (hadUp) up = up.filter(function (x) { return x !== uid; });
+        else { up.push(uid); down = down.filter(function (x) { return x !== uid; }); }
+      } else {
+        if (hadDown) down = down.filter(function (x) { return x !== uid; });
+        else { down.push(uid); up = up.filter(function (x) { return x !== uid; }); }
+      }
+      return Object.assign({}, t, { upBy: up, downBy: down });
+    });
+  }
   function renderTips(c) {
     var body = $('cpBody');
     if (!body) return;
-    function paint(list) {
-      if (!CP || String(CP.c.id) !== String(c.id) || CP.tab !== 'tips') return; /* 그 사이 탭이 바뀌었으면 무시 */
-      tipCache[c.id] = list;
-      body.innerHTML = tipsHTML(c, list);
-      bindTipEvents(c);
-    }
-    if (tipCache[c.id]) { paint(tipCache[c.id]); return; }
+    if (Array.isArray(tipCache[c.id])) { paintTips(c, tipCache[c.id]); return; }
     UI.skelRows(body, 4);
-    FB.getTips(c.id).then(paint).catch(function () { paint([]); });
+    FB.getTips(c.id, c.name).then(function (list) {
+      paintTips(c, list);
+    }).catch(function () {
+      if (Array.isArray(tipCache[c.id])) {
+        paintTips(c, tipCache[c.id]);
+      } else if (CP && String(CP.c.id) === String(c.id) && CP.tab === 'tips') {
+        body.innerHTML = '<p class="cp-empty">캐릭터 팁을 불러오지 못했습니다.<br>잠시 후 다시 시도해 주세요.</p>';
+      }
+    });
   }
   function bindTipEvents(c) {
     var body = $('cpBody');
@@ -852,12 +886,15 @@
       b.addEventListener('click', function () {
         if (!uid) return;
         var row = b.closest('.tip-row');
-        FB.voteTip(c.id, row.getAttribute('data-tip'), b.getAttribute('data-vote'), uid).then(function (list) {
-          tipCache[c.id] = list;
-          if (CP && String(CP.c.id) === String(c.id) && CP.tab === 'tips') {
-            body.innerHTML = tipsHTML(c, list);
-            bindTipEvents(c);
-          }
+        var tipId = row.getAttribute('data-tip');
+        var direction = b.getAttribute('data-vote');
+        b.disabled = true;
+        FB.voteTip(c.id, tipId, direction, uid,
+          row.getAttribute('data-tip-source'), c.name).then(function () {
+          paintTips(c, voteCachedTip(c, tipId, direction, uid));
+        }).catch(function () {
+          b.disabled = false;
+          UI.toast('추천을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.', 'err');
         });
       });
     });
@@ -869,16 +906,24 @@
       body.querySelector('#tipSubmit').addEventListener('click', function () {
         var v = ta.value.trim();
         if (!v) { UI.toast('팁 내용을 입력해 주세요.', 'err'); ta.focus(); return; }
-        var ud = UI.userDoc() || {};
-        FB.addTip(c.id, v, u, ud).then(function (res) {
+        var submit = body.querySelector('#tipSubmit');
+        submit.disabled = true;
+        var cachedProfile = UI.userDoc() || {};
+        var profileLookup = FB.getUserDoc ? FB.getUserDoc(u.uid) : Promise.resolve(null);
+        Promise.resolve(profileLookup).catch(function () { return null; }).then(function (profile) {
+          var ud = Object.assign({}, cachedProfile, profile || {});
+          if (!ud.nickname && cachedProfile.nickname) ud.nickname = cachedProfile.nickname;
+          return FB.addTip(c.id, v, u, ud, c.name);
+        }).then(function (res) {
           UI.toast(res.remote ? '꿀팁이 등록되었습니다.' : '임시 저장되었습니다. (서버 연결 실패)', res.remote ? 'ok' : 'err');
-          FB.getTips(c.id).then(function (list) {
-            tipCache[c.id] = list;
-            if (CP && String(CP.c.id) === String(c.id) && CP.tab === 'tips') {
-              body.innerHTML = tipsHTML(c, list);
-              bindTipEvents(c);
-            }
-          });
+          var list = tipCache[c.id] || [];
+          if (!list.some(function (tip) { return String(tip.id) === String(res.tip.id); })) {
+            list = [res.tip].concat(list);
+          }
+          paintTips(c, list);
+        }).catch(function () {
+          submit.disabled = false;
+          UI.toast('팁을 등록하지 못했습니다. 다시 시도해 주세요.', 'err');
         });
       });
     }
@@ -906,11 +951,19 @@
         main.querySelector('[data-act="save"]').addEventListener('click', function () {
           var v = area.value.trim();
           if (!v) { UI.toast('팁 내용을 입력해 주세요.', 'err'); area.focus(); return; }
-          FB.updateTip(c.id, row.getAttribute('data-tip'), v).then(function (list) {
-            tipCache[c.id] = list;
+          var save = main.querySelector('[data-act="save"]');
+          var tipId = row.getAttribute('data-tip');
+          save.disabled = true;
+          FB.updateTip(c.id, tipId, v,
+            row.getAttribute('data-tip-source'), c.name).then(function () {
+            var list = (tipCache[c.id] || []).map(function (tip) {
+              return String(tip.id) === String(tipId) ? Object.assign({}, tip, { text: v }) : tip;
+            });
             UI.toast('팁이 수정되었습니다.', 'ok');
-            body.innerHTML = tipsHTML(c, list);
-            bindTipEvents(c);
+            paintTips(c, list);
+          }).catch(function () {
+            save.disabled = false;
+            UI.toast('팁 수정에 실패했습니다. 권한 또는 연결 상태를 확인해 주세요.', 'err');
           });
         });
       });
@@ -931,13 +984,14 @@
         m.body.querySelector('#tipDelNo').addEventListener('click', m.close);
         m.body.querySelector('#tipDelYes').addEventListener('click', function () {
           m.close();
-          FB.deleteTip(c.id, tipId).then(function (list) {
-            tipCache[c.id] = list;
+          FB.deleteTip(c.id, tipId, row.getAttribute('data-tip-source'), c.name).then(function () {
+            var list = (tipCache[c.id] || []).filter(function (tip) {
+              return String(tip.id) !== String(tipId);
+            });
             UI.toast('팁이 삭제되었습니다.', 'ok');
-            if (CP && String(CP.c.id) === String(c.id) && CP.tab === 'tips') {
-              body.innerHTML = tipsHTML(c, list);
-              bindTipEvents(c);
-            }
+            paintTips(c, list);
+          }).catch(function () {
+            UI.toast('팁 삭제에 실패했습니다. 권한 또는 연결 상태를 확인해 주세요.', 'err');
           });
         });
       });
@@ -1108,7 +1162,8 @@
   function pvpDates() {
     var seen = {};
     return S.pvps.filter(function (g) {
-      return g.type !== 'upcoming' || pvpDaysUntil(g.date) > 0;
+      /* 출시 예정일은 날짜 필터를 만들지 않고, 실제 패치 날짜만 필터에 노출 */
+      return g.type !== 'upcoming';
     }).map(function (g) { return String(g.date || ''); })
       .filter(function (d) { if (!d || seen[d]) return false; seen[d] = 1; return true; })
       .sort()
@@ -1157,8 +1212,11 @@
       var groups = S.pvps.filter(function (g) {
         var upcoming = g.type === 'upcoming';
         var inColumn = g.type === kind || (kind === 'fix' && upcoming);
-        return inColumn && (!upcoming || pvpDaysUntil(g.date) > 0) &&
-          (!pvpSelDate || String(g.date) === pvpSelDate);
+        /* 예정 항목은 출시일까지 유지하며 선택한 실제 패치 날짜와 무관하게 함께 표시 */
+        var inDateRange = upcoming
+          ? pvpDaysUntil(g.date) > 0
+          : (!pvpSelDate || String(g.date) === pvpSelDate);
+        return inColumn && inDateRange;
       });
       /* 선택 날짜 기준 컬럼별 인원 카운트 */
       var cntEl = $(kind + 'Cnt');
@@ -1175,13 +1233,14 @@
         var upcomingDays = upcoming ? pvpDaysUntil(g.date) : null;
         var badgeType = upcoming ? 'upcoming' : kind;
         var badgeName = BNAME[badgeType] || BNAME[kind];
-        var badgeText = upcoming ? badgeName : BSYM[badgeType];
+        var badge = upcoming ? '' :
+          '<span class="orb-badge badge badge--' + badgeType + '" aria-hidden="true">' + BSYM[badgeType] + '</span>';
         var countdown = upcomingDays !== null
           ? '<span class="orb-countdown" aria-hidden="true">D-' + upcomingDays + '</span>'
           : '';
         return '<button class="orb' + (upcoming ? ' orb--upcoming' : '') + '" type="button" data-gid="' + UI.esc(g.uid) + '" aria-label="' + UI.esc(name) + ' (' + badgeName + (upcomingDays !== null ? ' D-' + upcomingDays : '') + ')">' +
           '<span class="orb-img"><img src="' + UI.esc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' + countdown +
-          '<span class="orb-badge badge badge--' + badgeType + '" aria-hidden="true">' + badgeText + '</span></span>' +
+          badge + '</span>' +
           '<span class="orb-name">' + UI.esc(name) + '</span></button>';
       }).join('') + '</div>';
       colEl.querySelectorAll('.orb').forEach(function (el) {
@@ -1208,7 +1267,7 @@
           return gr.items.map(function (it) { return '<li><small>' + UI.escBr(it.text || '') + '</small></li>'; }).join('');
         }).join('') + '</ul>';
       var heading = k === 'upcoming'
-        ? '<span class="badge badge--upcoming">' + BNAME[k] + '</span>'
+        ? '<span class="orb-badge badge badge--upcoming">' + BNAME[k] + '</span>'
         : '<span class="badge badge--' + k + '">' + BSYM[k] + '</span> ' + BNAME[k];
       return '<div class="pvp-sec pvp-sec--' + k + '"><h4>' + heading + '</h4>' + body + '</div>';
     }).join('');
