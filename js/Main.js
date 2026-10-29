@@ -1055,12 +1055,18 @@
     s = s.replace(/[\s\-·・.,()（）\[\]【】'’""]/g, '').toLowerCase();
     return s.replace(/(진화|각성|한계돌파|초월|개화|한돌)$/g, '');
   }
+  function hasSCharacterPrefix(n) {
+    var match = String(n || '').trim().match(/^s\s*[-‐‑‒–—−]\s*(.+)$/i);
+    return !!(match && nameKey(match[1]));
+  }
   function isRelatedName(a, b) {
     if (!a || !b) return false;
     if (a === b) return true;
     var ka = nameKey(a), kb = nameKey(b);
     if (!ka || !kb) return false;
     if (ka === kb) return true;
+    /* 세라핌 계열은 단독 S 접두사가 같은 경우에만 이름과 무관하게 연결 */
+    if (hasSCharacterPrefix(a) && hasSCharacterPrefix(b)) return true;
     /* 검색과 동일한 포함 관계 매칭 */
     if (ka.length >= 2 && kb.length >= 2 && (ka.indexOf(kb) > -1 || kb.indexOf(ka) > -1)) return true;
     return false;
