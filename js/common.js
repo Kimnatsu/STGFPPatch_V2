@@ -589,7 +589,7 @@ window.UI = (function () {
     var nv = $('desktopNav');
     if (!nv) return;
     var items = navForPage();
-    nv.innerHTML = '<div class="wrap dnav-in">' + items.map(function (n) {
+    nv.innerHTML = '<div class="fpp-nav__bar">' + items.map(function (n) {
       return '<a class="dnav' + (n.exit ? ' dnav--exit' : '') + '" data-nav="' + n.key + '" href="' + pageUrl(n.page + n.hash) + '">' + (n.label || NAV_LABELS[n.key] || n.key) + '</a>';
     }).join('') + '</div>';
   }

@@ -249,25 +249,24 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 }
 
 /* ---------- 데스크톱 내비 ---------- */
-.desk-nav{display:none;border-bottom:1px solid var(--line);background:var(--bg-2)}
+.desk-nav{display:none;padding:8px 0;border-bottom:1px solid var(--line);background:var(--bg)}
 @media (min-width:768px){.desk-nav{display:block}}
-.dnav-in{display:flex;gap:4px}
+.fpp-nav__bar{
+  display:flex;align-items:center;gap:4px;width:calc(100% - 40px);max-width:1280px;
+  min-height:60px;margin:0 auto;padding:6px 12px;
+  border:1px solid var(--line);border-radius:999px;background:var(--surface);
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
+}
 .dnav{
-  position:relative;padding:13px 20px;font-weight:900;font-size:14.5px;letter-spacing:.3px;color:var(--text-3);
-  transition:color .2s;min-height:46px;display:flex;align-items:center;
+  position:relative;padding:0 20px;border-radius:999px;font-weight:900;font-size:14.5px;letter-spacing:.3px;color:var(--text-3);
+  transition:color .2s,background .2s;min-height:46px;display:flex;align-items:center;
 }
-.dnav:hover{color:var(--text)}
-.dnav.active{color:var(--gold)}
-.dnav::after{
-  content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:3px;background:var(--gold);
-  transform:scaleX(0);transform-origin:left;transition:transform .28s var(--ease);
-}
-.dnav.active::after{transform:scaleX(1)}
+.dnav:hover{color:var(--text);background:var(--surface-2)}
+.dnav.active{color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,var(--surface))}
 /* 커뮤니티 메뉴의 "메인 홈" — 외부 이동 항목은 블루로 구분 (활성=금색과 혼동 방지) */
 .dnav--exit{color:var(--blue)}
 .dnav--exit:hover{color:var(--text)}
-.dnav--exit.active{color:var(--blue)}
-.dnav--exit.active::after{transform:scaleX(0)}
+.dnav--exit.active{color:var(--blue);background:color-mix(in srgb,var(--blue) 14%,var(--surface))}
 @media (min-width:768px){.btab--exit{color:var(--blue)}}
 .btab--exit svg{opacity:.95}
 
