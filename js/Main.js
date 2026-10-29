@@ -1065,6 +1065,8 @@
     var ka = nameKey(a), kb = nameKey(b);
     if (!ka || !kb) return false;
     if (ka === kb) return true;
+    /* 세라핌 S-호크와 원본 미호크는 이름 정규화만으로 연결되지 않아 명시적으로 매핑 */
+    if ((ka === 's호크' && kb === '미호크') || (ka === '미호크' && kb === 's호크')) return true;
     /* 세라핌 계열은 단독 S 접두사가 같은 경우에만 이름과 무관하게 연결 */
     if (hasSCharacterPrefix(a) && hasSCharacterPrefix(b)) return true;
     /* 검색과 동일한 포함 관계 매칭 */
