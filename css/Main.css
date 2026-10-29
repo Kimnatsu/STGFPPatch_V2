@@ -3,24 +3,6 @@
    ============================================================ */
 .page[hidden]{display:none}
 
-/* ===== 홈 티커 — 배너 아래 독립 스트립 ===== */
-.banner-ticker{
-  position:relative;overflow:hidden;
-  background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-  padding:10px 0;box-shadow:0 10px 26px -14px rgba(0,0,0,.5);
-}
-.banner-ticker::before{
-  content:"";position:absolute;left:0;right:0;top:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--gold) 18%,var(--red) 50%,var(--blue) 82%,transparent);
-  opacity:.55;
-}
-.tick-track{display:inline-flex;gap:22px;white-space:nowrap;animation:tickMove 40s linear infinite;will-change:transform}
-.banner-ticker:hover .tick-track{animation-play-state:paused}
-@keyframes tickMove{to{transform:translateX(-50%)}}
-.tick-item{font-size:12px;font-weight:700;color:var(--text-2)}
-.tick-sep{color:var(--gold);font-size:12px}
-.tick-note{color:var(--gold);font-weight:900}
-
 /* ===== 홈 2×2 그리드 ===== */
 .home-grid{display:grid;gap:18px;margin:26px 0 34px;grid-template-columns:1fr}
 @media (min-width:768px){.home-grid{grid-template-columns:1fr 1fr}}
@@ -56,12 +38,6 @@
   border-radius:50%;background:rgba(3,10,18,.62);color:#fff;
   font-family:var(--font-d);font-size:clamp(14px,2vw,19px);font-weight:900;letter-spacing:.2px;
   text-shadow:0 2px 6px rgba(0,0,0,.65);pointer-events:none;
-}
-.orb-release-label{
-  position:absolute;top:-8px;left:50%;z-index:5;transform:translateX(-50%);
-  padding:2px 6px;border:1px solid color-mix(in srgb,var(--gold) 55%,transparent);
-  border-radius:999px;background:var(--surface);color:var(--gold);
-  font-size:9px;font-weight:900;white-space:nowrap;pointer-events:none;
 }
 /* 여러 타입 공존 시 — 좌측 하단 · 중앙 하단 · 우측 하단에 반쯤 걸쳐 노출 */
 .orb-b--l{left:0;right:auto;transform:translateX(-42%)}
@@ -408,7 +384,7 @@
 .pvp-sec--nerf h4::before{background:var(--red)}
 .pvp-sec--fix h4::before{background:#d2a679}
 .pvp-sec--upcoming h4::before{background:var(--gold)}
-.pvp-sec .badge{position:static;font-size:11px;padding:3px 9px}
+.pvp-sec .badge{position:static;font-size:11px;padding:3px 9px;box-shadow:none}
 .pvp-list{list-style:none;display:flex;flex-direction:column;gap:8px}
 .pvp-list li{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px}
 .pvp-list li small{font-size:12.5px;color:var(--text-2);line-height:1.65}
