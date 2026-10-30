@@ -55,6 +55,15 @@
   color-scheme:light;
 }
 
+/* 홈 페이지 문서 스크롤바 — 트랙을 페이지 배경과 맞추고 화살표 버튼 제거 */
+html[data-page="main"]{
+  scrollbar-color:var(--text-3) var(--bg);
+}
+html[data-page="main"]::-webkit-scrollbar-track{background:var(--bg)}
+html[data-page="main"]::-webkit-scrollbar-button{
+  display:none;width:0;height:0;background:transparent;
+}
+
 *{margin:0;padding:0;box-sizing:border-box}
 html{overflow-x:hidden;overflow-x:clip}
 @supports not (overflow:clip){html{overflow-x:hidden}}
@@ -1528,6 +1537,28 @@ main,.app-footer{animation:pageRise .3s var(--ease) both}
   .pvp-date-list *
 )::-webkit-scrollbar-track{
   background:transparent;
+}
+:where(
+  #popupRoot .pop,
+  #popupRoot .pop *,
+  .modal-back,
+  .modal-back *,
+  .cp-panel,
+  .cp-panel *,
+  .profile-slide-panel,
+  .profile-slide-panel *,
+  .settings-auth-gate,
+  .settings-auth-gate *,
+  .settings-avatar-overlay,
+  .settings-avatar-overlay *,
+  .detail-menu-popover,
+  .detail-menu-popover *,
+  .pvp-date-list,
+  .pvp-date-list *
+)::-webkit-scrollbar-button{
+  display:none;
+  width:0;
+  height:0;
 }
 :where(
   #popupRoot .pop,
