@@ -56,12 +56,29 @@
 }
 
 /* 홈 페이지 문서 스크롤바 — 트랙을 페이지 배경과 맞추고 화살표 버튼 제거 */
-html[data-page="main"]{
+html[data-page="main"],
+html[data-page="community"]{
   scrollbar-color:var(--text-3) var(--bg);
 }
-html[data-page="main"]::-webkit-scrollbar-track{background:var(--bg)}
-html[data-page="main"]::-webkit-scrollbar-button{
+html[data-page="main"]::-webkit-scrollbar-track,
+html[data-page="community"]::-webkit-scrollbar-track{background:var(--bg)}
+html[data-page="main"]::-webkit-scrollbar-button,
+html[data-page="community"]::-webkit-scrollbar-button{
   display:none;width:0;height:0;background:transparent;
+}
+/* 브라우저별 페이지·내부 스크롤바 화살표 버튼을 강제로 제거 */
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-button:single-button,
+::-webkit-scrollbar-button:vertical:decrement,
+::-webkit-scrollbar-button:vertical:increment,
+::-webkit-scrollbar-button:horizontal:decrement,
+::-webkit-scrollbar-button:horizontal:increment{
+  display:none!important;
+  width:0!important;
+  height:0!important;
+  min-width:0!important;
+  min-height:0!important;
+  background:transparent!important;
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
