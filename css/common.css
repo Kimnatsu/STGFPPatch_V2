@@ -31,6 +31,8 @@
   --ease:cubic-bezier(.22,.9,.3,1);
   --header-h:60px;
   --r-sm:8px;--r-md:12px;--r-lg:16px;
+  --scrollbar-track:var(--bg);
+  --scrollbar-thumb:var(--surface-3);
 }
 [data-theme="dark"]{
   --bg:#0a1626;--bg-2:#0d1d31;
@@ -55,33 +57,12 @@
   color-scheme:light;
 }
 
-/* 홈 페이지 문서 스크롤바 — 트랙을 페이지 배경과 맞추고 화살표 버튼 제거 */
-html[data-page="main"],
-html[data-page="community"]{
-  scrollbar-color:var(--text-3) var(--bg);
-}
-html[data-page="main"]::-webkit-scrollbar-track,
-html[data-page="community"]::-webkit-scrollbar-track{background:var(--bg)}
-html[data-page="main"]::-webkit-scrollbar-button,
-html[data-page="community"]::-webkit-scrollbar-button{
-  display:none;width:0;height:0;background:transparent;
-}
-/* 브라우저별 페이지·내부 스크롤바 화살표 버튼을 강제로 제거 */
-::-webkit-scrollbar-button,
-::-webkit-scrollbar-button:single-button,
-::-webkit-scrollbar-button:vertical:decrement,
-::-webkit-scrollbar-button:vertical:increment,
-::-webkit-scrollbar-button:horizontal:decrement,
-::-webkit-scrollbar-button:horizontal:increment{
-  display:none!important;
-  width:0!important;
-  height:0!important;
-  min-width:0!important;
-  min-height:0!important;
-  background:transparent!important;
-}
-
 *{margin:0;padding:0;box-sizing:border-box}
+*{scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
+::-webkit-scrollbar-track{background:var(--scrollbar-track,var(--bg))}
+::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb,var(--surface-3));border:2px solid var(--scrollbar-track,var(--bg));border-radius:999px}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+::-webkit-scrollbar-corner{background:var(--scrollbar-track,var(--bg))}
 html{overflow-x:hidden;overflow-x:clip}
 @supports not (overflow:clip){html{overflow-x:hidden}}
 body{
@@ -845,6 +826,8 @@ body.body-lock{
   width:min(560px,100%);max-height:86vh;display:flex;flex-direction:column;
   background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);
   box-shadow:0 30px 80px rgba(0,0,0,.55);overflow:hidden;
+  --scrollbar-track:var(--surface);
+  --scrollbar-thumb:var(--surface-3);
   transform:translateY(14px) scale(.97);transition:transform .3s var(--ease);
 }
 .modal-back.show .modal{transform:none}
@@ -1490,149 +1473,4 @@ main,.app-footer{animation:pageRise .3s var(--ease) both}
     transform:translateY(-6px) scale(.98)!important;
   }
   .pop.pop--profile.show{transform:translateY(0) scale(1)!important}
-}
-
-/* ---------- 팝업 스크롤바 — STOVE layer-dialog 스타일 ---------- */
-:where(
-  #popupRoot .pop,
-  #popupRoot .pop *,
-  .modal-back,
-  .modal-back *,
-  .cp-panel,
-  .cp-panel *,
-  .profile-slide-panel,
-  .profile-slide-panel *,
-  .settings-auth-gate,
-  .settings-auth-gate *,
-  .settings-avatar-overlay,
-  .settings-avatar-overlay *,
-  .detail-menu-popover,
-  .detail-menu-popover *,
-  .pvp-date-list,
-  .pvp-date-list *
-){
-  scrollbar-width:thin;
-  scrollbar-color:var(--text-3) transparent;
-}
-:where(
-  #popupRoot .pop,
-  #popupRoot .pop *,
-  .modal-back,
-  .modal-back *,
-  .cp-panel,
-  .cp-panel *,
-  .profile-slide-panel,
-  .profile-slide-panel *,
-  .settings-auth-gate,
-  .settings-auth-gate *,
-  .settings-avatar-overlay,
-  .settings-avatar-overlay *,
-  .detail-menu-popover,
-  .detail-menu-popover *,
-  .pvp-date-list,
-  .pvp-date-list *
-)::-webkit-scrollbar{
-  width:4px;
-  height:4px;
-}
-:where(
-  #popupRoot .pop,
-  #popupRoot .pop *,
-  .modal-back,
-  .modal-back *,
-  .cp-panel,
-  .cp-panel *,
-  .profile-slide-panel,
-  .profile-slide-panel *,
-  .settings-auth-gate,
-  .settings-auth-gate *,
-  .settings-avatar-overlay,
-  .settings-avatar-overlay *,
-  .detail-menu-popover,
-  .detail-menu-popover *,
-  .pvp-date-list,
-  .pvp-date-list *
-)::-webkit-scrollbar-track{
-  background:transparent;
-}
-:where(
-  #popupRoot .pop,
-  #popupRoot .pop *,
-  .modal-back,
-  .modal-back *,
-  .cp-panel,
-  .cp-panel *,
-  .profile-slide-panel,
-  .profile-slide-panel *,
-  .settings-auth-gate,
-  .settings-auth-gate *,
-  .settings-avatar-overlay,
-  .settings-avatar-overlay *,
-  .detail-menu-popover,
-  .detail-menu-popover *,
-  .pvp-date-list,
-  .pvp-date-list *
-)::-webkit-scrollbar-button{
-  display:none;
-  width:0;
-  height:0;
-}
-:where(
-  #popupRoot .pop,
-  #popupRoot .pop *,
-  .modal-back,
-  .modal-back *,
-  .cp-panel,
-  .cp-panel *,
-  .profile-slide-panel,
-  .profile-slide-panel *,
-  .settings-auth-gate,
-  .settings-auth-gate *,
-  .settings-avatar-overlay,
-  .settings-avatar-overlay *,
-  .detail-menu-popover,
-  .detail-menu-popover *,
-  .pvp-date-list,
-  .pvp-date-list *
-)::-webkit-scrollbar-thumb{
-  border-radius:999px;
-  background-color:var(--text-3);
-}
-:where(
-  #popupRoot .pop,
-  #popupRoot .pop *,
-  .modal-back,
-  .modal-back *,
-  .cp-panel,
-  .cp-panel *,
-  .profile-slide-panel,
-  .profile-slide-panel *,
-  .settings-auth-gate,
-  .settings-auth-gate *,
-  .settings-avatar-overlay,
-  .settings-avatar-overlay *,
-  .detail-menu-popover,
-  .detail-menu-popover *,
-  .pvp-date-list,
-  .pvp-date-list *
-)::-webkit-scrollbar-thumb:hover,
-:where(
-  #popupRoot .pop,
-  #popupRoot .pop *,
-  .modal-back,
-  .modal-back *,
-  .cp-panel,
-  .cp-panel *,
-  .profile-slide-panel,
-  .profile-slide-panel *,
-  .settings-auth-gate,
-  .settings-auth-gate *,
-  .settings-avatar-overlay,
-  .settings-avatar-overlay *,
-  .detail-menu-popover,
-  .detail-menu-popover *,
-  .pvp-date-list,
-  .pvp-date-list *
-)::-webkit-scrollbar-thumb:active{
-  background-color:var(--text-2);
 }
