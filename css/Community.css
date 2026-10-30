@@ -11,6 +11,8 @@
 .patch-content{flex:1;min-width:0}
 .month-filter{
   flex:none;width:190px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  --scrollbar-track:var(--surface);
+  --scrollbar-thumb:var(--surface-3);
   padding:14px 12px;position:sticky;top:calc(var(--header-h) + 62px);max-height:calc(100vh - var(--header-h) - 90px);
   display:flex;flex-direction:column;overflow:auto;order:-1;
 }

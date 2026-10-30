@@ -59,10 +59,21 @@
 
 *{margin:0;padding:0;box-sizing:border-box}
 *{scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track)}
-::-webkit-scrollbar-track{background:var(--scrollbar-track,var(--bg))}
-::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb,var(--surface-3));border:2px solid var(--scrollbar-track,var(--bg));border-radius:999px}
-::-webkit-scrollbar-button{display:none;width:0;height:0}
-::-webkit-scrollbar-corner{background:var(--scrollbar-track,var(--bg))}
+*::-webkit-scrollbar-track{background:var(--scrollbar-track,var(--bg))}
+*::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb,var(--surface-3));border:2px solid var(--scrollbar-track,var(--bg));border-radius:999px}
+*::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button:single-button,
+*::-webkit-scrollbar-button:vertical,
+*::-webkit-scrollbar-button:horizontal,
+*::-webkit-scrollbar-button:vertical:decrement,
+*::-webkit-scrollbar-button:vertical:increment,
+*::-webkit-scrollbar-button:horizontal:decrement,
+*::-webkit-scrollbar-button:horizontal:increment{
+  display:none!important;width:0!important;height:0!important;
+  min-width:0!important;min-height:0!important;max-width:0!important;max-height:0!important;
+  background:transparent!important;border:0!important;-webkit-appearance:none!important;
+}
+*::-webkit-scrollbar-corner{background:var(--scrollbar-track,var(--bg))}
 html{overflow-x:hidden;overflow-x:clip}
 @supports not (overflow:clip){html{overflow-x:hidden}}
 body{
@@ -675,6 +686,8 @@ select{appearance:none;-webkit-appearance:none;cursor:pointer;
 .pop{
   position:fixed;z-index:100;background:var(--surface);border:1px solid var(--line-2);
   border-radius:var(--r-md);box-shadow:0 20px 60px rgba(0,0,0,.5);
+  --scrollbar-track:var(--surface);
+  --scrollbar-thumb:var(--surface-3);
   opacity:0;transform:translateY(-6px) scale(.98);transition:.22s var(--ease);overflow:hidden;
 }
 .pop.show{opacity:1;transform:none}
@@ -1153,6 +1166,8 @@ body.body-lock{
 .profile-notification-list{
   max-height:min(520px,calc(100vh - 260px));overflow-y:auto;overscroll-behavior:contain;
   border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);
+  --scrollbar-track:var(--surface);
+  --scrollbar-thumb:var(--surface-3);
 }
 .profile-notification-row{
   display:flex;align-items:flex-start;gap:12px;width:100%;min-height:72px;padding:14px 15px;
@@ -1255,6 +1270,8 @@ body.body-lock{
   position:absolute;top:0;right:calc(-100% - 12px);bottom:0;
   width:320px;max-width:calc(100vw - 24px);
   background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-md);
+  --scrollbar-track:var(--surface);
+  --scrollbar-thumb:var(--surface-3);
   box-shadow:0 20px 60px rgba(0,0,0,.5);
   opacity:0;visibility:hidden;pointer-events:none;
   transform:translateX(108%);transition:opacity .2s var(--ease),transform .3s var(--ease),visibility 0s linear .3s;

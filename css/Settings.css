@@ -253,7 +253,8 @@ body.settings-auth-blocked{overflow:hidden}
 .settings-avatar-overlay[hidden]{display:none}
 .settings-avatar-picker{
   display:flex;width:min(440px,100%);max-height:min(680px,calc(100svh - 32px));flex-direction:column;
-  overflow:hidden;border:1px solid var(--line-2);border-radius:20px;background:var(--surface);box-shadow:var(--shadow)
+  overflow:hidden;border:1px solid var(--line-2);border-radius:20px;background:var(--surface);box-shadow:var(--shadow);
+  --scrollbar-track:var(--surface);--scrollbar-thumb:var(--surface-3)
 }
 .settings-avatar-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
 .settings-avatar-header h2{margin:0;font-size:15px}

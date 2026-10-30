@@ -319,6 +319,8 @@
 .pvp-date-list{
   position:absolute;top:calc(100% + 8px);right:0;z-index:30;width:230px;
   background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-md);
+  --scrollbar-track:var(--surface);
+  --scrollbar-thumb:var(--surface-3);
   box-shadow:var(--shadow);padding:6px;max-height:232px;overflow-y:auto;
 }
 .pvp-date-item{
